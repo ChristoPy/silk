@@ -1,4 +1,6 @@
 const TOKENS_SPEC = [
+    [/^\s+/, 'SKIP'],
+    [/^\/\/.*/, 'SKIP'],
     [/^\d+/, 'NUMBER'],
     [/^"[^"]*"/, 'STRING']
 ]
@@ -27,18 +29,34 @@ export default class Tokenizer {
         const string = this._code.slice(this._cursor);
 
         for (const [regex, type] of TOKENS_SPEC) {
-            const matches = regex.exec(string);
-            if (matches !== null) {
-                const match = matches[0];
-                this._cursor += match.length;
+            const match = this._matchToken(regex, string);
 
-                return {
-                    type,
-                    value: match
-                };
+            if (match === null) {
+                continue;
             }
+
+            if (type === 'SKIP') {
+                return this.getNextToken();
+            }
+
+            return {
+                type,
+                value: match
+            };
         }
 
-        throw new SyntaxError(`Unexpected token ${string[0]}`);
+        throw new SyntaxError(`Unexpected token "${string[0]}"`);
+    }
+
+    _matchToken(regex, value) {
+        const matched = regex.exec(value);
+        if (matched === null) {
+            return null
+        }
+
+        const match = matched[0];
+        this._cursor += match.length;
+
+        return match;
     }
 }
