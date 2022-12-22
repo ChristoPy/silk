@@ -1,3 +1,8 @@
+const TOKENS_SPEC = [
+    [/^\d+/, 'NUMBER'],
+    [/^"[^"]*"/, 'STRING']
+]
+
 export default class Tokenizer {
     init(code) {
         this._code = code;
@@ -21,30 +26,19 @@ export default class Tokenizer {
 
         const string = this._code.slice(this._cursor);
 
-        // Numbers
-        const numberMatches = /^\d+/.exec(string);
-        if (numberMatches !== null) {
-            const match = numberMatches[0]
-            this._cursor += match.length;
+        for (const [regex, type] of TOKENS_SPEC) {
+            const matches = regex.exec(string);
+            if (matches !== null) {
+                const match = matches[0];
+                this._cursor += match.length;
 
-            return {
-                type: 'NUMBER',
-                value: Number(match)
-            };
+                return {
+                    type,
+                    value: match
+                };
+            }
         }
 
-        // String
-        const stringMatches = /^"[^"]*"/.exec(string);
-        if (stringMatches !== null) {
-            const match = stringMatches[0];
-            this._cursor += match.length;
-
-            return {
-                type: 'STRING',
-                value: match
-            };
-        }
-
-        return null;
+        throw new SyntaxError(`Unexpected token ${string[0]}`);
     }
 }
