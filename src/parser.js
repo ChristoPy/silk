@@ -38,6 +38,11 @@ export default class Parser {
      */
     Literal() {
         const token = this._lookahead;
+
+        if (token === null) {
+            return {};
+        }
+
         const possibilities = {
             NUMBER: this.NumberLiteral,
             STRING: this.StringLiteral
