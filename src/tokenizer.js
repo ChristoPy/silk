@@ -22,36 +22,26 @@ export default class Tokenizer {
         const string = this._code.slice(this._cursor);
 
         // Numbers
-        if (!isNaN(string)) {
-            let number = '';
-
-            while (!isNaN(string[this._cursor])) {
-                number += string[this._cursor];
-                this._cursor++;
-            }
+        const numberMatches = /^\d+/.exec(string);
+        if (numberMatches !== null) {
+            const match = numberMatches[0]
+            this._cursor += match.length;
 
             return {
                 type: 'NUMBER',
-                value: Number(number)
+                value: Number(match)
             };
         }
 
         // String
-        if (string[0] === '"') {
-            let stringValue = '';
-
-            do {
-                stringValue += string[this._cursor];
-                this._cursor++;
-            } while (string[this._cursor] !== '"' && !this.isEOF());
-
-            // Add the last quote
-            stringValue += '"';
-            this._cursor++;
+        const stringMatches = /^"[^"]*"/.exec(string);
+        if (stringMatches !== null) {
+            const match = stringMatches[0];
+            this._cursor += match.length;
 
             return {
                 type: 'STRING',
-                value: stringValue
+                value: match
             };
         }
 
