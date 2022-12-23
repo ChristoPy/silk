@@ -19,20 +19,64 @@ export default class Parser {
 
     /**
      * Program
-     *   : Literal
+     *   : Statement
      *   ;
      */
     Program() {
-        const literals = [];
+        const statements = [];
 
         while (this._lookahead !== null) {
-            literals.push(this.Literal());
+            statements.push(this.Statement());
         }
 
         return {
             type: 'Program',
-            body: literals
+            body: statements,
         }
+    }
+
+    Statement() {
+        const token = this._lookahead;
+
+        if (token === null) {
+            return {};
+        }
+
+        const possibilities = {
+            LET: this.VariableDeclaration,
+        };
+
+        if (!possibilities[token.type]) {
+            throw new Error(`Unexpected token ${token.type}, expected LET, FUNCTION, IF, or LOOP`);
+        }
+
+        return possibilities[token.type].call(this);
+    }
+
+    /**
+     * VariableDeclaration
+     * : LET IDENTIFIER EQUALS Literal
+     * ;
+     */
+    VariableDeclaration() {
+        this._eat('LET');
+
+        const id = this._eat('IDENTIFIER');
+
+        this._eat('EQUALS');
+
+        const init = this.Literal();
+
+        return {
+            type: 'VariableDeclaration',
+            value: {
+                name: {
+                    type: 'Identifier',
+                    value: id.value
+                },
+                value: init
+            }
+        };
     }
 
     /**

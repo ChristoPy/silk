@@ -2,7 +2,10 @@ const TOKENS_SPEC = [
     [/^\s+/, 'SKIP'],
     [/^\/\/.*/, 'SKIP'],
     [/^\d+/, 'NUMBER'],
-    [/^"[^"]*"/, 'STRING']
+    [/^"[^"]*"/, 'STRING'],
+    [/^let/, 'LET'],
+    [/^[a-zA-Z_][a-zA-Z0-9_]*/, 'IDENTIFIER'],
+    [/^=/, 'EQUALS'],
 ]
 
 export default class Tokenizer {
