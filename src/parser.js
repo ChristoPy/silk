@@ -23,12 +23,17 @@ export default class Parser {
      *   ;
      */
     Program() {
+        const literals = [];
+
+        while (this._lookahead !== null) {
+            literals.push(this.Literal());
+        }
+
         return {
             type: 'Program',
-            body: this.Literal()
+            body: literals
         }
     }
-
 
     /**
      * Literal
