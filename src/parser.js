@@ -56,6 +56,7 @@ export default class Parser {
     /**
      * VariableDeclaration
      * : LET IDENTIFIER EQUALS Literal
+     * | LET IDENTIFIER EQUALS Identifier
      * ;
      */
     VariableDeclaration() {
@@ -65,7 +66,12 @@ export default class Parser {
 
         this._eat('EQUALS');
 
-        const init = this.Literal();
+        let init = null;
+        if (this._lookahead.type === 'IDENTIFIER') {
+            init = this.Identifier();
+        } else {
+            init = this.Literal();
+        }
 
         return {
             type: 'VariableDeclaration',
@@ -127,6 +133,19 @@ export default class Parser {
         return {
             type: 'StringLiteral',
             value: token.value.slice(1, -1)
+        };
+    }
+
+    /**
+     * Identifier
+     * : IDENTIFIER
+     * ;
+     */
+    Identifier() {
+        const token = this._eat('IDENTIFIER');
+        return {
+            type: 'Identifier',
+            value: token.value
         };
     }
 
