@@ -35,6 +35,12 @@ export default class Parser {
         }
     }
 
+    /**
+     * Statement
+     *   : VariableDeclaration
+     *   | FunctionDeclaration
+     *   ;
+     */
     Statement() {
         const token = this._lookahead;
 
@@ -44,6 +50,7 @@ export default class Parser {
 
         const possibilities = {
             LET: this.VariableDeclaration,
+            FUNCTION: this.FunctionDeclaration,
         };
 
         if (!possibilities[token.type]) {
@@ -55,9 +62,9 @@ export default class Parser {
 
     /**
      * VariableDeclaration
-     * : LET IDENTIFIER EQUALS Literal
-     * | LET IDENTIFIER EQUALS Identifier
-     * ;
+     *   : LET IDENTIFIER EQUALS Literal
+     *   | LET IDENTIFIER EQUALS Identifier
+     *   ;
      */
     VariableDeclaration() {
         this._eat('LET');
@@ -85,11 +92,59 @@ export default class Parser {
         };
     }
 
+    /*
+    * FunctionDeclaration
+    *   : FUNCTION IDENTIFIER LPAREN RPAREN Block
+    *   ;
+    */
+    FunctionDeclaration() {
+        this._eat('FUNCTION');
+
+        const id = this._eat('IDENTIFIER');
+
+        this._eat('LPAREN');
+        this._eat('RPAREN');
+
+        const body = this.Block();
+
+        return {
+            type: 'FunctionDeclaration',
+            value: {
+                name: id.value,
+                params: [],
+                body: body.body
+            }
+        };
+    }
+
+    /**
+     * Block
+     *   : LBRACE RBRACE
+     *   | LBRACE Statement RBRACE
+     *   ;
+     */
+    Block() {
+        this._eat('LBRACE');
+
+        const statements = [];
+
+        while (this._lookahead.type !== 'RBRACE') {
+            statements.push(this.Statement());
+        }
+
+        this._eat('RBRACE');
+
+        return {
+            type: 'Block',
+            body: statements
+        };
+    }
+
     /**
      * Literal
-     *  : NumberLiteral
-     *  | StringLiteral
-     * ;
+     *   : NumberLiteral
+     *   | StringLiteral
+     *   ;
      */
     Literal() {
         const token = this._lookahead;
@@ -112,8 +167,8 @@ export default class Parser {
 
     /**
      * NumberLiteral
-     *  : NUMBER
-     *  ;
+     *   : NUMBER
+     *   ;
      */
     NumberLiteral() {
         const token = this._eat('NUMBER');
@@ -125,8 +180,8 @@ export default class Parser {
 
     /**
      * StringLiteral
-     *  : STRING
-     *  ;
+     *   : STRING
+     *   ;
      */
     StringLiteral() {
         const token = this._eat('STRING');
@@ -138,8 +193,8 @@ export default class Parser {
 
     /**
      * Identifier
-     * : IDENTIFIER
-     * ;
+     *   : IDENTIFIER
+     *   ;
      */
     Identifier() {
         const token = this._eat('IDENTIFIER');

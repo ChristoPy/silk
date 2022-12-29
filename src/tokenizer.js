@@ -4,8 +4,13 @@ const TOKENS_SPEC = [
     [/^\d+/, 'NUMBER'],
     [/^"[^"]*"/, 'STRING'],
     [/^let/, 'LET'],
+    [/^function/, 'FUNCTION'],
     [/^[a-zA-Z_][a-zA-Z0-9_]*/, 'IDENTIFIER'],
     [/^=/, 'EQUALS'],
+    [/^\(/, 'LPAREN'],
+    [/^\)/, 'RPAREN'],
+    [/^\{/, 'LBRACE'],
+    [/^\}/, 'RBRACE'],
 ]
 
 export default class Tokenizer {
