@@ -24,7 +24,13 @@ describe("Empty Function Declaration", () => {
 describe("Function Declaration with Declarations", () => {
     it("should parse a function declaration with declarations", () => {
         const parser = new Parser();
-        const ast = parser.parse("function add() { let x = 1 }");
+        const ast = parser.parse(`function add() {
+            let x = 1
+
+            function nested() {
+                let y = 2
+            }
+        }`);
         expect(ast).toEqual({
             type: "Program",
             body: [
@@ -45,6 +51,28 @@ describe("Function Declaration with Declarations", () => {
                                         type: "NumberLiteral",
                                         value: 1,
                                     },
+                                },
+                            },
+                            {
+                                type: "FunctionDeclaration",
+                                value: {
+                                    name: "nested",
+                                    params: [],
+                                    body: [
+                                        {
+                                            type: "VariableDeclaration",
+                                            value: {
+                                                name: {
+                                                    type: "Identifier",
+                                                    value: "y",
+                                                },
+                                                value: {
+                                                    type: "NumberLiteral",
+                                                    value: 2,
+                                                },
+                                            },
+                                        },
+                                    ],
                                 },
                             },
                         ],
