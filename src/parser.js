@@ -103,6 +103,16 @@ export default class Parser {
         const id = this._eat('IDENTIFIER');
 
         this._eat('LPAREN');
+
+        let params = []
+        while (this._lookahead.type !== 'RPAREN') {
+            params.push(this.Identifier());
+
+            if (this._lookahead.type === 'COMMA') {
+                this._eat('COMMA');
+            }
+        }
+
         this._eat('RPAREN');
 
         const body = this.Block();
@@ -111,7 +121,7 @@ export default class Parser {
             type: 'FunctionDeclaration',
             value: {
                 name: id.value,
-                params: [],
+                params: params,
                 body: body.body
             }
         };

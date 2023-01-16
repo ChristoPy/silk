@@ -82,3 +82,55 @@ describe("Function Declaration with Declarations", () => {
         });
     });
 });
+
+
+describe("Function Declaration with parameters", () => {
+    it("should parse a function declaration with one parameter", () => {
+        const parser = new Parser();
+        const ast = parser.parse("function add(x) {}");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "add",
+                        params: [
+                            {
+                                type: "Identifier",
+                                value: "x",
+                            },
+                        ],
+                        body: [],
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse a function declaration with multiple parameters", () => {
+        const parser = new Parser();
+        const ast = parser.parse("function add(x, y) {}");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "add",
+                        params: [
+                            {
+                                type: "Identifier",
+                                value: "x",
+                            },
+                            {
+                                type: "Identifier",
+                                value: "y",
+                            },
+                        ],
+                        body: [],
+                    },
+                },
+            ],
+        });
+    });
+})

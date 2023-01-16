@@ -11,6 +11,7 @@ const TOKENS_SPEC = [
     [/^\)/, 'RPAREN'],
     [/^\{/, 'LBRACE'],
     [/^\}/, 'RBRACE'],
+    [/^,/, 'COMMA'],
 ]
 
 export default class Tokenizer {
