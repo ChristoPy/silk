@@ -14,6 +14,11 @@ Attempt to write a parser for a programming language that looks like JavaScript.
     // code comment
     ```
 ### Variable declaration
+- [x] **Boolean**
+    ```js
+    let loggedIn = true
+    let sideBarOpen = false
+    ```
 - [x] **String**
     ```js
     let name = "Kyle"

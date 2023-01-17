@@ -47,6 +47,51 @@ describe("Literals", () => {
             ],
         });
     });
+
+    it("should parse a literal boolean (true)", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let a = true");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "VariableDeclaration",
+                    value: {
+                        name: {
+                            type: "Identifier",
+                            value: "a",
+                        },
+                        value: {
+                            type: "BooleanLiteral",
+                            value: true,
+                        },
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse a literal boolean (false)", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let a = false");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "VariableDeclaration",
+                    value: {
+                        name: {
+                            type: "Identifier",
+                            value: "a",
+                        },
+                        value: {
+                            type: "BooleanLiteral",
+                            value: false,
+                        },
+                    },
+                },
+            ],
+        });
+    });
 });
 
 describe("Identifers", () => {

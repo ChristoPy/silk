@@ -165,7 +165,8 @@ export default class Parser {
 
         const possibilities = {
             NUMBER: this.NumberLiteral,
-            STRING: this.StringLiteral
+            STRING: this.StringLiteral,
+            BOOLEAN: this.BooleanLiteral
         };
 
         if (!possibilities[token.type]) {
@@ -198,6 +199,21 @@ export default class Parser {
         return {
             type: 'StringLiteral',
             value: token.value.slice(1, -1)
+        };
+    }
+
+    /*
+    * BooleanLiteral
+    *   : TRUE
+    *   | FALSE
+    *   ;
+    * */
+    BooleanLiteral() {
+        const token = this._eat('BOOLEAN');
+
+        return {
+            type: 'BooleanLiteral',
+            value: token.value === 'true' ? true : false
         };
     }
 

@@ -5,6 +5,8 @@ const TOKENS_SPEC = [
     [/^"[^"]*"/, 'STRING'],
     [/^let/, 'LET'],
     [/^function/, 'FUNCTION'],
+    [/^true/, 'BOOLEAN'],
+    [/^false/, 'BOOLEAN'],
     [/^[a-zA-Z_][a-zA-Z0-9_]*/, 'IDENTIFIER'],
     [/^=/, 'EQUALS'],
     [/^\(/, 'LPAREN'],
