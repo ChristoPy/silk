@@ -68,6 +68,19 @@ Attempt to write a parser for a programming language that looks like JavaScript.
   function sum(a, b) {}
   ```
 
+- [x] **Call with one or many literal parameters**
+  ```js
+  doSomething(1)
+  doSomething(true)
+  doSomething(false)
+  doSomething("Kyle")
+  ```
+
+- [x] **Call with one or many references**
+  ```js
+  pluralize(thing)
+  ```
+
 ### Math
 - [ ] **Literals**
   ```js

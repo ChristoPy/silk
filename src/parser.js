@@ -51,13 +51,36 @@ export default class Parser {
         const possibilities = {
             LET: this.VariableDeclaration,
             FUNCTION: this.FunctionDeclaration,
+            IDENTIFIER: this.FunctionCall,
         };
 
         if (!possibilities[token.type]) {
-            throw new Error(`Unexpected token ${token.type}, expected LET, FUNCTION, IF, or LOOP`);
+            throw new Error(`Unexpected token ${token.type}, expected ${Object.keys(possibilities).join(', ')}`);
         }
 
         return possibilities[token.type].call(this);
+    }
+
+    /**
+     * FunctionCall
+     *  : IDENTIFIER LPAREN RPAREN
+     *  | IDENTIFIER LPAREN Parameters RPAREN
+     *  ;
+     */
+    FunctionCall() {
+        const id = this._eat('IDENTIFIER');
+
+        this._eat('LPAREN');
+        const params = this.GenericList();
+        this._eat('RPAREN');
+
+        return {
+            type: 'FunctionCall',
+            value: {
+                name: id.value,
+                params
+            }
+        };
     }
 
     /**
@@ -103,16 +126,7 @@ export default class Parser {
         const id = this._eat('IDENTIFIER');
 
         this._eat('LPAREN');
-
-        let params = []
-        while (this._lookahead.type !== 'RPAREN') {
-            params.push(this.Identifier());
-
-            if (this._lookahead.type === 'COMMA') {
-                this._eat('COMMA');
-            }
-        }
-
+        const params = this.IdentifierList();
         this._eat('RPAREN');
 
         const body = this.Block();
@@ -125,6 +139,67 @@ export default class Parser {
                 body: body.body
             }
         };
+    }
+
+    /**
+     * IdentifierList
+     *  : IDENTIFIER
+     *  | IDENTIFIER COMMA IdentifierList
+     *  ;
+     */
+    IdentifierList() {
+        const params = [];
+
+        let endWithComma = false;
+        while (this._lookahead.type !== 'RPAREN') {
+            params.push(this.Identifier());
+            endWithComma = false;
+
+            if (this._lookahead.type === 'COMMA') {
+                this._eat('COMMA');
+                endWithComma = true;
+            }
+        }
+
+        if (endWithComma) {
+            throw new Error('Unexpected token RPAREN, expected IDENTIFIER');
+        }
+
+        return params;
+    }
+
+    /**
+     * GenericList
+     *  : Literal
+     *  | Literal COMMA GenericList
+     *  | Identifier
+     *  | Identifier COMMA GenericList
+     *  ;
+     */
+    GenericList() {
+        const params = [];
+
+        let endWithComma = false;
+        while (this._lookahead.type !== 'RPAREN') {
+            if (this._lookahead.type === 'IDENTIFIER') {
+                params.push(this.Identifier());
+                endWithComma = false;
+            } else {
+                params.push(this.Literal());
+                endWithComma = false;
+            }
+
+            if (this._lookahead.type === 'COMMA') {
+                this._eat('COMMA');
+                endWithComma = true;
+            }
+        }
+
+        if (endWithComma) {
+            throw new Error('Unexpected token RPAREN, expected IDENTIFIER or LITERAL');
+        }
+
+        return params;
     }
 
     /**

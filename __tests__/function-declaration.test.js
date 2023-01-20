@@ -2,6 +2,10 @@ import { describe, it, expect } from "vitest";
 import Parser from "../src/parser";
 
 describe("Empty Function Declaration", () => {
+    it("should break if trailing comma", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("function add(a,) {}")).toThrow();
+    });
     it("should parse an empty function declaration", () => {
         const parser = new Parser();
         const ast = parser.parse("function add() {}");
