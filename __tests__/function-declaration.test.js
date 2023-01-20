@@ -205,7 +205,7 @@ describe("Function Declaration return statements", () => {
     });
     it("should parse a return statement with all possible value types", () => {
         const parser = new Parser();
-        const ast = parser.parse(`function add() { return 1 return "hello" return true return false return name }`);
+        const ast = parser.parse(`function add() { return 1 return "hello" return true return false return name return hello() return hello(1) }`);
         expect(ast).toEqual({
             type: "Program",
             body: [
@@ -248,6 +248,31 @@ describe("Function Declaration return statements", () => {
                                 value: {
                                     type: "Identifier",
                                     value: "name",
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "FunctionCall",
+                                    value: {
+                                        name: "hello",
+                                        params: []
+                                    },
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "FunctionCall",
+                                    value: {
+                                        name: "hello",
+                                        params: [
+                                            {
+                                                type: "NumberLiteral",
+                                                value: 1
+                                            }
+                                        ]
+                                    },
                                 },
                             },
                         ],

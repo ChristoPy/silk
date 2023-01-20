@@ -5,6 +5,7 @@ export default class Parser {
         this._code = '';
         this._tokenizer = new Tokenizer();
     }
+
     parse(code) {
         this._code = code;
         this._tokenizer.init(code);
@@ -154,7 +155,7 @@ export default class Parser {
     GenericList() {
         return this.List(() => {
             if (this._lookahead.type === 'IDENTIFIER') {
-                return this.Identifier();
+                return this.IdentifierOrFunctionCall();
             } else {
                 return this.Literal();
             }
@@ -207,7 +208,7 @@ export default class Parser {
             NUMBER: this.NumberLiteral,
             STRING: this.StringLiteral,
             BOOLEAN: this.BooleanLiteral,
-            IDENTIFIER: this.Identifier,
+            IDENTIFIER: this.IdentifierOrFunctionCall,
         };
 
         if (!possibilities[token.type]) {
@@ -244,6 +245,7 @@ export default class Parser {
      *   : VariableDeclaration
      *   | FunctionDeclaration
      *   | FunctionCall
+     *   | ReturnStatement
      *   ;
      */
     ScopedStatement() {
@@ -256,7 +258,7 @@ export default class Parser {
         const possibilities = {
             LET: this.VariableDeclaration,
             FUNCTION: this.FunctionDeclaration,
-            IDENTIFIER: this.FunctionCall,
+            IDENTIFIER: this.IdentifierOrFunctionCall,
             RETURN: this.ReturnStatement,
         };
 
@@ -278,6 +280,36 @@ export default class Parser {
             type: 'ReturnStatement',
             value: this.ExpressionValue()
         };
+    }
+
+    /**
+     * IdentifierOrFunctionCall
+     *   : IDENTIFIER
+     *   | FunctionCall
+     *   ;
+     */
+    IdentifierOrFunctionCall() {
+        const token = this._eat('IDENTIFIER');
+
+        try {
+            this._eat('LPAREN');
+            const params = this.GenericList();
+            this._eat('RPAREN');
+
+            return {
+                type: 'FunctionCall',
+                value: {
+                    name: token.value,
+                    params
+                }
+            };
+        } catch (e) {
+            return {
+                type: 'Identifier',
+                value: token.value
+            };
+        }
+
     }
 
     /**
