@@ -143,29 +143,12 @@ export default class Parser {
 
     /**
      * IdentifierList
-     *  : IDENTIFIER
-     *  | IDENTIFIER COMMA IdentifierList
+     *  : Identifier
+     *  | Identifier COMMA IdentifierList
      *  ;
      */
     IdentifierList() {
-        const params = [];
-
-        let endWithComma = false;
-        while (this._lookahead.type !== 'RPAREN') {
-            params.push(this.Identifier());
-            endWithComma = false;
-
-            if (this._lookahead.type === 'COMMA') {
-                this._eat('COMMA');
-                endWithComma = true;
-            }
-        }
-
-        if (endWithComma) {
-            throw new Error('Unexpected token RPAREN, expected IDENTIFIER');
-        }
-
-        return params;
+        return this.List(this.Identifier, "Unexpected token RPAREN, expected IDENTIFIER");
     }
 
     /**
@@ -177,17 +160,30 @@ export default class Parser {
      *  ;
      */
     GenericList() {
+        return this.List(() => {
+            if (this._lookahead.type === 'IDENTIFIER') {
+                return this.Identifier();
+            } else {
+                return this.Literal();
+            }
+        }, "Unexpected token RPAREN, expected IDENTIFIER or LITERAL");
+    }
+
+    /**
+     * List
+     * : Literal
+     * | Literal COMMA List
+     * | Identifier
+     * | Identifier COMMA List
+     * ;
+     */
+    List(fn, errorMessage) {
         const params = [];
 
         let endWithComma = false;
         while (this._lookahead.type !== 'RPAREN') {
-            if (this._lookahead.type === 'IDENTIFIER') {
-                params.push(this.Identifier());
-                endWithComma = false;
-            } else {
-                params.push(this.Literal());
-                endWithComma = false;
-            }
+            params.push(fn.call(this));
+            endWithComma = false;
 
             if (this._lookahead.type === 'COMMA') {
                 this._eat('COMMA');
@@ -196,12 +192,11 @@ export default class Parser {
         }
 
         if (endWithComma) {
-            throw new Error('Unexpected token RPAREN, expected IDENTIFIER or LITERAL');
+            throw new Error(errorMessage);
         }
 
         return params;
     }
-
     /**
      * Block
      *   : LBRACE RBRACE
