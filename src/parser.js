@@ -39,6 +39,7 @@ export default class Parser {
      * Statement
      *   : VariableDeclaration
      *   | FunctionDeclaration
+     *   | FunctionCall
      *   ;
      */
     Statement() {
@@ -91,17 +92,8 @@ export default class Parser {
      */
     VariableDeclaration() {
         this._eat('LET');
-
         const id = this._eat('IDENTIFIER');
-
         this._eat('EQUALS');
-
-        let init = null;
-        if (this._lookahead.type === 'IDENTIFIER') {
-            init = this.Identifier();
-        } else {
-            init = this.Literal();
-        }
 
         return {
             type: 'VariableDeclaration',
@@ -110,7 +102,7 @@ export default class Parser {
                     type: 'Identifier',
                     value: id.value
                 },
-                value: init
+                value: this.ExpressionValue()
             }
         };
     }
@@ -197,6 +189,34 @@ export default class Parser {
 
         return params;
     }
+
+    /**
+     * ExpressionValue
+     *  : Literal
+     *  | Identifier
+     *  ;
+     */
+    ExpressionValue() {
+        const token = this._lookahead;
+
+        if (token === null) {
+            return {};
+        }
+
+        const possibilities = {
+            NUMBER: this.NumberLiteral,
+            STRING: this.StringLiteral,
+            BOOLEAN: this.BooleanLiteral,
+            IDENTIFIER: this.Identifier,
+        };
+
+        if (!possibilities[token.type]) {
+            throw new Error(`Unexpected token ${token.type}, expected ${Object.keys(possibilities).join(', ')}`);
+        }
+
+        return possibilities[token.type].call(this);
+    }
+
     /**
      * Block
      *   : LBRACE RBRACE
@@ -207,7 +227,6 @@ export default class Parser {
         this._eat('LBRACE');
 
         const statements = [];
-
         while (this._lookahead.type !== 'RBRACE') {
             statements.push(this.Statement());
         }
@@ -280,7 +299,6 @@ export default class Parser {
     * */
     BooleanLiteral() {
         const token = this._eat('BOOLEAN');
-
         return {
             type: 'BooleanLiteral',
             value: token.value === 'true' ? true : false
