@@ -228,7 +228,7 @@ export default class Parser {
 
         const statements = [];
         while (this._lookahead.type !== 'RBRACE') {
-            statements.push(this.Statement());
+            statements.push(this.ScopedStatement());
         }
 
         this._eat('RBRACE');
@@ -236,6 +236,47 @@ export default class Parser {
         return {
             type: 'Block',
             body: statements
+        };
+    }
+
+    /**
+     * ScopedStatement
+     *   : VariableDeclaration
+     *   | FunctionDeclaration
+     *   | FunctionCall
+     *   ;
+     */
+    ScopedStatement() {
+        const token = this._lookahead;
+
+        if (token === null) {
+            return {};
+        }
+
+        const possibilities = {
+            LET: this.VariableDeclaration,
+            FUNCTION: this.FunctionDeclaration,
+            IDENTIFIER: this.FunctionCall,
+            RETURN: this.ReturnStatement,
+        };
+
+        if (!possibilities[token.type]) {
+            throw new Error(`Unexpected token ${token.type}, expected ${Object.keys(possibilities).join(', ')}`);
+        }
+
+        return possibilities[token.type].call(this);
+    }
+
+    /**
+     * ReturnStatement
+     *  : RETURN ExpressionValue
+     *  ;
+     */
+    ReturnStatement() {
+        this._eat('RETURN');
+        return {
+            type: 'ReturnStatement',
+            value: this.ExpressionValue()
         };
     }
 

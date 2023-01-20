@@ -87,7 +87,6 @@ describe("Function Declaration with Declarations", () => {
     });
 });
 
-
 describe("Function Declaration with parameters", () => {
     it("should parse a function declaration with one parameter", () => {
         const parser = new Parser();
@@ -138,3 +137,123 @@ describe("Function Declaration with parameters", () => {
         });
     });
 })
+
+describe("Function Declaration return statements", () => {
+    it("should parse one return statement", () => {
+        const parser = new Parser();
+        const ast = parser.parse("function add() { return 1 }");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "add",
+                        params: [],
+                        body: [
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "NumberLiteral",
+                                    value: 1,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse multiple return statements", () => {
+        const parser = new Parser();
+        const ast = parser.parse("function add() { return 1 return 2 return 3 }");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "add",
+                        params: [],
+                        body: [
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "NumberLiteral",
+                                    value: 1,
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "NumberLiteral",
+                                    value: 2,
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "NumberLiteral",
+                                    value: 3,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse a return statement with all possible value types", () => {
+        const parser = new Parser();
+        const ast = parser.parse(`function add() { return 1 return "hello" return true return false return name }`);
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "add",
+                        params: [],
+                        body: [
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "NumberLiteral",
+                                    value: 1,
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "StringLiteral",
+                                    value: "hello",
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "BooleanLiteral",
+                                    value: true,
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "BooleanLiteral",
+                                    value: false,
+                                },
+                            },
+                            {
+                                type: "ReturnStatement",
+                                value: {
+                                    type: "Identifier",
+                                    value: "name",
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+    });
+});

@@ -7,6 +7,7 @@ const TOKENS_SPEC = [
     [/^function/, 'FUNCTION'],
     [/^true/, 'BOOLEAN'],
     [/^false/, 'BOOLEAN'],
+    [/^return/, 'RETURN'],
     [/^[a-zA-Z_][a-zA-Z0-9_]*/, 'IDENTIFIER'],
     [/^=/, 'EQUALS'],
     [/^\(/, 'LPAREN'],
