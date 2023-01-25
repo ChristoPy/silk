@@ -14,7 +14,6 @@ export default class Parser {
         // so we can determine which parsing function to call
         // based on the first token.
         this._lookahead = this._tokenizer.getNextToken();
-
         return this.Program();
     }
 
@@ -41,14 +40,13 @@ export default class Parser {
      *   : VariableDeclaration
      *   | FunctionDeclaration
      *   | FunctionCall
+     *   | ImportStatement
      *   ;
      */
     Statement() {
         const token = this._lookahead;
 
-        if (token === null) {
-            return {};
-        }
+        if (token === null) return {};
 
         const possibilities = {
             LET: this.VariableDeclaration,
@@ -71,11 +69,9 @@ export default class Parser {
      */
     ImportStatement() {
         this._eat('IMPORT');
-
         const id = this._eat('IDENTIFIER');
 
         this._eat('FROM');
-
         const path = this.StringLiteral();
 
         return {
@@ -139,7 +135,6 @@ export default class Parser {
     */
     FunctionDeclaration() {
         this._eat('FUNCTION');
-
         const id = this._eat('IDENTIFIER');
 
         this._eat('LPAREN');
@@ -180,9 +175,8 @@ export default class Parser {
         return this.List(() => {
             if (this._lookahead.type === 'IDENTIFIER') {
                 return this.IdentifierOrFunctionCall();
-            } else {
-                return this.Literal();
             }
+            return this.Literal();
         }, "Unexpected token RPAREN, expected IDENTIFIER or LITERAL");
     }
 
@@ -208,10 +202,7 @@ export default class Parser {
             }
         }
 
-        if (endWithComma) {
-            throw new Error(errorMessage);
-        }
-
+        if (endWithComma) throw new Error(errorMessage);
         return params;
     }
 
@@ -223,10 +214,7 @@ export default class Parser {
      */
     ExpressionValue() {
         const token = this._lookahead;
-
-        if (token === null) {
-            return {};
-        }
+        if (token === null) return {};
 
         const possibilities = {
             NUMBER: this.NumberLiteral,
@@ -274,10 +262,7 @@ export default class Parser {
      */
     ScopedStatement() {
         const token = this._lookahead;
-
-        if (token === null) {
-            return {};
-        }
+        if (token === null) return {};
 
         const possibilities = {
             LET: this.VariableDeclaration,
@@ -333,7 +318,6 @@ export default class Parser {
                 value: token.value
             };
         }
-
     }
 
     /**
@@ -344,10 +328,7 @@ export default class Parser {
      */
     Literal() {
         const token = this._lookahead;
-
-        if (token === null) {
-            return {};
-        }
+        if (token === null) return {}
 
         const possibilities = {
             NUMBER: this.NumberLiteral,
