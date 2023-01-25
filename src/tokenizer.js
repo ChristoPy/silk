@@ -8,6 +8,8 @@ const TOKENS_SPEC = [
     [/^true/, 'BOOLEAN'],
     [/^false/, 'BOOLEAN'],
     [/^return/, 'RETURN'],
+    [/^import/, 'IMPORT'],
+    [/^from/, 'FROM'],
     [/^[a-zA-Z_][a-zA-Z0-9_]*/, 'IDENTIFIER'],
     [/^=/, 'EQUALS'],
     [/^\(/, 'LPAREN'],

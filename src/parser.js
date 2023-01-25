@@ -54,6 +54,7 @@ export default class Parser {
             LET: this.VariableDeclaration,
             FUNCTION: this.FunctionDeclaration,
             IDENTIFIER: this.FunctionCall,
+            IMPORT: this.ImportStatement,
         };
 
         if (!possibilities[token.type]) {
@@ -61,6 +62,29 @@ export default class Parser {
         }
 
         return possibilities[token.type].call(this);
+    }
+
+    /**
+     * ImportStatement
+     *  : IMPORT IDENTIFIER FROM StringLiteral
+     *  ;
+     */
+    ImportStatement() {
+        this._eat('IMPORT');
+
+        const id = this._eat('IDENTIFIER');
+
+        this._eat('FROM');
+
+        const path = this.StringLiteral();
+
+        return {
+            type: 'ImportStatement',
+            value: {
+                name: id.value,
+                path: path.value
+            }
+        };
     }
 
     /**
