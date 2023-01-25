@@ -104,7 +104,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
   (price * amount) - discount
   ```
 ### Modules
-- [ ] **Import**
+- [x] **Import**
   ```js
   import Math from "std/math"
   ```
