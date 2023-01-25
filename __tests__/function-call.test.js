@@ -109,4 +109,41 @@ describe("Function Call", () => {
             ],
         });
     });
+    it("should support function calls as parameters", () => {
+        const parser = new Parser();
+        const ast = parser.parse(`add(1, add(2, 3))`);
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionCall",
+                    value: {
+                        name: "add",
+                        params: [
+                            {
+                                type: "NumberLiteral",
+                                value: 1,
+                            },
+                            {
+                                type: "FunctionCall",
+                                value: {
+                                    name: "add",
+                                    params: [
+                                        {
+                                            type: "NumberLiteral",
+                                            value: 2,
+                                        },
+                                        {
+                                            type: "NumberLiteral",
+                                            value: 3,
+                                        },
+                                    ],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+    });
 });
