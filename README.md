@@ -1,5 +1,6 @@
 # Parser
 Attempt to write a parser for a programming language that looks like JavaScript.  
+All code is valid JavaScript. But only a small subset of it is supported.
 
 ## Features
 ### Comment
@@ -101,4 +102,13 @@ Attempt to write a parser for a programming language that looks like JavaScript.
 - [ ] **Complex**
   ```js
   (price * amount) - discount
+  ```
+### Modules
+- [ ] **Import**
+  ```js
+  import Math from "std/math"
+  ```
+- [ ] **Export**
+  ```js
+  export function main() {}
   ```
