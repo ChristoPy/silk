@@ -27,7 +27,7 @@ Attempt to write a parser for a programming language that looks like JavaScript.
     ```js
     let age = 32
     ```
-- [] **Map**
+- [ ] **Map**
     ```js
     let user = {name: "Kyle", age: 32}
     ```
@@ -38,6 +38,10 @@ Attempt to write a parser for a programming language that looks like JavaScript.
 - [x] **References**
     ```js
     let basket = fruits
+    ```
+- [x] **Dynamic result**
+    ```js
+    let name = getName(user)
     ```
 ### Branching
 - [ ] **If**
@@ -52,7 +56,7 @@ Attempt to write a parser for a programming language that looks like JavaScript.
   ```js
   else {}
   ```
-- [ ] **Return**
+- [ ] **Return (inside a function)**
   ```js
   return a + b
   ```
@@ -79,6 +83,10 @@ Attempt to write a parser for a programming language that looks like JavaScript.
 - [x] **Call with one or many references**
   ```js
   pluralize(thing)
+  ```
+- [x] **Call with dynamic values**
+  ```js
+  pluralize(getThings())
   ```
 
 ### Math
