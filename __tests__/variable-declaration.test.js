@@ -124,7 +124,6 @@ describe("Literals", () => {
                             type: "ObjectLiteral",
                             value: [
                                 {
-                                    type: "ObjectProperty",
                                     key: "b",
                                     value: {
                                         type: "NumberLiteral",
@@ -132,7 +131,6 @@ describe("Literals", () => {
                                     },
                                 },
                                 {
-                                    type: "ObjectProperty",
                                     key: "c",
                                     value: {
                                         type: "BooleanLiteral",
@@ -140,7 +138,6 @@ describe("Literals", () => {
                                     },
                                 },
                                 {
-                                    type: "ObjectProperty",
                                     key: "d",
                                     value: {
                                         type: "StringLiteral",
@@ -148,7 +145,6 @@ describe("Literals", () => {
                                     },
                                 },
                                 {
-                                    type: "ObjectProperty",
                                     key: "e",
                                     value: {
                                         type: "ArrayLiteral",
@@ -169,13 +165,11 @@ describe("Literals", () => {
                                     },
                                 },
                                 {
-                                    type: "ObjectProperty",
                                     key: "f",
                                     value: {
                                         type: "ObjectLiteral",
                                         value: [
                                             {
-                                                type: "ObjectProperty",
                                                 key: "g",
                                                 value: {
                                                     type: "NumberLiteral",
@@ -183,7 +177,7 @@ describe("Literals", () => {
                                                 },
                                             },
                                             {
-                                                type: "ObjectProperty",
+
                                                 key: "h",
                                                 value: {
                                                     type: "NumberLiteral",

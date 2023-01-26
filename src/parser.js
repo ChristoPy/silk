@@ -370,7 +370,6 @@ export default class Parser {
         this._eat('COLON');
 
         return {
-            type: 'ObjectProperty',
             key: key.value,
             value: this.ExpressionValue()
         };
