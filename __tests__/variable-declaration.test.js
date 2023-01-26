@@ -21,7 +21,6 @@ describe("Literals", () => {
             ],
         });
     });
-
     it("should parse a literal string", () => {
         const parser = new Parser();
         const ast = parser.parse('let a = "Hello, World!"');
@@ -41,7 +40,6 @@ describe("Literals", () => {
             ],
         });
     });
-
     it("should parse a literal boolean (true)", () => {
         const parser = new Parser();
         const ast = parser.parse("let a = true");
@@ -74,6 +72,38 @@ describe("Literals", () => {
                         value: {
                             type: "BooleanLiteral",
                             value: false,
+                        },
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse a literal array", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let a = [1, 2, 3]");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "VariableDeclaration",
+                    value: {
+                        name: "a",
+                        value: {
+                            type: "ArrayLiteral",
+                            value: [
+                                {
+                                    type: "NumberLiteral",
+                                    value: 1,
+                                },
+                                {
+                                    type: "NumberLiteral",
+                                    value: 2,
+                                },
+                                {
+                                    type: "NumberLiteral",
+                                    value: 3,
+                                },
+                            ],
                         },
                     },
                 },

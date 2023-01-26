@@ -217,6 +217,7 @@ export default class Parser {
             STRING: this.StringLiteral,
             BOOLEAN: this.BooleanLiteral,
             IDENTIFIER: this.IdentifierOrFunctionCall,
+            LBRACKET: this.ArrayLiteral,
         };
 
         if (!possibilities[token.type]) {
@@ -224,6 +225,41 @@ export default class Parser {
         }
 
         return possibilities[token.type].call(this);
+    }
+
+    /**
+     * ArrayLiteral
+     * : LBRACKET RBRACKET
+     * | LBRACKET ArrayElements RBRACKET
+     * ;
+     * ArrayElements
+     * : ExpressionValue
+     * | ExpressionValue COMMA ArrayElements
+     * ;
+     */
+    ArrayLiteral() {
+        this._eat('LBRACKET');
+
+        const elements = [];
+
+        let endWithComma = false;
+        while (this._lookahead.type !== 'RBRACKET') {
+            elements.push(this.ExpressionValue());
+            endWithComma = false;
+
+            if (this._lookahead.type === 'COMMA') {
+                this._eat('COMMA');
+                endWithComma = true;
+            }
+        }
+
+        if (endWithComma) throw new Error("Unexpected token RBRACKET, expected EXPRESSION_VALUE");
+        this._eat('RBRACKET');
+
+        return {
+            type: 'ArrayLiteral',
+            value: elements
+        };
     }
 
     /**

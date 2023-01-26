@@ -16,6 +16,8 @@ const TOKENS_SPEC = [
     [/^\)/, 'RPAREN'],
     [/^\{/, 'LBRACE'],
     [/^\}/, 'RBRACE'],
+    [/^\[/, 'LBRACKET'],
+    [/^\]/, 'RBRACKET'],
     [/^,/, 'COMMA'],
 ]
 
