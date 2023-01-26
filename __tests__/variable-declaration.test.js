@@ -110,6 +110,96 @@ describe("Literals", () => {
             ],
         });
     });
+    it("should parse a literal object", () => {
+        const parser = new Parser();
+        const ast = parser.parse('let a = {b: 1, c: true, d: "Hello, World!", e: [1, 2, 3], f: {g: 1, h: 2}}');
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "VariableDeclaration",
+                    value: {
+                        name: "a",
+                        value: {
+                            type: "ObjectLiteral",
+                            value: [
+                                {
+                                    type: "ObjectProperty",
+                                    key: "b",
+                                    value: {
+                                        type: "NumberLiteral",
+                                        value: 1,
+                                    },
+                                },
+                                {
+                                    type: "ObjectProperty",
+                                    key: "c",
+                                    value: {
+                                        type: "BooleanLiteral",
+                                        value: true,
+                                    },
+                                },
+                                {
+                                    type: "ObjectProperty",
+                                    key: "d",
+                                    value: {
+                                        type: "StringLiteral",
+                                        value: "Hello, World!",
+                                    },
+                                },
+                                {
+                                    type: "ObjectProperty",
+                                    key: "e",
+                                    value: {
+                                        type: "ArrayLiteral",
+                                        value: [
+                                            {
+                                                type: "NumberLiteral",
+                                                value: 1,
+                                            },
+                                            {
+                                                type: "NumberLiteral",
+                                                value: 2,
+                                            },
+                                            {
+                                                type: "NumberLiteral",
+                                                value: 3,
+                                            },
+                                        ],
+                                    },
+                                },
+                                {
+                                    type: "ObjectProperty",
+                                    key: "f",
+                                    value: {
+                                        type: "ObjectLiteral",
+                                        value: [
+                                            {
+                                                type: "ObjectProperty",
+                                                key: "g",
+                                                value: {
+                                                    type: "NumberLiteral",
+                                                    value: 1,
+                                                },
+                                            },
+                                            {
+                                                type: "ObjectProperty",
+                                                key: "h",
+                                                value: {
+                                                    type: "NumberLiteral",
+                                                    value: 2,
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            ],
+        });
+    });
 });
 
 describe("Identifers", () => {

@@ -28,7 +28,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
     ```js
     let age = 32
     ```
-- [ ] **Map**
+- [x] **Map**
     ```js
     let user = {name: "Kyle", age: 32}
     ```

@@ -218,6 +218,7 @@ export default class Parser {
             BOOLEAN: this.BooleanLiteral,
             IDENTIFIER: this.IdentifierOrFunctionCall,
             LBRACKET: this.ArrayLiteral,
+            LBRACE: this.ObjectLiteral,
         };
 
         if (!possibilities[token.type]) {
@@ -334,6 +335,44 @@ export default class Parser {
         return {
             type: 'ArrayLiteral',
             value: elements
+        };
+    }
+
+    /**
+     * ObjectLiteral
+     * : LBRACE RBRACE
+     * | LBRACE ObjectProperty RBRACE
+     * | LBRACE ObjectProperty COMMA ObjectLiteral
+     * ;
+     */
+    ObjectLiteral() {
+        this._eat('LBRACE');
+
+        const properties = this.List(() => {
+            return this.ObjectProperty();
+        }, "RBRACE", "Unexpected token RBRACE, expected OBJECT_PROPERTY");
+
+        this._eat('RBRACE');
+
+        return {
+            type: 'ObjectLiteral',
+            value: properties
+        };
+    }
+
+    /**
+     * ObjectProperty
+     * : IDENTIFIER COLON ExpressionValue
+     * ;
+     */
+    ObjectProperty() {
+        const key = this._eat('IDENTIFIER');
+        this._eat('COLON');
+
+        return {
+            type: 'ObjectProperty',
+            key: key.value,
+            value: this.ExpressionValue()
         };
     }
 
