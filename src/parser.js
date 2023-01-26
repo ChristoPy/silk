@@ -156,7 +156,7 @@ export default class Parser {
      *  ;
      */
     IdentifierList() {
-        return this.List(this.Identifier, "Unexpected token RPAREN, expected IDENTIFIER");
+        return this.List(this.Identifier, "RPAREN", "Unexpected token RPAREN, expected IDENTIFIER");
     }
 
     /**
@@ -173,7 +173,7 @@ export default class Parser {
                 return this.IdentifierOrFunctionCall();
             }
             return this.Literal();
-        }, "Unexpected token RPAREN, expected IDENTIFIER or LITERAL");
+        }, "RPAREN", "Unexpected token RPAREN, expected IDENTIFIER or LITERAL");
     }
 
     /**
@@ -184,11 +184,11 @@ export default class Parser {
      * | Identifier COMMA List
      * ;
      */
-    List(fn, errorMessage) {
+    List(fn, limiter, errorMessage) {
         const params = [];
 
         let endWithComma = false;
-        while (this._lookahead.type !== 'RPAREN') {
+        while (this._lookahead.type !== limiter) {
             params.push(fn.call(this));
             endWithComma = false;
 
@@ -225,41 +225,6 @@ export default class Parser {
         }
 
         return possibilities[token.type].call(this);
-    }
-
-    /**
-     * ArrayLiteral
-     * : LBRACKET RBRACKET
-     * | LBRACKET ArrayElements RBRACKET
-     * ;
-     * ArrayElements
-     * : ExpressionValue
-     * | ExpressionValue COMMA ArrayElements
-     * ;
-     */
-    ArrayLiteral() {
-        this._eat('LBRACKET');
-
-        const elements = [];
-
-        let endWithComma = false;
-        while (this._lookahead.type !== 'RBRACKET') {
-            elements.push(this.ExpressionValue());
-            endWithComma = false;
-
-            if (this._lookahead.type === 'COMMA') {
-                this._eat('COMMA');
-                endWithComma = true;
-            }
-        }
-
-        if (endWithComma) throw new Error("Unexpected token RBRACKET, expected EXPRESSION_VALUE");
-        this._eat('RBRACKET');
-
-        return {
-            type: 'ArrayLiteral',
-            value: elements
-        };
     }
 
     /**
@@ -350,6 +315,26 @@ export default class Parser {
                 value: token.value
             };
         }
+    }
+
+    /**
+     * ArrayLiteral
+     *  : LBRACKET RBRACKET
+     * | LBRACKET ExpressionValue RBRACKET
+     * | LBRACKET ExpressionValue COMMA ArrayLiteral
+     * ;
+     */
+    ArrayLiteral() {
+        this._eat('LBRACKET');
+        const elements = this.List(() => {
+            return this.ExpressionValue();
+        }, "RBRACKET", "Unexpected token RBRACKET, expected EXPRESSION_VALUE");
+        this._eat('RBRACKET');
+
+        return {
+            type: 'ArrayLiteral',
+            value: elements
+        };
     }
 
     /**
