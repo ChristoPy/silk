@@ -32,7 +32,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
     ```js
     let user = {name: "Kyle", age: 32}
     ```
-- [ ] **List**
+- [x] **List**
     ```js
     let fruits = ["banana", "apple", "avocado"]
     ```
