@@ -47,10 +47,7 @@ describe("Function Declaration with Declarations", () => {
                             {
                                 type: "VariableDeclaration",
                                 value: {
-                                    name: {
-                                        type: "Identifier",
-                                        value: "x",
-                                    },
+                                    name: "x",
                                     value: {
                                         type: "NumberLiteral",
                                         value: 1,
@@ -66,10 +63,7 @@ describe("Function Declaration with Declarations", () => {
                                         {
                                             type: "VariableDeclaration",
                                             value: {
-                                                name: {
-                                                    type: "Identifier",
-                                                    value: "y",
-                                                },
+                                                name: "y",
                                                 value: {
                                                     type: "NumberLiteral",
                                                     value: 2,

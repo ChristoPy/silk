@@ -45,7 +45,6 @@ export default class Parser {
      */
     Statement() {
         const token = this._lookahead;
-
         if (token === null) return {};
 
         const possibilities = {
@@ -119,10 +118,7 @@ export default class Parser {
         return {
             type: 'VariableDeclaration',
             value: {
-                name: {
-                    type: 'Identifier',
-                    value: id.value
-                },
+                name: id.value,
                 value: this.ExpressionValue()
             }
         };

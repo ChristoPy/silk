@@ -11,10 +11,7 @@ describe("Literals", () => {
                 {
                     type: "VariableDeclaration",
                     value: {
-                        name: {
-                            type: "Identifier",
-                            value: "a",
-                        },
+                        name: "a",
                         value: {
                             type: "NumberLiteral",
                             value: 1,
@@ -34,10 +31,7 @@ describe("Literals", () => {
                 {
                     type: "VariableDeclaration",
                     value: {
-                        name: {
-                            type: "Identifier",
-                            value: "a",
-                        },
+                        name: "a",
                         value: {
                             type: "StringLiteral",
                             value: "Hello, World!",
@@ -57,10 +51,7 @@ describe("Literals", () => {
                 {
                     type: "VariableDeclaration",
                     value: {
-                        name: {
-                            type: "Identifier",
-                            value: "a",
-                        },
+                        name: "a",
                         value: {
                             type: "BooleanLiteral",
                             value: true,
@@ -79,10 +70,7 @@ describe("Literals", () => {
                 {
                     type: "VariableDeclaration",
                     value: {
-                        name: {
-                            type: "Identifier",
-                            value: "a",
-                        },
+                        name: "a",
                         value: {
                             type: "BooleanLiteral",
                             value: false,
@@ -104,10 +92,7 @@ describe("Identifers", () => {
                 {
                     type: "VariableDeclaration",
                     value: {
-                        name: {
-                            type: "Identifier",
-                            value: "a",
-                        },
+                        name: "a",
                         value: {
                             type: "Identifier",
                             value: "b",
@@ -129,10 +114,7 @@ describe("Function call", () => {
                 {
                     type: "VariableDeclaration",
                     value: {
-                        name: {
-                            type: "Identifier",
-                            value: "a",
-                        },
+                        name: "a",
                         value: {
                             type: "FunctionCall",
                             value: {
