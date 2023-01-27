@@ -57,7 +57,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
   ```js
   else {}
   ```
-- [ ] **Return (inside a function)**
+- [x] **Return (inside a function)**
   ```js
   return a + b
   ```
