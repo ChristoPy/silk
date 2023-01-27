@@ -1,6 +1,21 @@
 import { describe, it, expect } from "vitest";
 import Parser from "../src/parser";
 
+describe("Syntax errors", () => {
+    it("should throw an error if variable declaration is missing an identifier", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("let")).toThrow();
+    });
+    it("should throw an error if variable declaration is missing an assignment operator", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("let a")).toThrow();
+    });
+    it("should throw an error if variable declaration is missing an assignment value", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("let a =")).toThrow();
+    });
+});
+
 describe("Literals", () => {
     it("should parse a literal number", () => {
         const parser = new Parser();

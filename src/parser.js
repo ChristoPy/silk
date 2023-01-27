@@ -1,5 +1,5 @@
 import Tokenizer from "./tokenizer.js";
-
+import { throwError } from './utils.js';
 export default class Parser {
     constructor() {
         this._code = '';
@@ -55,7 +55,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throw new Error(`Unexpected token ${token.type}, expected ${Object.keys(possibilities).join(', ')}`);
+            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'statement');
         }
 
         return possibilities[token.type].call(this);
@@ -156,7 +156,7 @@ export default class Parser {
      *  ;
      */
     IdentifierList() {
-        return this.List(this.Identifier, "RPAREN", "Unexpected token RPAREN, expected IDENTIFIER");
+        return this.List(this.Identifier, "RPAREN");
     }
 
     /**
@@ -173,7 +173,7 @@ export default class Parser {
                 return this.IdentifierOrFunctionCall();
             }
             return this.Literal();
-        }, "RPAREN", "Unexpected token RPAREN, expected IDENTIFIER or LITERAL");
+        }, "RPAREN");
     }
 
     /**
@@ -184,7 +184,7 @@ export default class Parser {
      * | Identifier COMMA List
      * ;
      */
-    List(fn, limiter, errorMessage) {
+    List(fn, limiter) {
         const params = [];
 
         let endWithComma = false;
@@ -198,7 +198,7 @@ export default class Parser {
             }
         }
 
-        if (endWithComma) throw new Error(errorMessage);
+        if (endWithComma) throwError('Syntax', 'unexpectedToken', ',', this._tokenizer._line, 'danglingComma');
         return params;
     }
 
@@ -210,7 +210,9 @@ export default class Parser {
      */
     ExpressionValue() {
         const token = this._lookahead;
-        if (token === null) return {};
+        if (token === null) {
+            throwError('Syntax', 'unexpectedToken', '', this._tokenizer._line, 'expressionValue');
+        };
 
         const possibilities = {
             NUMBER: this.NumberLiteral,
@@ -222,7 +224,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throw new Error(`Unexpected token ${token.type}, expected ${Object.keys(possibilities).join(', ')}`);
+            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'expressionValue');
         }
 
         return possibilities[token.type].call(this);
@@ -260,7 +262,9 @@ export default class Parser {
      */
     ScopedStatement() {
         const token = this._lookahead;
-        if (token === null) return {};
+        if (token === null) {
+            throwError('Syntax', 'unexpectedToken', '', this._tokenizer._line, 'scopedStatement');
+        };
 
         const possibilities = {
             LET: this.VariableDeclaration,
@@ -270,7 +274,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throw new Error(`Unexpected token ${token.type}, expected ${Object.keys(possibilities).join(', ')}`);
+            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'scopedStatement');
         }
 
         return possibilities[token.type].call(this);
@@ -298,24 +302,24 @@ export default class Parser {
     IdentifierOrFunctionCall() {
         const token = this._eat('IDENTIFIER');
 
-        try {
-            this._eat('LPAREN');
-            const params = this.GenericList();
-            this._eat('RPAREN');
-
-            return {
-                type: 'FunctionCall',
-                value: {
-                    name: token.value,
-                    params
-                }
-            };
-        } catch (e) {
+        if (this._lookahead.type !== 'LPAREN') {
             return {
                 type: 'Identifier',
                 value: token.value
             };
         }
+
+        this._eat('LPAREN');
+        const params = this.GenericList();
+        this._eat('RPAREN');
+
+        return {
+            type: 'FunctionCall',
+            value: {
+                name: token.value,
+                params
+            }
+        };
     }
 
     /**
@@ -329,7 +333,7 @@ export default class Parser {
         this._eat('LBRACKET');
         const elements = this.List(() => {
             return this.ExpressionValue();
-        }, "RBRACKET", "Unexpected token RBRACKET, expected EXPRESSION_VALUE");
+        }, "RBRACKET");
         this._eat('RBRACKET');
 
         return {
@@ -350,7 +354,7 @@ export default class Parser {
 
         const properties = this.List(() => {
             return this.ObjectProperty();
-        }, "RBRACE", "Unexpected token RBRACE, expected OBJECT_PROPERTY");
+        }, "RBRACE");
 
         this._eat('RBRACE');
 
@@ -392,7 +396,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throw new Error(`Unexpected token ${token.type}, expected NUMBER or STRING`);
+            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'literal');
         }
 
         return possibilities[token.type].call(this);
@@ -458,11 +462,11 @@ export default class Parser {
         const token = this._lookahead;
 
         if (token === null) {
-            throw new Error(`Unexpected end of input, expected ${tokenType}`);
+            throwError('Syntax', 'unexpectedEndOfInput', '', this._tokenizer._line);
         }
 
         if (token.type !== tokenType) {
-            throw new Error(`Unexpected token ${token.type}, expected ${tokenType}`);
+            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line);
         }
 
         // Advance the parser's cursor by one token

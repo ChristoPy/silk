@@ -1,3 +1,5 @@
+import { throwError } from './utils.js';
+
 const TOKENS_SPEC = [
     [/^\s+/, 'SKIP'],
     [/^\/\/.*/, 'SKIP'],
@@ -28,6 +30,7 @@ export default class Tokenizer {
     init(code) {
         this._code = code;
         this._cursor = 0;
+        this._line = 1;
     }
 
     // EOF is when the cursor can't go any further
@@ -55,6 +58,9 @@ export default class Tokenizer {
             }
 
             if (type === 'SKIP') {
+                if (match === '\n') {
+                    this._line += 1;
+                }
                 return this.getNextToken();
             }
 
@@ -64,7 +70,7 @@ export default class Tokenizer {
             };
         }
 
-        throw new SyntaxError(`Unexpected token "${string[0]}"`);
+        throwError('Syntax', 'unexpectedToken', string[0], this._line)
     }
 
     _matchToken(regex, value) {
