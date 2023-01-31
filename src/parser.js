@@ -169,7 +169,7 @@ export default class Parser {
      */
     GenericList() {
         return this.List(() => {
-            if (this._lookahead.type === 'IDENTIFIER') {
+            if (this._lookahead && this._lookahead.type === 'IDENTIFIER') {
                 return this.IdentifierOrFunctionCall();
             }
             return this.Literal();
@@ -188,11 +188,11 @@ export default class Parser {
         const params = [];
 
         let endWithComma = false;
-        while (this._lookahead.type !== limiter) {
+        while (this._lookahead && this._lookahead.type !== limiter) {
             params.push(fn.call(this));
             endWithComma = false;
 
-            if (this._lookahead.type === 'COMMA') {
+            if (this._lookahead && this._lookahead.type === 'COMMA') {
                 this._eat('COMMA');
                 endWithComma = true;
             }
@@ -240,7 +240,7 @@ export default class Parser {
         this._eat('LBRACE');
 
         const statements = [];
-        while (this._lookahead.type !== 'RBRACE') {
+        while (this._lookahead && this._lookahead.type !== 'RBRACE') {
             statements.push(this.ScopedStatement());
         }
 
@@ -302,7 +302,7 @@ export default class Parser {
     IdentifierOrFunctionCall() {
         const token = this._eat('IDENTIFIER');
 
-        if (this._lookahead.type !== 'LPAREN') {
+        if (this._lookahead && this._lookahead.type !== 'LPAREN') {
             return {
                 type: 'Identifier',
                 value: token.value
