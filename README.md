@@ -49,7 +49,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
   ```js
   if (name) {}
   ```
-- [ ] **Else if**
+- [x] **Else if**
   ```js
   else if (name) {}
   ```
