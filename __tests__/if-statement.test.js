@@ -1,11 +1,23 @@
 import { describe, it, expect } from "vitest";
 import Parser from "../src/parser";
 
-describe("Syntax", () => {
+describe("If Syntax", () => {
     it("should break if outside of a function", () => {
         const code = `
             if (something) {
                 return "Hello, world!"
+            }
+        `;
+
+        const parser = new Parser();
+        expect(() => parser.parse(code)).toThrow();
+    });
+    it("should break if missing open parenthesis", () => {
+        const code = `
+            function greet() {
+                if something) {
+                    return "Hello, world!"
+                }
             }
         `;
 
@@ -20,18 +32,6 @@ describe("Syntax", () => {
                 }
             }
         `;
-        const parser = new Parser();
-        expect(() => parser.parse(code)).toThrow();
-    });
-    it("should break if missing open parenthesis", () => {
-        const code = `
-            function greet() {
-                if something) {
-                    return "Hello, world!"
-                }
-            }
-        `;
-
         const parser = new Parser();
         expect(() => parser.parse(code)).toThrow();
     });
@@ -69,5 +69,129 @@ describe("Syntax", () => {
 
         const parser = new Parser();
         expect(() => parser.parse(code)).toThrow();
+    });
+});
+
+describe("Else If Syntax", () => {
+    it("should break if missing if condition aftwerwards", () => {
+        const code = `
+            function greet() {
+                if (something) {
+                    return "Hello, world!"
+                } else
+            }
+        `;
+
+        const parser = new Parser();
+        expect(() => parser.parse(code)).toThrow();
+    });
+});
+
+describe("AST", () => {
+    it("should parse if statement", () => {
+        const code = `
+            function greet() {
+                if (something) {
+                    return "Hello, world!"
+                }
+            }
+        `;
+
+        const parser = new Parser();
+        const ast = parser.parse(code);
+
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "greet",
+                        params: [],
+                        body: [
+                            {
+                                type: "IfStatement",
+                                condition: {
+                                    type: "Identifier",
+                                    value: "something",
+                                },
+                                body: [
+                                    {
+                                        type: "ReturnStatement",
+                                        value: {
+                                            type: "StringLiteral",
+                                            value: "Hello, world!",
+                                        },
+                                    },
+                                ],
+                                fallback: null,
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse if else statement", () => {
+        const code = `
+            function greet() {
+                if (something) {
+                    return "Hello, world!"
+                } else if (something) {
+                    return "Hello, visitor!"
+                }
+            }
+        `;
+
+        const parser = new Parser();
+        const ast = parser.parse(code);
+
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "FunctionDeclaration",
+                    value: {
+                        name: "greet",
+                        params: [],
+                        body: [
+                            {
+                                type: "IfStatement",
+                                condition: {
+                                    type: "Identifier",
+                                    value: "something",
+                                },
+                                body: [
+                                    {
+                                        type: "ReturnStatement",
+                                        value: {
+                                            type: "StringLiteral",
+                                            value: "Hello, world!",
+                                        },
+                                    },
+                                ],
+                                fallback: {
+                                    type: "IfStatement",
+                                    condition: {
+                                        type: "Identifier",
+                                        value: "something",
+                                    },
+                                    body: [
+                                        {
+                                            type: "ReturnStatement",
+                                            value: {
+                                                type: "StringLiteral",
+                                                value: "Hello, visitor!",
+                                            },
+                                        },
+                                    ],
+                                    fallback: null,
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
     });
 });

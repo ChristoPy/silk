@@ -13,6 +13,7 @@ const TOKENS_SPEC = [
     [/^import/, 'IMPORT'],
     [/^from/, 'FROM'],
     [/^if/, 'IF'],
+    [/^else/, 'ELSE'],
     [/^[a-zA-Z_][a-zA-Z0-9_]*/, 'IDENTIFIER'],
     [/^=/, 'EQUALS'],
     [/^\(/, 'LPAREN'],

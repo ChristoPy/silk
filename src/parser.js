@@ -283,7 +283,7 @@ export default class Parser {
 
     /**
      * IfStatement
-     *  : IF LPAREN ConditionValue RPAREN Block
+     *  : IF LPAREN ConditionValue RPAREN Block ElseIfStatement
      * ;
      */
     IfStatement() {
@@ -294,14 +294,29 @@ export default class Parser {
         this._eat('RPAREN');
 
         const body = this.Block();
+        const fallback = this.ElseIfStatement();
 
         return {
             type: 'IfStatement',
-            value: {
-                condition: condition,
-                body: body.body
-            }
+            condition,
+            body: body.body,
+            fallback
         };
+    }
+
+    /**
+     * ElseIfStatement
+     * : ELSE IfStatement
+     * ;
+     */
+    ElseIfStatement() {
+        if (this._lookahead && this._lookahead.type !== 'ELSE') {
+            return null;
+        }
+
+        this._eat('ELSE');
+
+        return this.IfStatement();
     }
 
     /**
