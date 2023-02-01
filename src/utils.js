@@ -25,6 +25,5 @@ const formatError = (type, id, wrongBit, line, context) => {
 export const throwError = (type, id, wrongBit, line, context) => {
     const message = formatError(type, id, wrongBit, line, context);
 
-    console.warn(message);
-    process.exit(1);
+    throw new Error(message);
 };

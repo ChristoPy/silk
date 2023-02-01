@@ -2,6 +2,10 @@ import { describe, it, expect } from "vitest";
 import Parser from "../src/parser";
 
 describe("Function Call", () => {
+    it("should break if no closing parenthesis", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("add(1")).toThrow();
+    });
     it("should break if trailing comma", () => {
         const parser = new Parser();
         expect(() => parser.parse("add(1,)")).toThrow();

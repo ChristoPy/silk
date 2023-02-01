@@ -302,7 +302,7 @@ export default class Parser {
     IdentifierOrFunctionCall() {
         const token = this._eat('IDENTIFIER');
 
-        if (this._lookahead && this._lookahead.type !== 'LPAREN') {
+        if (!this._lookahead || this._lookahead && this._lookahead.type !== 'LPAREN') {
             return {
                 type: 'Identifier',
                 value: token.value

@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "devDependencies": {
-    "vitest": "^0.26.2"
+  "dependencies": {
+    "vitest": "^0.28.3"
   }
 }

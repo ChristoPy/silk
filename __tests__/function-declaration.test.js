@@ -1,6 +1,29 @@
 import { describe, it, expect } from "vitest";
 import Parser from "../src/parser";
 
+describe("Syntax", () => {
+    it("should break if missing function name", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("function")).toThrow();
+    });
+    it("should break if missing function opening parenthesis", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("function add")).toThrow();
+    });
+    it("should break if missing function closing parenthesis", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("function add(")).toThrow();
+    });
+    it("should break if missing function opening curly brace", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("function add()")).toThrow();
+    });
+    it("should break if missing function closing curly brace", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("function add() {")).toThrow();
+    });
+})
+
 describe("Empty Function Declaration", () => {
     it("should break if trailing comma", () => {
         const parser = new Parser();
