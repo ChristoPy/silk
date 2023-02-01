@@ -45,7 +45,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
     let name = getName(user)
     ```
 ### Branching
-- [ ] **If**
+- [x] **If (inside a function)**
   ```js
   if (name) {}
   ```
@@ -53,11 +53,7 @@ All code is valid JavaScript. But only a small subset of it is supported.
   ```js
   else if (name) {}
   ```
-- [ ] **Else**
-  ```js
-  else {}
-  ```
-- [x] **Return (inside a function)**
+- [x] **Return (inside a function or if)**
   ```js
   return a + b
   ```
