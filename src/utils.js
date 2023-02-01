@@ -3,11 +3,12 @@ const ERRORS = {
     unexpectedEndOfInput: 'The program ended unexpectedly.',
 };
 const REASONS = {
-    literal: 'Expected: String, Number, Boolean, Array, Object, Function',
-    statement: 'Expected: Import, Let, Function',
-    expressionValue: 'Expected: String, Number, Boolean, Array, Object, Function',
-    scopedStatement: 'Expected: Let, Function, Return',
+    literal: 'Expected: String, Number, Boolean, Array, Object or Function',
+    statement: 'Expected: Import, Let or Function',
+    expressionValue: 'Expected: Name, String, Number, Boolean, Array, Object or Function',
+    scopedStatement: 'Expected:  Name, Let, Function or Return',
     danglingComma: 'Cannot have a dangling comma.',
+    conditionValue: 'Expected:  Name or Function',
 }
 
 const formatError = (type, id, wrongBit, line, context) => {

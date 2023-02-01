@@ -267,6 +267,7 @@ export default class Parser {
         };
 
         const possibilities = {
+            IF: this.IfStatement,
             LET: this.VariableDeclaration,
             FUNCTION: this.FunctionDeclaration,
             IDENTIFIER: this.IdentifierOrFunctionCall,
@@ -275,6 +276,52 @@ export default class Parser {
 
         if (!possibilities[token.type]) {
             throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'scopedStatement');
+        }
+
+        return possibilities[token.type].call(this);
+    }
+
+    /**
+     * IfStatement
+     *  : IF LPAREN ConditionValue RPAREN Block
+     * ;
+     */
+    IfStatement() {
+        this._eat('IF');
+
+        this._eat('LPAREN');
+        const condition = this.ConditionValue();
+        this._eat('RPAREN');
+
+        const body = this.Block();
+
+        return {
+            type: 'IfStatement',
+            value: {
+                condition: condition,
+                body: body.body
+            }
+        };
+    }
+
+    /**
+     * ConditionValue
+     * : Identifier
+     * | FunctionCall
+     */
+    ConditionValue() {
+        const token = this._lookahead;
+
+        if (token === null) {
+            throwError('Syntax', 'unexpectedEndOfInput', '', this._tokenizer._line);
+        };
+
+        const possibilities = {
+            IDENTIFIER: this.IdentifierOrFunctionCall,
+        };
+
+        if (!possibilities[token.type]) {
+            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'conditionValue');
         }
 
         return possibilities[token.type].call(this);
