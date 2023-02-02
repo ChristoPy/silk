@@ -2,6 +2,7 @@ const ERRORS = {
     unexpectedToken: 'I was not expecting this.',
     unexpectedEndOfInput: 'The program ended unexpectedly.',
     identifierAlreadyDeclared: 'This identifier has already been declared.',
+    identifierNotDeclared: 'This identifier has not been declared.',
 };
 const REASONS = {
     literal: 'Expected: String, Number, Boolean, Array, Object or Function',
@@ -13,6 +14,8 @@ const REASONS = {
     import: 'You can\'t import with this name. It has already been declared.',
     let: 'You can\'t declare a variable with this name. It has already been declared.',
     letValueDoesNotExist: 'You can\'t use this variable as value. It does not exist.',
+    functionNameDoesNotExist: 'You can\'t call this function. It does not exist.',
+    functionParamDoesNotExist: 'You can\'t call this function with this variable as parameter. It does not exist.',
 }
 
 const formatError = (type, id, wrongBit, line, context) => {

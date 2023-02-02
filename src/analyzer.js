@@ -1,5 +1,7 @@
 import { throwError } from './utils.js';
 
+const identifiers = {};
+
 function addIdentifier(identifiers, node, scope, context) {
     const { value, line } = node;
 
@@ -14,24 +16,37 @@ function throwIfNotFound(identifiers, name, line, context) {
     }
 }
 
-export default function Analyzer(ast) {
-    const identifiers = {}
+function traverse(scope, node) {
+    if (node.type === "ImportStatement") {
+        addIdentifier(identifiers, node, "external", "import");
+    }
+    if (node.type === "VariableDeclaration") {
+        const value = node.value.value;
+        if (value.type === "Identifier") {
+            throwIfNotFound(identifiers, value.value, node.line, "letValueDoesNotExist");
+        }
+        addIdentifier(identifiers, node, scope, "let");
+    }
+    if (node.type === "FunctionCall") {
+        throwIfNotFound(identifiers, node.value.name, node.line, "functionNameDoesNotExist");
 
-    for (const node of ast.body) {
-        if (node.type === "ImportStatement") {
-            addIdentifier(identifiers, node, "external", "import");
-        }
-        if (node.type === "VariableDeclaration") {
-            const value = node.value.value;
-            if (value.type === "Identifier") {
-                throwIfNotFound(identifiers, value.value, node.line, "letValueDoesNotExist");
+        const { params } = node.value
+        params.forEach(param => {
+            if (param.type === "Identifier") {
+                throwIfNotFound(identifiers, param.value, node.line, "functionParamDoesNotExist");
             }
-            addIdentifier(identifiers, node, "program", "let");
-        }
-        if (node.type === "FunctionDeclaration") {
-            addIdentifier(identifiers, node, "program", "function");
-        }
+        });
+    }
+    if (node.type === "FunctionDeclaration") {
+        addIdentifier(identifiers, node, scope, "function");
     }
 
-    return { identifiers }
+    // assuming the first node is the root node
+    if (node.body) {
+        node.body.forEach(childNode => traverse(scope, childNode));
+    }
+}
+
+export default function Analyzer(ast) {
+    traverse("program", ast);
 };
