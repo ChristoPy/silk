@@ -75,6 +75,7 @@ export default class Parser {
 
         return {
             type: 'ImportStatement',
+            line: this._tokenizer._line,
             value: {
                 name: id.value,
                 path: path.value
@@ -97,6 +98,7 @@ export default class Parser {
 
         return {
             type: 'FunctionCall',
+            line: this._tokenizer._line,
             value: {
                 name: id.value,
                 params
@@ -117,6 +119,7 @@ export default class Parser {
 
         return {
             type: 'VariableDeclaration',
+            line: this._tokenizer._line,
             value: {
                 name: id.value,
                 value: this.ExpressionValue()
@@ -141,6 +144,7 @@ export default class Parser {
 
         return {
             type: 'FunctionDeclaration',
+            line: this._tokenizer._line,
             value: {
                 name: id.value,
                 params: params,
@@ -298,6 +302,7 @@ export default class Parser {
 
         return {
             type: 'IfStatement',
+            line: this._tokenizer._line,
             condition,
             body: body.body,
             fallback
@@ -351,6 +356,7 @@ export default class Parser {
         this._eat('RETURN');
         return {
             type: 'ReturnStatement',
+            line: this._tokenizer._line,
             value: this.ExpressionValue()
         };
     }
@@ -377,6 +383,7 @@ export default class Parser {
 
         return {
             type: 'FunctionCall',
+            line: this._tokenizer._line,
             value: {
                 name: token.value,
                 params
@@ -400,6 +407,7 @@ export default class Parser {
 
         return {
             type: 'ArrayLiteral',
+            line: this._tokenizer._line,
             value: elements
         };
     }
@@ -422,6 +430,7 @@ export default class Parser {
 
         return {
             type: 'ObjectLiteral',
+            line: this._tokenizer._line,
             value: properties
         };
     }
@@ -437,6 +446,7 @@ export default class Parser {
 
         return {
             key: key.value,
+            line: this._tokenizer._line,
             value: this.ExpressionValue()
         };
     }
@@ -473,6 +483,7 @@ export default class Parser {
         const token = this._eat('NUMBER');
         return {
             type: 'NumberLiteral',
+            line: this._tokenizer._line,
             value: Number(token.value)
         };
     }
@@ -486,6 +497,7 @@ export default class Parser {
         const token = this._eat('STRING');
         return {
             type: 'StringLiteral',
+            line: this._tokenizer._line,
             value: token.value.slice(1, -1)
         };
     }
@@ -500,6 +512,7 @@ export default class Parser {
         const token = this._eat('BOOLEAN');
         return {
             type: 'BooleanLiteral',
+            line: this._tokenizer._line,
             value: token.value === 'true' ? true : false
         };
     }
@@ -513,6 +526,7 @@ export default class Parser {
         const token = this._eat('IDENTIFIER');
         return {
             type: 'Identifier',
+            line: this._tokenizer._line,
             value: token.value
         };
     }

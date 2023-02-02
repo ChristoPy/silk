@@ -1,6 +1,7 @@
 const ERRORS = {
     unexpectedToken: 'I was not expecting this.',
     unexpectedEndOfInput: 'The program ended unexpectedly.',
+    identifierAlreadyDeclared: 'This identifier has already been declared.',
 };
 const REASONS = {
     literal: 'Expected: String, Number, Boolean, Array, Object or Function',
@@ -9,6 +10,10 @@ const REASONS = {
     scopedStatement: 'Expected:  Name, Let, Function or Return',
     danglingComma: 'Cannot have a dangling comma.',
     conditionValue: 'Expected:  Name or Function',
+    import: 'You can\'t import with this name. It has already been declared.',
+    let: 'You can\'t declare a variable with this name. It has already been declared.',
+    letNotDeclared: 'You can\'t use this variable. It has not been declared.',
+    letValueDoesNotExist: 'You can\'t use this variable as value. It does not exist.',
 }
 
 const formatError = (type, id, wrongBit, line, context) => {
