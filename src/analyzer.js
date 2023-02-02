@@ -26,7 +26,7 @@ export default function Analyzer(ast) {
             if (value.type === "Identifier") {
                 throwIfNotFound(identifiers, value.value, node.line, "letValueDoesNotExist");
             }
-            addIdentifier(identifiers, node, "program", "letNotDeclared");
+            addIdentifier(identifiers, node, "program", "let");
         }
         if (node.type === "FunctionDeclaration") {
             addIdentifier(identifiers, node, "program", "function");

@@ -7,12 +7,11 @@ const REASONS = {
     literal: 'Expected: String, Number, Boolean, Array, Object or Function',
     statement: 'Expected: Import, Let or Function',
     expressionValue: 'Expected: Name, String, Number, Boolean, Array, Object or Function',
-    scopedStatement: 'Expected:  Name, Let, Function or Return',
+    scopedStatement: 'Expected: Name, Let, Function or Return',
     danglingComma: 'Cannot have a dangling comma.',
-    conditionValue: 'Expected:  Name or Function',
+    conditionValue: 'Expected: Name or Function',
     import: 'You can\'t import with this name. It has already been declared.',
     let: 'You can\'t declare a variable with this name. It has already been declared.',
-    letNotDeclared: 'You can\'t use this variable. It has not been declared.',
     letValueDoesNotExist: 'You can\'t use this variable as value. It does not exist.',
 }
 
