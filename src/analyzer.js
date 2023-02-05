@@ -28,8 +28,7 @@ function traverse(scope, node) {
         addIdentifier(identifiers, node, scope, "let");
     }
     if (node.type === "FunctionCall") {
-        throwIfNotFound(identifiers, node.value.name, node.line, "functionNameDoesNotExist");
-
+        throwIfNotFound(identifiers, node.value, node.line, "functionNameDoesNotExist");
         const { params } = node.value
         params.forEach(param => {
             if (param.type === "Identifier") {
