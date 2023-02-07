@@ -104,12 +104,14 @@ describe("AST", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "greet",
                         params: [],
                         body: [
                             {
+                                line: 1,
                                 type: "IfStatement",
                                 condition: {
                                     type: "Identifier",
@@ -117,8 +119,10 @@ describe("AST", () => {
                                 },
                                 body: [
                                     {
+                                        line: 1,
                                         type: "ReturnStatement",
                                         value: {
+                                            line: 1,
                                             type: "StringLiteral",
                                             value: "Hello, world!",
                                         },
@@ -150,12 +154,14 @@ describe("AST", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "greet",
                         params: [],
                         body: [
                             {
+                                line: 1,
                                 type: "IfStatement",
                                 condition: {
                                     type: "Identifier",
@@ -163,14 +169,17 @@ describe("AST", () => {
                                 },
                                 body: [
                                     {
+                                        line: 1,
                                         type: "ReturnStatement",
                                         value: {
+                                            line: 1,
                                             type: "StringLiteral",
                                             value: "Hello, world!",
                                         },
                                     },
                                 ],
                                 fallback: {
+                                    line: 1,
                                     type: "IfStatement",
                                     condition: {
                                         type: "Identifier",
@@ -178,8 +187,10 @@ describe("AST", () => {
                                     },
                                     body: [
                                         {
+                                            line: 1,
                                             type: "ReturnStatement",
                                             value: {
+                                                line: 1,
                                                 type: "StringLiteral",
                                                 value: "Hello, visitor!",
                                             },

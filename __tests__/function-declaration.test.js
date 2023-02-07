@@ -36,6 +36,7 @@ describe("Empty Function Declaration", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
@@ -62,32 +63,38 @@ describe("Function Declaration with Declarations", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
                         params: [],
                         body: [
                             {
+                                line: 1,
                                 type: "VariableDeclaration",
                                 value: {
                                     name: "x",
                                     value: {
+                                        line: 1,
                                         type: "NumberLiteral",
                                         value: 1,
                                     },
                                 },
                             },
                             {
+                                line: 1,
                                 type: "FunctionDeclaration",
                                 value: {
                                     name: "nested",
                                     params: [],
                                     body: [
                                         {
+                                            line: 1,
                                             type: "VariableDeclaration",
                                             value: {
                                                 name: "y",
                                                 value: {
+                                                    line: 1,
                                                     type: "NumberLiteral",
                                                     value: 2,
                                                 },
@@ -112,11 +119,13 @@ describe("Function Declaration with parameters", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
                         params: [
                             {
+                                line: 1,
                                 type: "Identifier",
                                 value: "x",
                             },
@@ -134,15 +143,18 @@ describe("Function Declaration with parameters", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
                         params: [
                             {
+                                line: 1,
                                 type: "Identifier",
                                 value: "x",
                             },
                             {
+                                line: 1,
                                 type: "Identifier",
                                 value: "y",
                             },
@@ -163,14 +175,17 @@ describe("Function Declaration return statements", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
                         params: [],
                         body: [
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 1,
                                 },
@@ -188,28 +203,35 @@ describe("Function Declaration return statements", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
                         params: [],
                         body: [
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 1,
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 2,
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 3,
                                 },
@@ -227,40 +249,50 @@ describe("Function Declaration return statements", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionDeclaration",
                     value: {
                         name: "add",
                         params: [],
                         body: [
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 1,
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "StringLiteral",
                                     value: "hello",
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "BooleanLiteral",
                                     value: true,
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "BooleanLiteral",
                                     value: false,
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
                                     type: "Identifier",
@@ -268,8 +300,10 @@ describe("Function Declaration return statements", () => {
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "FunctionCall",
                                     value: {
                                         name: "hello",
@@ -278,13 +312,16 @@ describe("Function Declaration return statements", () => {
                                 },
                             },
                             {
+                                line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "FunctionCall",
                                     value: {
                                         name: "hello",
                                         params: [
                                             {
+                                                line: 1,
                                                 type: "NumberLiteral",
                                                 value: 1
                                             }

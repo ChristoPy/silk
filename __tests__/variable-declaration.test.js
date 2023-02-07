@@ -24,10 +24,12 @@ describe("Literals", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",
                         value: {
+                            line: 1,
                             type: "NumberLiteral",
                             value: 1,
                         },
@@ -43,10 +45,12 @@ describe("Literals", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",
                         value: {
+                            line: 1,
                             type: "StringLiteral",
                             value: "Hello, World!",
                         },
@@ -62,10 +66,12 @@ describe("Literals", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",
                         value: {
+                            line: 1,
                             type: "BooleanLiteral",
                             value: true,
                         },
@@ -81,10 +87,12 @@ describe("Literals", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",
                         value: {
+                            line: 1,
                             type: "BooleanLiteral",
                             value: false,
                         },
@@ -100,21 +108,26 @@ describe("Literals", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",
                         value: {
+                            line: 1,
                             type: "ArrayLiteral",
                             value: [
                                 {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 1,
                                 },
                                 {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 2,
                                 },
                                 {
+                                    line: 1,
                                     type: "NumberLiteral",
                                     value: 3,
                                 },
@@ -132,47 +145,60 @@ describe("Literals", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",
                         value: {
                             type: "ObjectLiteral",
+                            line: 1,
                             value: [
                                 {
                                     key: "b",
+                                    line: 1,
                                     value: {
+                                        line: 1,
                                         type: "NumberLiteral",
                                         value: 1,
                                     },
                                 },
                                 {
                                     key: "c",
+                                    line: 1,
                                     value: {
+                                        line: 1,
                                         type: "BooleanLiteral",
                                         value: true,
                                     },
                                 },
                                 {
                                     key: "d",
+                                    line: 1,
                                     value: {
+                                        line: 1,
                                         type: "StringLiteral",
                                         value: "Hello, World!",
                                     },
                                 },
                                 {
                                     key: "e",
+                                    line: 1,
                                     value: {
+                                        line: 1,
                                         type: "ArrayLiteral",
                                         value: [
                                             {
+                                                line: 1,
                                                 type: "NumberLiteral",
                                                 value: 1,
                                             },
                                             {
+                                                line: 1,
                                                 type: "NumberLiteral",
                                                 value: 2,
                                             },
                                             {
+                                                line: 1,
                                                 type: "NumberLiteral",
                                                 value: 3,
                                             },
@@ -181,20 +207,25 @@ describe("Literals", () => {
                                 },
                                 {
                                     key: "f",
+                                    line: 1,
                                     value: {
+                                        line: 1,
                                         type: "ObjectLiteral",
                                         value: [
                                             {
+                                                line: 1,
                                                 key: "g",
                                                 value: {
+                                                    line: 1,
                                                     type: "NumberLiteral",
                                                     value: 1,
                                                 },
                                             },
                                             {
-
+                                                line: 1,
                                                 key: "h",
                                                 value: {
+                                                    line: 1,
                                                     type: "NumberLiteral",
                                                     value: 2,
                                                 },
@@ -219,6 +250,7 @@ describe("Identifers", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "VariableDeclaration",
                     value: {
                         name: "a",

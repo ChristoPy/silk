@@ -17,6 +17,7 @@ describe("Function Call", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionCall",
                     value: {
                         name: "add",
@@ -33,11 +34,13 @@ describe("Function Call", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionCall",
                     value: {
                         name: "add",
                         params: [
                             {
+                                line: 1,
                                 type: "NumberLiteral",
                                 value: 1,
                             },
@@ -54,19 +57,23 @@ describe("Function Call", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionCall",
                     value: {
                         name: "add",
                         params: [
                             {
+                                line: 1,
                                 type: "NumberLiteral",
                                 value: 1,
                             },
                             {
+                                line: 1,
                                 type: "NumberLiteral",
                                 value: 2,
                             },
                             {
+                                line: 1,
                                 type: "NumberLiteral",
                                 value: 3,
                             },
@@ -83,23 +90,28 @@ describe("Function Call", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionCall",
                     value: {
                         name: "add",
                         params: [
                             {
+                                line: 1,
                                 type: "NumberLiteral",
                                 value: 1,
                             },
                             {
+                                line: 1,
                                 type: "StringLiteral",
                                 value: "a",
                             },
                             {
+                                line: 1,
                                 type: "BooleanLiteral",
                                 value: true,
                             },
                             {
+                                line: 1,
                                 type: "BooleanLiteral",
                                 value: false,
                             },
@@ -120,24 +132,29 @@ describe("Function Call", () => {
             type: "Program",
             body: [
                 {
+                    line: 1,
                     type: "FunctionCall",
                     value: {
                         name: "add",
                         params: [
                             {
+                                line: 1,
                                 type: "NumberLiteral",
                                 value: 1,
                             },
                             {
+                                line: 1,
                                 type: "FunctionCall",
                                 value: {
                                     name: "add",
                                     params: [
                                         {
+                                            line: 1,
                                             type: "NumberLiteral",
                                             value: 2,
                                         },
                                         {
+                                            line: 1,
                                             type: "NumberLiteral",
                                             value: 3,
                                         },
