@@ -55,7 +55,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'statement');
+            throwError('Syntax', 'unexpectedToken', token.value, token.line, 'statement');
         }
 
         return possibilities[token.type].call(this);
@@ -67,7 +67,7 @@ export default class Parser {
      *  ;
      */
     ImportStatement() {
-        this._eat('IMPORT');
+        const keyword = this._eat('IMPORT');
         const id = this._eat('IDENTIFIER');
 
         this._eat('FROM');
@@ -75,7 +75,7 @@ export default class Parser {
 
         return {
             type: 'ImportStatement',
-            line: this._tokenizer._line,
+            line: keyword.line,
             value: {
                 name: id.value,
                 path: path.value
@@ -98,7 +98,7 @@ export default class Parser {
 
         return {
             type: 'FunctionCall',
-            line: this._tokenizer._line,
+            line: id.line,
             value: {
                 name: id.value,
                 params
@@ -113,13 +113,13 @@ export default class Parser {
      *   ;
      */
     VariableDeclaration() {
-        this._eat('LET');
+        const keyword = this._eat('LET');
         const id = this._eat('IDENTIFIER');
         this._eat('EQUALS');
 
         return {
             type: 'VariableDeclaration',
-            line: this._tokenizer._line,
+            line: keyword.line,
             value: {
                 name: id.value,
                 value: this.ExpressionValue()
@@ -133,7 +133,7 @@ export default class Parser {
     *   ;
     */
     FunctionDeclaration() {
-        this._eat('FUNCTION');
+        const keyword = this._eat('FUNCTION');
         const id = this._eat('IDENTIFIER');
 
         this._eat('LPAREN');
@@ -144,7 +144,7 @@ export default class Parser {
 
         return {
             type: 'FunctionDeclaration',
-            line: this._tokenizer._line,
+            line: keyword.line,
             value: {
                 name: id.value,
                 params: params,
@@ -228,7 +228,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'expressionValue');
+            throwError('Syntax', 'unexpectedToken', token.value, token.line, 'expressionValue');
         }
 
         return possibilities[token.type].call(this);
@@ -279,7 +279,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'scopedStatement');
+            throwError('Syntax', 'unexpectedToken', token.value, token.line, 'scopedStatement');
         }
 
         return possibilities[token.type].call(this);
@@ -291,7 +291,7 @@ export default class Parser {
      * ;
      */
     IfStatement() {
-        this._eat('IF');
+        const keyword = this._eat('IF');
 
         this._eat('LPAREN');
         const condition = this.ConditionValue();
@@ -302,7 +302,7 @@ export default class Parser {
 
         return {
             type: 'IfStatement',
-            line: this._tokenizer._line,
+            line: keyword.line,
             condition,
             body: body.body,
             fallback
@@ -341,7 +341,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'conditionValue');
+            throwError('Syntax', 'unexpectedToken', token.value, token.line, 'conditionValue');
         }
 
         return possibilities[token.type].call(this);
@@ -353,10 +353,10 @@ export default class Parser {
      *  ;
      */
     ReturnStatement() {
-        this._eat('RETURN');
+        const keyword = this._eat('RETURN');
         return {
             type: 'ReturnStatement',
-            line: this._tokenizer._line,
+            line: keyword.line,
             value: this.ExpressionValue()
         };
     }
@@ -372,6 +372,7 @@ export default class Parser {
 
         if (!this._lookahead || this._lookahead && this._lookahead.type !== 'LPAREN') {
             return {
+                line: token.line,
                 type: 'Identifier',
                 value: token.value
             };
@@ -383,7 +384,7 @@ export default class Parser {
 
         return {
             type: 'FunctionCall',
-            line: this._tokenizer._line,
+            line: token.line,
             value: {
                 name: token.value,
                 params
@@ -446,7 +447,7 @@ export default class Parser {
 
         return {
             key: key.value,
-            line: this._tokenizer._line,
+            line: key.line,
             value: this.ExpressionValue()
         };
     }
@@ -468,7 +469,7 @@ export default class Parser {
         };
 
         if (!possibilities[token.type]) {
-            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line, 'literal');
+            throwError('Syntax', 'unexpectedToken', token.value, token.line, 'literal');
         }
 
         return possibilities[token.type].call(this);
@@ -483,7 +484,7 @@ export default class Parser {
         const token = this._eat('NUMBER');
         return {
             type: 'NumberLiteral',
-            line: this._tokenizer._line,
+            line: token.line,
             value: Number(token.value)
         };
     }
@@ -497,7 +498,7 @@ export default class Parser {
         const token = this._eat('STRING');
         return {
             type: 'StringLiteral',
-            line: this._tokenizer._line,
+            line: token.line,
             value: token.value.slice(1, -1)
         };
     }
@@ -512,7 +513,7 @@ export default class Parser {
         const token = this._eat('BOOLEAN');
         return {
             type: 'BooleanLiteral',
-            line: this._tokenizer._line,
+            line: token.line,
             value: token.value === 'true' ? true : false
         };
     }
@@ -526,7 +527,7 @@ export default class Parser {
         const token = this._eat('IDENTIFIER');
         return {
             type: 'Identifier',
-            line: this._tokenizer._line,
+            line: token.line,
             value: token.value
         };
     }
@@ -542,7 +543,7 @@ export default class Parser {
         }
 
         if (token.type !== tokenType) {
-            throwError('Syntax', 'unexpectedToken', token.value, this._tokenizer._line);
+            throwError('Syntax', 'unexpectedToken', token.value, token.line);
         }
 
         // Advance the parser's cursor by one token

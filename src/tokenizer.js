@@ -59,14 +59,16 @@ export default class Tokenizer {
                 continue;
             }
 
+            if (match.includes('\n')) {
+                this._line += match.split('\n').length - 1;
+            }
+
             if (type === 'SKIP') {
-                if (match === '\n') {
-                    this._line += 1;
-                }
                 return this.getNextToken();
             }
 
             return {
+                line: this._line,
                 type,
                 value: match
             };

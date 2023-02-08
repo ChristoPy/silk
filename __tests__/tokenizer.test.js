@@ -38,14 +38,16 @@ describe("Tokenize Numbers", () => {
         const tokenizer = new Tokenizer();
         tokenizer.init("1");
         const tokens = tokenizer.getNextToken();
-        expect(tokens).toEqual({ type: "NUMBER", value: "1" });
+        expect(tokens.type).toEqual("NUMBER");
+        expect(tokens.value).toEqual("1");
     });
 
     it("should tokenize a long number", () => {
         const tokenizer = new Tokenizer();
         tokenizer.init("1234243");
         const tokens = tokenizer.getNextToken();
-        expect(tokens).toEqual({ type: "NUMBER", value: "1234243" });
+        expect(tokens.type).toEqual("NUMBER");
+        expect(tokens.value).toEqual("1234243");
     });
 });
 
@@ -54,7 +56,8 @@ describe("Tokenize Strings", () => {
         const tokenizer = new Tokenizer();
         tokenizer.init('"Hello, World!"');
         const tokens = tokenizer.getNextToken();
-        expect(tokens).toEqual({ type: "STRING", value: '"Hello, World!"' });
+        expect(tokens.type).toEqual("STRING");
+        expect(tokens.value).toEqual('"Hello, World!"');
     });
 });
 
@@ -63,7 +66,8 @@ describe("Tokenize Identifiers", () => {
         const tokenizer = new Tokenizer();
         tokenizer.init("hello");
         const tokens = tokenizer.getNextToken();
-        expect(tokens).toEqual({ type: "IDENTIFIER", value: "hello" });
+        expect(tokens.type).toEqual("IDENTIFIER");
+        expect(tokens.value).toEqual("hello");
     });
 });
 
@@ -72,6 +76,25 @@ describe("Tokenize Operators", () => {
         const tokenizer = new Tokenizer();
         tokenizer.init("=");
         const tokens = tokenizer.getNextToken();
-        expect(tokens).toEqual({ type: "EQUALS", value: "=" });
+        expect(tokens.type).toEqual("EQUALS");
+        expect(tokens.value).toEqual("=");
+    });
+});
+
+describe("Tokenize lines", () => {
+    it("should tokenize a line", () => {
+        const tokenizer = new Tokenizer();
+        tokenizer.init(`let 
+        hello 
+        = 
+        1`);
+        const token = tokenizer.getNextToken();
+        expect(token).toEqual({ type: "LET", value: "let", line: 1 });
+
+        const token2 = tokenizer.getNextToken();
+        expect(token2).toEqual({ type: "IDENTIFIER", value: "hello", line: 2 });
+
+        const token3 = tokenizer.getNextToken();
+        expect(token3).toEqual({ type: "EQUALS", value: "=", line: 3 });
     });
 });
