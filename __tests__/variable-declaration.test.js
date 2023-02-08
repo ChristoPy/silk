@@ -255,6 +255,7 @@ describe("Identifers", () => {
                     value: {
                         name: "a",
                         value: {
+                            line: 1,
                             type: "Identifier",
                             value: "b",
                         },
@@ -265,27 +266,29 @@ describe("Identifers", () => {
     });
 });
 
-// describe("Function call", () => {
-//     it("should parse a function call", () => {
-//         const parser = new Parser();
-//         const ast = parser.parse("let a = b()");
-//         expect(ast).toEqual({
-//             type: "Program",
-//             body: [
-//                 {
-//                     type: "VariableDeclaration",
-//                     value: {
-//                         name: "a",
-//                         value: {
-//                             type: "FunctionCall",
-//                             value: {
-//                                 name: "b",
-//                                 params: [],
-//                             },
-//                         },
-//                     },
-//                 },
-//             ],
-//         });
-//     });
-// });
+describe("Function call", () => {
+    it("should parse a function call", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let a = b()");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    line: 1,
+                    type: "VariableDeclaration",
+                    value: {
+                        name: "a",
+                        value: {
+                            line: 1,
+                            type: "FunctionCall",
+                            value: {
+                                name: "b",
+                                params: [],
+                            },
+                        },
+                    },
+                },
+            ],
+        });
+    });
+});

@@ -70,31 +70,31 @@ describe("Function Declaration with Declarations", () => {
                         params: [],
                         body: [
                             {
-                                line: 1,
+                                line: 2,
                                 type: "VariableDeclaration",
                                 value: {
                                     name: "x",
                                     value: {
-                                        line: 1,
+                                        line: 2,
                                         type: "NumberLiteral",
                                         value: 1,
                                     },
                                 },
                             },
                             {
-                                line: 1,
+                                line: 4,
                                 type: "FunctionDeclaration",
                                 value: {
                                     name: "nested",
                                     params: [],
                                     body: [
                                         {
-                                            line: 1,
+                                            line: 5,
                                             type: "VariableDeclaration",
                                             value: {
                                                 name: "y",
                                                 value: {
-                                                    line: 1,
+                                                    line: 5,
                                                     type: "NumberLiteral",
                                                     value: 2,
                                                 },
@@ -295,6 +295,7 @@ describe("Function Declaration return statements", () => {
                                 line: 1,
                                 type: "ReturnStatement",
                                 value: {
+                                    line: 1,
                                     type: "Identifier",
                                     value: "name",
                                 },

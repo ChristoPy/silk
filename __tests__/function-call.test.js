@@ -116,6 +116,7 @@ describe("Function Call", () => {
                                 value: false,
                             },
                             {
+                                line: 1,
                                 type: "Identifier",
                                 value: "identifier",
                             },

@@ -104,25 +104,26 @@ describe("AST", () => {
             type: "Program",
             body: [
                 {
-                    line: 1,
+                    line: 2,
                     type: "FunctionDeclaration",
                     value: {
                         name: "greet",
                         params: [],
                         body: [
                             {
-                                line: 1,
+                                line: 3,
                                 type: "IfStatement",
                                 condition: {
+                                    line: 3,
                                     type: "Identifier",
                                     value: "something",
                                 },
                                 body: [
                                     {
-                                        line: 1,
+                                        line: 4,
                                         type: "ReturnStatement",
                                         value: {
-                                            line: 1,
+                                            line: 4,
                                             type: "StringLiteral",
                                             value: "Hello, world!",
                                         },
@@ -154,43 +155,45 @@ describe("AST", () => {
             type: "Program",
             body: [
                 {
-                    line: 1,
+                    line: 2,
                     type: "FunctionDeclaration",
                     value: {
                         name: "greet",
                         params: [],
                         body: [
                             {
-                                line: 1,
+                                line: 3,
                                 type: "IfStatement",
                                 condition: {
+                                    line: 3,
                                     type: "Identifier",
                                     value: "something",
                                 },
                                 body: [
                                     {
-                                        line: 1,
+                                        line: 4,
                                         type: "ReturnStatement",
                                         value: {
-                                            line: 1,
+                                            line: 4,
                                             type: "StringLiteral",
                                             value: "Hello, world!",
                                         },
                                     },
                                 ],
                                 fallback: {
-                                    line: 1,
+                                    line: 5,
                                     type: "IfStatement",
                                     condition: {
+                                        line: 5,
                                         type: "Identifier",
                                         value: "something",
                                     },
                                     body: [
                                         {
-                                            line: 1,
+                                            line: 6,
                                             type: "ReturnStatement",
                                             value: {
-                                                line: 1,
+                                                line: 6,
                                                 type: "StringLiteral",
                                                 value: "Hello, visitor!",
                                             },
