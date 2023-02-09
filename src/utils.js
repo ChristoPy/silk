@@ -16,6 +16,7 @@ const REASONS = {
     letValueDoesNotExist: 'You can\'t use this variable as value. It does not exist.',
     functionNameDoesNotExist: 'You can\'t call this function. It does not exist.',
     functionParamDoesNotExist: 'You can\'t call this function with this variable as parameter. It does not exist.',
+    importNameMustBePascalCase: 'You can\'t import with this name. It must be PascalCase.',
 }
 
 const formatError = (type, id, wrongBit, line, context) => {

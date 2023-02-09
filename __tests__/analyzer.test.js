@@ -3,9 +3,14 @@ import Parser from "../src/parser";
 import Analyzer from "../src/analyzer";
 
 describe("Identifier errors", () => {
+    it("should throw if import not in PascalCase", () => {
+        const parser = new Parser();
+        expect(() => Analyzer(parser.parse(`import math from "std/math"`)))
+            .toThrowError(/I was not expecting this./);
+    });
     it("should throw if import already done", () => {
         const parser = new Parser();
-        expect(() => Analyzer(parser.parse(`import vitest from "vitest" import vitest from "vitest"`)))
+        expect(() => Analyzer(parser.parse(`import Vitest from "vitest" import Vitest from "vitest"`)))
             .toThrowError(/This identifier has already been declared./);
     });
     it("should throw if reference is not declared", () => {

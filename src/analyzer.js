@@ -19,7 +19,12 @@ function throwIfNotFound(scope, name, node, context) {
 
 function traverse(scope, node) {
     if (node.type === "ImportStatement") {
-        addIdentifier(scope, node.value.name, node, "import");
+        if (/^[A-Z][a-z]+(?:[A-Z][a-z]+)*$/.test(node.value.name)) {
+            addIdentifier(scope, node.value.name, node, "import");
+            return
+        }
+        identifiers = {};
+        throwError('Syntax', 'unexpectedToken', node.value.name, node.line, "importNameMustBePascalCase");
     }
     if (node.type === "VariableDeclaration") {
         const reference = node.value.value;
