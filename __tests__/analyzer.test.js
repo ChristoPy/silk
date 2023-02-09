@@ -3,9 +3,19 @@ import Parser from "../src/parser";
 import Analyzer from "../src/analyzer";
 
 describe("Identifier errors", () => {
+    it("should throw if import already done", () => {
+        const parser = new Parser();
+        expect(() => Analyzer(parser.parse(`import vitest from "vitest" import vitest from "vitest"`)))
+            .toThrowError(/This identifier has already been declared./);
+    });
     it("should throw if reference is not declared", () => {
         const parser = new Parser();
         expect(() => Analyzer(parser.parse("let a = b")))
+            .toThrowError(/This identifier has not been declared./);
+    });
+    it("should throw if function call reference is not declared", () => {
+        const parser = new Parser();
+        expect(() => Analyzer(parser.parse("let a = b()")))
             .toThrowError(/This identifier has not been declared./);
     });
     it("should throw if variable already declared", () => {
@@ -25,7 +35,7 @@ describe("Identifier errors", () => {
     });
     it("should throw if function call param not declared", () => {
         const parser = new Parser();
-        expect(() => Analyzer(parser.parse("a(c)")))
+        expect(() => Analyzer(parser.parse("function a() {} a(c)")))
             .toThrowError(/This identifier has not been declared./);
     });
 });

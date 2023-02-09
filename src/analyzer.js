@@ -1,47 +1,52 @@
 import { throwError } from './utils.js';
 
-const identifiers = {};
+let identifiers = {};
 
-function addIdentifier(identifiers, node, scope, context) {
-    const { value, line } = node;
-
-    if (identifiers[value.name]) {
-        throwError('Syntax', 'identifierAlreadyDeclared', value.name, line, context);
+function addIdentifier(scope, name, node, context) {
+    if (identifiers[name]) {
+        identifiers = {};
+        throwError('Syntax', 'identifierAlreadyDeclared', name, node.line, context);
     }
-    identifiers[value.name] = { value: value.value, scope };
+
+    identifiers[name] = { value: node, scope };
 }
-function throwIfNotFound(identifiers, name, line, context) {
+function throwIfNotFound(scope, name, node, context) {
     if (!identifiers[name]) {
-        throwError('Syntax', 'identifierNotDeclared', name, line, context);
+        identifiers = {};
+        throwError('Syntax', 'identifierNotDeclared', name, node.line, context);
     }
 }
 
 function traverse(scope, node) {
     if (node.type === "ImportStatement") {
-        addIdentifier(identifiers, node, "external", "import");
+        addIdentifier(scope, node.value.name, node, "import");
     }
     if (node.type === "VariableDeclaration") {
-        const value = node.value.value;
-        if (value.type === "Identifier") {
-            throwIfNotFound(identifiers, value.value, node.line, "letValueDoesNotExist");
+        const reference = node.value.value;
+        if (reference.type === "Identifier") {
+            throwIfNotFound(scope, reference.value, node, "letValueDoesNotExist");
         }
-        addIdentifier(identifiers, node, scope, "let");
+        if (reference.type === "FunctionCall") {
+            throwIfNotFound(scope, reference.value, node, "functionNameDoesNotExist");
+        }
+        addIdentifier(scope, node.value.name, node, "let");
     }
     if (node.type === "FunctionCall") {
-        throwIfNotFound(identifiers, node.value, node.line, "functionNameDoesNotExist");
+        throwIfNotFound(scope, node.value.name, node, "functionNameDoesNotExist");
         const { params } = node.value
         params.forEach(param => {
             if (param.type === "Identifier") {
-                throwIfNotFound(identifiers, param.value, node.line, "functionParamDoesNotExist");
+                throwIfNotFound(scope, param.value, node, "functionParamDoesNotExist");
             }
         });
     }
     if (node.type === "FunctionDeclaration") {
-        addIdentifier(identifiers, node, scope, "function");
+        addIdentifier(scope, node.value.name, node, "function");
     }
 
     // assuming the first node is the root node
     if (node.body) {
+        // keep the same scope until the validation bubbles to the previous scope
         node.body.forEach(childNode => traverse(scope, childNode));
     }
 }
