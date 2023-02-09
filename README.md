@@ -108,3 +108,9 @@ All code is valid JavaScript. But only a small subset of it is supported.
   ```js
   export function main() {}
   ```
+- [ ] **Module usage**
+  ```js
+  import String from "std/string"
+
+  String.uppercase("avocado")
+  ```
