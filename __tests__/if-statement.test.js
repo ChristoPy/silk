@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Parser from "../src/parser";
+import Parser from "../src/compiler/parser";
 
 describe("If Syntax", () => {
     it("should break if outside of a function", () => {

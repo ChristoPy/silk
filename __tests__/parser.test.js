@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Parser from "../src/parser";
+import Parser from "../src/compiler/parser";
 
 describe("Parser AST", () => {
     it("should have a root node with a body", () => {

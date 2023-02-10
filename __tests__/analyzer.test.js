@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import Parser from "../src/parser";
-import Analyzer from "../src/analyzer";
+import Parser from "../src/compiler/parser";
+import Analyzer from "../src/compiler/analyzer";
 
 describe("Identifier errors", () => {
     it("should throw if import not in PascalCase", () => {

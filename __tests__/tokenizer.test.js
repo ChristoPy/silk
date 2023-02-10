@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Tokenizer from "../src/tokenizer";
+import Tokenizer from "../src/compiler/tokenizer";
 
 describe("Tokenize Spaces", () => {
     it("should skip space", () => {
