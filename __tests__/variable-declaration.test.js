@@ -14,6 +14,18 @@ describe("Syntax errors", () => {
         const parser = new Parser();
         expect(() => parser.parse("let a =")).toThrow();
     });
+    it("should throw an error if variable value ends without the property to get accessed", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("let a = b.")).toThrow();
+    });
+    it("should throw an error if variable value ends with accessing a property in a function call 1", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("let a = b().")).toThrow();
+    })
+    it("should throw an error if variable value ends with accessing a property in a function call 1", () => {
+        const parser = new Parser();
+        expect(() => parser.parse("let a = b().c")).toThrow();
+    })
 });
 
 describe("Literals", () => {
@@ -289,6 +301,139 @@ describe("Function call", () => {
                     },
                 },
             ],
+        });
+    });
+});
+
+
+describe("Nested identifiers and function call", () => {
+    it("should parse a nested identifier", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let a = b.c");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    line: 1,
+                    type: "VariableDeclaration",
+                    value: {
+                        name: "a",
+                        value: {
+                            line: 1,
+                            type: "MemberExpression",
+                            object: {
+                                line: 1,
+                                type: "Identifier",
+                                value: "b",
+                            },
+                            property: {
+                                line: 1,
+                                type: "Identifier",
+                                value: "c",
+                            }
+                        },
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse a nested function call", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let a = something.b()");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    line: 1,
+                    type: "VariableDeclaration",
+                    value: {
+                        name: "a",
+                        value: {
+                            line: 1,
+                            type: "MemberExpression",
+                            object: {
+                                line: 1,
+                                type: "Identifier",
+                                value: "something",
+                            },
+                            property: {
+                                line: 1,
+                                type: "FunctionCall",
+                                value: {
+                                    name: "b",
+                                    params: [],
+                                },
+                            }
+                        },
+                    },
+                },
+            ],
+        });
+    });
+    it("should parse multiple nested identifiers", () => {
+        const parser = new Parser();
+        const ast = parser.parse("let value = a.b.c.d.e.f");
+        expect(ast).toEqual({
+            type: "Program",
+            body: [
+                {
+                    type: "VariableDeclaration",
+                    line: 1,
+                    value: {
+                        name: "value",
+                        value: {
+                            type: "MemberExpression",
+                            line: 1,
+                            object: {
+                                type: "Identifier",
+                                value: "a",
+                                line: 1
+                            },
+                            property: {
+                                type: "MemberExpression",
+                                line: 1,
+                                object: {
+                                    type: "Identifier",
+                                    value: "b",
+                                    line: 1
+                                },
+                                property: {
+                                    type: "MemberExpression",
+                                    line: 1,
+                                    object: {
+                                        type: "Identifier",
+                                        value: "c",
+                                        line: 1
+                                    },
+                                    property: {
+                                        type: "MemberExpression",
+                                        line: 1,
+                                        object: {
+                                            type: "Identifier",
+                                            value: "d",
+                                            line: 1
+                                        },
+                                        property: {
+                                            type: "MemberExpression",
+                                            line: 1,
+                                            object: {
+                                                type: "Identifier",
+                                                value: "e",
+                                                line: 1
+                                            },
+                                            property: {
+                                                line: 1,
+                                                type: "Identifier",
+                                                value: "f"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         });
     });
 });

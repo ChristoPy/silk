@@ -108,8 +108,7 @@ export default class Parser {
 
     /**
      * VariableDeclaration
-     *   : LET IDENTIFIER EQUALS Literal
-     *   | LET IDENTIFIER EQUALS Identifier
+     *   : LET IDENTIFIER EQUALS ExpressionValue
      *   ;
      */
     VariableDeclaration() {
@@ -365,12 +364,14 @@ export default class Parser {
      * IdentifierOrFunctionCall
      *   : IDENTIFIER
      *   | FunctionCall
+     *   | IDENTIFIER DOT IdentifierOrFunctionCall
      *   ;
      */
     IdentifierOrFunctionCall() {
         const token = this._eat('IDENTIFIER');
+        const notFollow = ['LPAREN', 'DOT']
 
-        if (!this._lookahead || this._lookahead && this._lookahead.type !== 'LPAREN') {
+        if (!this._lookahead || this._lookahead && !notFollow.includes(this._lookahead.type)) {
             return {
                 line: token.line,
                 type: 'Identifier',
@@ -378,18 +379,35 @@ export default class Parser {
             };
         }
 
-        this._eat('LPAREN');
-        const params = this.GenericList();
-        this._eat('RPAREN');
+        const nextToken = this._lookahead;
+        if (nextToken.type === 'LPAREN') {
+            this._eat('LPAREN');
+            const params = this.GenericList();
+            this._eat('RPAREN');
 
-        return {
-            type: 'FunctionCall',
-            line: token.line,
-            value: {
-                name: token.value,
-                params
-            }
-        };
+            return {
+                type: 'FunctionCall',
+                line: token.line,
+                value: {
+                    name: token.value,
+                    params
+                }
+            };
+        }
+
+        if (nextToken.type === 'DOT') {
+            this._eat('DOT');
+            return {
+                type: 'MemberExpression',
+                line: token.line,
+                object: {
+                    type: 'Identifier',
+                    value: token.value,
+                    line: token.line
+                },
+                property: this.IdentifierOrFunctionCall()
+            };
+        }
     }
 
     /**
