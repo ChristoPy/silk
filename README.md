@@ -108,9 +108,12 @@ All code is valid JavaScript. But only a small subset of it is supported.
   ```js
   export function main() {}
   ```
-- [ ] **Module usage**
+- [x] **Module usage**
   ```js
+  import Math from "std/math"
   import String from "std/string"
 
   String.uppercase("avocado")
+  let random = Math.random()
+  let PI = Math.PI
   ```
