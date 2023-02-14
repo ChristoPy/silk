@@ -117,3 +117,27 @@ All code is valid JavaScript. But only a small subset of it is supported.
   let random = Math.random()
   let PI = Math.PI
   ```
+## Compiler Rules
+- [x] **Duplicated identifier (outer scope)**
+  ```js
+  import Math from "std/math"
+
+  let Math = 1
+  ```
+- [x] **Reference to non defined value (outer scope)**
+  ```js
+  // values
+  let a = b
+  // function calls
+  d()
+  // parameters of function calls
+  definedFunction(nothing)
+  ```
+- [x] **No dynamic values (outer scope)**
+  ```js
+  import Module from "other-module"
+
+  // a value returned from a function call cannot be accessed since its dynamic
+  // and this makes more difficult to catch errors
+  let name = Module.doSomething().dynamicValue
+  ```
