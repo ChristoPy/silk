@@ -1,5 +1,15 @@
 # Silk
-The Smooth JavaScript subset!
+The Smooth JavaScript subset!  
+
+
+# About and motivation
+Silk is a programming language that was designed to reduce programming errors caused by the inherent flexibility and power of JavaScript. Although JavaScript is an incredibly powerful language that allows developers to do almost anything, its flexibility can sometimes lead to unexpected results and errors.
+
+While TypeScript can help to reduce errors, Silk is not meant to replace JavaScript or TypeScript. TypeScript is primarily known for its type system, linting, and tooling capabilities, but it is also incredibly powerful in other ways, thanks to its compiler.
+
+Silk takes a different approach from TypeScript. It encourages developers to write functional code while still taking advantage of the full power of JavaScript. If TypeScript were used instead, it could become overwhelming quickly, as TypeScript grows in the same way as JavaScript does.
+
+It's worth noting that Silk is currently a small subset of JavaScript, designed to provide developers with a more focused and streamlined approach to coding in JavaScript.
 
 ## Features
 ### Comment
@@ -142,7 +152,7 @@ The Smooth JavaScript subset!
   //   │  ^^^^^^^^ This identifier has already been declared.
   // You can't declare a variable with this name. It has already been declared.
   ```
-  If the name is not created inside a function, this rule does not apply if the name exists outside of it.  
+  If the variable name is not created inside a function, this rule does not apply if the name exists outside of it.  
   ```js
   let userName = "Anna"
   function greet(name) {
@@ -150,7 +160,7 @@ The Smooth JavaScript subset!
     return "Hello, " + userName
   }
   ```
-- [x] **Reference to non defined value**
+- [x] **Reference to non defined value**  
   Silk will warn you about a non defined reference and won't compile. This rule applies for: variables, function calls, function calls parameters.
   ```js
   let a = b
@@ -168,3 +178,24 @@ The Smooth JavaScript subset!
   // and this makes more difficult to catch errors
   let name = Module.doSomething().dynamicValue
   ```
+
+### Roadmap
+[x] Prevent name clashes
+  [x] Program scope
+  [x] Inner scopes
+[x] Prevent undefined errors
+  [x] Program scope
+  [x] Inner scopes
+[x] Warn about errors in a nicer way
+[ ] Sugest code fixes for errors
+[ ] Standard library
+[ ] Support imports
+[ ] CLI
+  [ ] Bootstrap a project
+  [ ] Compile the project to JS
+[ ] Documentation
+[ ] Silk <-> JS interoperability
+[ ] Small type system
+[ ] Editor integration (Language Server)
+[ ] Generate TS code
+  [ ] Generate types
