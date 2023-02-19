@@ -180,22 +180,22 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   ```
 
 ### Roadmap
-[x] Prevent name clashes
-  [x] Program scope
-  [x] Inner scopes
-[x] Prevent undefined errors
-  [x] Program scope
-  [x] Inner scopes
-[x] Warn about errors in a nicer way
-[ ] Sugest code fixes for errors
-[ ] Standard library
-[ ] Support imports
-[ ] CLI
-  [ ] Bootstrap a project
-  [ ] Compile the project to JS
-[ ] Documentation
-[ ] Silk <-> JS interoperability
-[ ] Small type system
-[ ] Editor integration (Language Server)
-[ ] Generate TS code
-  [ ] Generate types
+- [x] Prevent name clashes
+  - [x] Program scope
+  - [x] Inner scopes
+- [x] Prevent undefined errors
+  - [x] Program scope
+  - [x] Inner scopes
+- [x] Warn about errors in a nicer way
+- [ ] Sugest code fixes for errors
+- [ ] Standard library
+- [ ] Support imports
+- [ ] CLI
+  - [ ] Bootstrap a project
+  - [ ] Compile the project to JS
+- [ ] Documentation
+- [ ] Silk <-> JS interoperability
+- [ ] Small type system
+- [ ] Editor integration (Language Server)
+- [ ] Generate TS code
+  - [ ] Generate types
