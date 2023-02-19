@@ -1,6 +1,5 @@
-# Parser
-Attempt to write a parser for a programming language that looks like JavaScript.  
-All code is valid JavaScript. But only a small subset of it is supported.
+# Silk
+The Smooth JavaScript subset!
 
 ## Features
 ### Comment
@@ -118,22 +117,50 @@ All code is valid JavaScript. But only a small subset of it is supported.
   let PI = Math.PI
   ```
 ## Compiler Rules
-- [x] **Duplicated identifier (outer scope)**
+- [x] **Duplicated identifier**
+
+  This rule makes impossible to create functions/variables with the same name.  
   ```js
   import Math from "std/math"
 
   let Math = 1
+  //   ┌─ error: SyntaxError
+  // 3 │  Math
+  //   │  ^^^^ This identifier has already been declared.
+  // You can't declare a variable with this name. It has already been declared.
   ```
-- [x] **Reference to non defined value (outer scope)**
+  Same for variables inside a function.  
+  Note that function parameters are variables, so they cannot be recreated inside of it too. Example:
   ```js
-  // values
-  let a = b
-  // function calls
-  d()
-  // parameters of function calls
-  definedFunction(nothing)
+  let name = "Anna"
+  function greet(userName) {
+    let userName = String.titleCase(name)
+    return "Hello, " + userName
+  }
+  //   ┌─ error: SyntaxError
+  // 3 │  userName
+  //   │  ^^^^^^^^ This identifier has already been declared.
+  // You can't declare a variable with this name. It has already been declared.
   ```
-- [x] **No dynamic values (outer scope)**
+  If the name is not created inside a function, this rule does not apply if the name exists outside of it.  
+  ```js
+  let userName = "Anna"
+  function greet(name) {
+    let userName = String.titleCase(name)
+    return "Hello, " + userName
+  }
+  ```
+- [x] **Reference to non defined value**
+  Silk will warn you about a non defined reference and won't compile. This rule applies for: variables, function calls, function calls parameters.
+  ```js
+  let a = b
+  // Error:   ┌─ error: SyntaxError
+  // 1 │  b
+  //   │  ^ This identifier has not been declared.
+  // You can't use this variable as value. It does not exist.
+  ```
+- [x] **No dynamic values**
+  This rule is a boundary to prevent you from accessing a property in a dynamic value which (Silk) can't garantee it exists (yet).
   ```js
   import Module from "other-module"
 
