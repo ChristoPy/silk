@@ -199,3 +199,4 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
 - [ ] Editor integration (Language Server)
 - [ ] Generate TS code
   - [ ] Generate types
+- [ ] Rewrite Silk in Silk itself
