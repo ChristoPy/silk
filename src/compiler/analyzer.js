@@ -1,18 +1,33 @@
 import { throwError } from './utils.js';
 
-let identifiers = {};
+const EMPTY = () => ({
+    program: {},
+});
+let identifiers = EMPTY();
 
 function addIdentifier(scope, name, node, context) {
-    if (identifiers[name]) {
-        identifiers = {};
+    if (!identifiers[scope]) {
+        identifiers[scope] = {};
+    }
+    const identifier = identifiers[scope][name];
+    if (identifier) {
+        identifiers = EMPTY();
         throwError('Syntax', 'identifierAlreadyDeclared', name, node.line, context);
     }
 
-    identifiers[name] = { value: node, scope };
+    identifiers[scope][name] = { value: node };
 }
 function throwIfNotFound(scope, name, node, context) {
-    if (!identifiers[name]) {
-        identifiers = {};
+    let notFound = false;
+    const isNestedScope = scope.includes(".");
+
+    notFound = identifiers[scope][name] ? false : true;
+    if (isNestedScope && notFound) {
+        notFound = identifiers.program[name] ? false : true;
+    }
+
+    if (notFound) {
+        identifiers = EMPTY();
         throwError('Syntax', 'identifierNotDeclared', name, node.line, context);
     }
 }
@@ -23,7 +38,7 @@ function traverse(scope, node) {
             addIdentifier(scope, node.value.name, node, "import");
             return
         }
-        identifiers = {};
+        identifiers = EMPTY();
         throwError('Syntax', 'unexpectedToken', node.value.name, node.line, "importNameMustBePascalCase");
     }
     if (node.type === "VariableDeclaration") {
@@ -47,10 +62,16 @@ function traverse(scope, node) {
     }
     if (node.type === "FunctionDeclaration") {
         addIdentifier(scope, node.value.name, node, "function");
+        // make params available in the function scope
+        node.value.params.forEach((value) => {
+            addIdentifier(`function.${node.value.name}`, value.value, "functionParam");
+        });
+        // make the function body available in the function scope
+        traverse(`function.${node.value.name}`, node.value);
     }
 
     // assuming the first node is the root node
-    if (node.body) {
+    if (node.body && node.type !== "FunctionDeclaration") {
         // keep the same scope until the validation bubbles to the previous scope
         node.body.forEach(childNode => traverse(scope, childNode));
     }
