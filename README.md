@@ -169,7 +169,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   //   │  ^ This identifier has not been declared.
   // You can't use this variable as value. It does not exist.
   ```
-- [x] **No dynamic values**
+- [x] **No dynamic values**  
   This rule is a boundary to prevent you from accessing a property in a dynamic value which (Silk) can't garantee it exists (yet).
   ```js
   import Module from "other-module"
