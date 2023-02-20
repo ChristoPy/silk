@@ -16,6 +16,9 @@ function addIdentifier(scope, name, node, context) {
     }
 
     identifiers[scope][name] = { value: node };
+    if (node.type === "FunctionDeclaration") {
+        identifiers[`function.${name}`] = {};
+    }
 }
 function throwIfNotFound(scope, name, node, context) {
     let notFound = false;
@@ -30,6 +33,16 @@ function throwIfNotFound(scope, name, node, context) {
         identifiers = EMPTY();
         throwError('Syntax', 'identifierNotDeclared', name, node.line, context);
     }
+}
+
+function functionCall(scope, name, node, context) {
+    throwIfNotFound(scope, name, node, context || "functionNameDoesNotExist");
+    const { params } = node.value
+    params.forEach(param => {
+        if (param.type === "Identifier") {
+            throwIfNotFound(scope, param.value, node, "functionParamDoesNotExist");
+        }
+    });
 }
 
 function traverse(scope, node) {
@@ -47,18 +60,12 @@ function traverse(scope, node) {
             throwIfNotFound(scope, reference.value, node, "letValueDoesNotExist");
         }
         if (reference.type === "FunctionCall") {
-            throwIfNotFound(scope, reference.value, node, "functionNameDoesNotExist");
+            functionCall(scope, reference.value.name, node, "letValueDoesNotExist");
         }
         addIdentifier(scope, node.value.name, node, "let");
     }
     if (node.type === "FunctionCall") {
-        throwIfNotFound(scope, node.value.name, node, "functionNameDoesNotExist");
-        const { params } = node.value
-        params.forEach(param => {
-            if (param.type === "Identifier") {
-                throwIfNotFound(scope, param.value, node, "functionParamDoesNotExist");
-            }
-        });
+        functionCall(scope, node.value.name, node);
     }
     if (node.type === "FunctionDeclaration") {
         addIdentifier(scope, node.value.name, node, "function");
@@ -68,6 +75,20 @@ function traverse(scope, node) {
         });
         // make the function body available in the function scope
         traverse(`function.${node.value.name}`, node.value);
+    }
+    if (node.type === "IfStatement") {
+        const { condition } = node;
+        if (condition.type === "Identifier") {
+            throwIfNotFound(scope, condition.value, node, "ifConditionDoesNotExist");
+        }
+        if (condition.type === "FunctionCall") {
+            functionCall(scope, condition, "ifConditionDoesNotExist");
+        }
+
+        traverse(scope, node.body);
+        if (node.fallback) {
+            traverse(scope, node.fallback);
+        }
     }
 
     // assuming the first node is the root node
