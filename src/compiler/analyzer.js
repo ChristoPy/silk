@@ -54,14 +54,18 @@ function functionCall(name, node, context) {
 
 function traverse(scope, node) {
     if (node.type === "ImportStatement") {
+        throwIfFound("program", node.value.name, node, "import");
+        addIdentifier("program", node.value.name, node);
+
         if (!/^[A-Z][a-z]+(?:[A-Z][a-z]+)*$/.test(node.value.name)) {
             state = EMPTY();
             throwError('Syntax', 'unexpectedToken', node.value.name, node.line, "importNameMustBePascalCase");
         }
-        throwIfFound("program", node.value.name, node, "import");
-        addIdentifier("program", node.value.name, node);
     }
     if (node.type === "VariableDeclaration") {
+        throwIfFound(scope, node.value.name, node, "let");
+        addIdentifier(scope, node.value.name, node);
+
         const reference = node.value.value;
         if (reference.type === "Identifier") {
             throwIfNotFound(state.path, reference.value, node, "letValueDoesNotExist");
@@ -69,8 +73,6 @@ function traverse(scope, node) {
         if (reference.type === "FunctionCall") {
             functionCall(reference.value.name, node.value.value, "letValueDoesNotExist");
         }
-        throwIfFound(scope, node.value.name, node, "let");
-        addIdentifier(scope, node.value.name, node);
     }
     if (node.type === "FunctionDeclaration") {
         throwIfFound(scope, node.value.name, node, "function");
