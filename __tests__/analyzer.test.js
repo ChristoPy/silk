@@ -36,7 +36,7 @@ describe("Identifier errors", () => {
 });
 
 describe("Reference errors", () => {
-    it("should throw if reference is not declared", () => {
+    it("should throw if reference is not declared in program scope", () => {
         const parser = new Parser();
         expect(() => Analyzer(parser.parse("let a = b")))
             .toThrowError(/This identifier has not been declared./);
@@ -49,6 +49,12 @@ describe("Reference errors", () => {
     it("should throw if function not declared", () => {
         const parser = new Parser();
         expect(() => Analyzer(parser.parse("a()")))
+            .toThrowError(/This identifier has not been declared./);
+    });
+
+    it("should throw if reference is not declared in function scope", () => {
+        const parser = new Parser();
+        expect(() => Analyzer(parser.parse("function a() { let a = b }")))
             .toThrowError(/This identifier has not been declared./);
     });
     it("should throw if function call param not declared", () => {

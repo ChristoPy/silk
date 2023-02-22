@@ -1,93 +1,107 @@
 import { throwError } from './utils.js';
 
 const EMPTY = () => ({
-    program: {},
+    path: "program",
+    scopes: {
+        program: {},
+    },
 });
-let identifiers = EMPTY();
 
-function addIdentifier(scope, name, node, context) {
-    if (!identifiers[scope]) {
-        identifiers[scope] = {};
-    }
-    const identifier = identifiers[scope][name];
-    if (identifier) {
-        identifiers = EMPTY();
-        throwError('Syntax', 'identifierAlreadyDeclared', name, node.line, context);
-    }
+let state = EMPTY();
 
-    identifiers[scope][name] = { value: node };
-    if (node.type === "FunctionDeclaration") {
-        identifiers[`function.${name}`] = {};
+function addIdentifier(scope, name, node) {
+    if (!state.scopes[scope]) {
+        state.scopes[scope] = {};
+    }
+    state.scopes[scope][name] = node;
+}
+function throwIfFound(scope, name, node, context) {
+    if (!state.scopes[scope]) return
+    if (state.scopes[scope][name]) {
+        state = EMPTY();
+        throwError('Reference', 'identifierAlreadyDeclared', name, node.line, context);
     }
 }
 function throwIfNotFound(scope, name, node, context) {
-    let notFound = false;
-    const isNestedScope = scope.includes(".");
-
-    notFound = identifiers[scope][name] ? false : true;
-    if (isNestedScope && notFound) {
-        notFound = identifiers.program[name] ? false : true;
+    // when scope is program we don't need to check for nested scopes
+    if (scope === "program") {
+        if (!state.scopes[scope][name]) {
+            state = EMPTY();
+            throwError('Reference', 'identifierNotDeclared', name, node.line, context);
+        }
     }
-
-    if (notFound) {
-        identifiers = EMPTY();
-        throwError('Syntax', 'identifierNotDeclared', name, node.line, context);
+    // when a scope has a dot, it means it's a nested scope
+    // we need to check the existence of the identifier in the nested scope
+    // and the previous scope until we find it or it reaches the program scope again
+    if (scope.includes(".")) {
+        const [parentScope, nestedScope] = scope.split(".");
+        if (!state.scopes[nestedScope][name]) {
+            if (!state.scopes[parentScope][name]) {
+                state = EMPTY();
+                throwError('Reference', 'identifierNotDeclared', name, node.line, context);
+            }
+        }
     }
 }
-
-function functionCall(scope, name, node, context) {
-    throwIfNotFound(scope, name, node, context || "functionNameDoesNotExist");
-    const { params } = node.value
-    params.forEach(param => {
+function functionCall(name, node, context) {
+    throwIfNotFound(state.path, name, node, context || "functionNameDoesNotExist");
+    node.value.params.forEach(param => {
         if (param.type === "Identifier") {
-            throwIfNotFound(scope, param.value, node, "functionParamDoesNotExist");
+            throwIfNotFound(state.path, param.value, node, "functionParamDoesNotExist");
         }
     });
 }
 
 function traverse(scope, node) {
     if (node.type === "ImportStatement") {
-        if (/^[A-Z][a-z]+(?:[A-Z][a-z]+)*$/.test(node.value.name)) {
-            addIdentifier(scope, node.value.name, node, "import");
-            return
+        if (!/^[A-Z][a-z]+(?:[A-Z][a-z]+)*$/.test(node.value.name)) {
+            state = EMPTY();
+            throwError('Syntax', 'unexpectedToken', node.value.name, node.line, "importNameMustBePascalCase");
         }
-        identifiers = EMPTY();
-        throwError('Syntax', 'unexpectedToken', node.value.name, node.line, "importNameMustBePascalCase");
+        throwIfFound("program", node.value.name, node, "import");
+        addIdentifier("program", node.value.name, node);
     }
     if (node.type === "VariableDeclaration") {
         const reference = node.value.value;
         if (reference.type === "Identifier") {
-            throwIfNotFound(scope, reference.value, node, "letValueDoesNotExist");
+            throwIfNotFound(state.path, reference.value, node, "letValueDoesNotExist");
         }
         if (reference.type === "FunctionCall") {
-            functionCall(scope, reference.value.name, node, "letValueDoesNotExist");
+            functionCall(reference.value.name, node.value.value, "letValueDoesNotExist");
         }
-        addIdentifier(scope, node.value.name, node, "let");
-    }
-    if (node.type === "FunctionCall") {
-        functionCall(scope, node.value.name, node);
+        throwIfFound(scope, node.value.name, node, "let");
+        addIdentifier(scope, node.value.name, node);
     }
     if (node.type === "FunctionDeclaration") {
-        addIdentifier(scope, node.value.name, node, "function");
-        // make params available in the function scope
-        node.value.params.forEach((value) => {
-            addIdentifier(`function.${node.value.name}`, value.value, "functionParam");
+        throwIfFound(scope, node.value.name, node, "function");
+        addIdentifier(scope, node.value.name, node);
+        addIdentifier(`function_${node.value.name}`, node.value.name, node);
+        node.value.params.forEach(param => {
+            throwIfFound(`function_${node.value.name}`, param.value, node, "functionParamDoesNotExist");
+            addIdentifier(`function_${node.value.name}`, param.value, node);
         });
-        // make the function body available in the function scope
-        traverse(`function.${node.value.name}`, node.value);
+        state.path = `program.function_${node.value.name}`;
+        traverse(`function_${node.value.name}`, node.value);
+        state.path = scope;
+    }
+    if (node.type === "FunctionCall") {
+        functionCall(node.value.name, node)
     }
     if (node.type === "IfStatement") {
+        let functionScope = state.path
+        state.path += `.if_${node.line}`;
         const { condition } = node;
         if (condition.type === "Identifier") {
-            throwIfNotFound(scope, condition.value, node, "ifConditionDoesNotExist");
+            throwIfNotFound(functionScope, condition.value, node, "ifConditionDoesNotExist");
         }
         if (condition.type === "FunctionCall") {
-            functionCall(scope, condition, "ifConditionDoesNotExist");
+            functionCall(condition.value.name, condition, "ifConditionDoesNotExist");
         }
 
-        traverse(scope, node.body);
+        traverse(state.path, node.body);
         if (node.fallback) {
-            traverse(scope, node.fallback);
+            state.path += `.else_${node.line}`;
+            traverse(state.path, node.fallback);
         }
     }
 
@@ -100,4 +114,5 @@ function traverse(scope, node) {
 
 export default function Analyzer(ast) {
     traverse("program", ast);
+    state = EMPTY();
 };
