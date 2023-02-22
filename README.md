@@ -111,7 +111,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
 ### Modules
 - [x] **Import**
   ```js
-  import Math from "std/math"
+  import Math from "silk/math"
   ```
 - [ ] **Export**
   ```js
@@ -119,8 +119,8 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   ```
 - [x] **Module usage**
   ```js
-  import Math from "std/math"
-  import String from "std/string"
+  import Math from "silk/math"
+  import String from "silk/string"
 
   String.uppercase("avocado")
   let random = Math.random()
@@ -131,7 +131,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
 
   This rule makes impossible to create functions/variables with the same name.  
   ```js
-  import Math from "std/math"
+  import Math from "silk/math"
 
   let Math = 1
   //   ┌─ error: SyntaxError
@@ -169,6 +169,18 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   //   │  ^ This identifier has not been declared.
   // You can't use this variable as value. It does not exist.
   ```
+  Example inside a function:
+  ```js
+  let score = 98
+  function sumScore(value) {
+    let newScore = scor + value // note the typo
+    return newScore
+  }
+  // Error:   ┌─ error: SyntaxError
+  // 3 │  scor
+  //   │  ^^^^ This identifier has not been declared.
+  // You can't use this variable as value. It does not exist.
+  ```
 - [x] **No dynamic values**  
   This rule is a boundary to prevent you from accessing a property in a dynamic value which (Silk) can't garantee it exists (yet).
   ```js
@@ -177,6 +189,36 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   // a value returned from a function call cannot be accessed since its dynamic
   // and this makes more difficult to catch errors
   let name = Module.doSomething().dynamicValue
+  //   ┌─ error: SyntaxError
+  // 6 │  .
+  //   │  ^ I was not expecting this.
+  // Expected: Import, Let or Function
+  ```
+- [ ] **Reference to non defined nested value**  
+  This rule prevents you from accessing a path in an object that does not exist.  
+  ```js
+  let user = {
+    name: "Jane",
+    age: 25
+  }
+  function greet(name) {
+    return "Hi, " + name
+  }
+  greet(user.lastName)
+  //   ┌─ error: SyntaxError
+  // 8 │  lastName
+  //   │  ^^^^^^^^ This property has not been declared.
+  // You can't use this variable as value. It does not exist.
+  ```
+  Same when you call a nested function which is not a function or does not exist.  
+  ```js
+  import String from "silk/string"
+
+  String.upcase("avocado")
+  //   ┌─ error: SyntaxError
+  // 3 │  upcase
+  //   │  ^^^^^^ This property has not been declared.
+  // You can't use this variable as value. It does not exist.
   ```
 
 ### Roadmap
@@ -196,6 +238,9 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
 - [ ] Documentation
 - [ ] Silk <-> JS interoperability
 - [ ] Small type system
+  - [ ] Know the shape of objects
+  - [ ] Know the types of variables
+  - [ ] Know the return types of functions
 - [ ] Editor integration (Language Server)
 - [ ] Generate TS code
   - [ ] Generate types
