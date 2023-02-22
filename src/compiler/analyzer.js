@@ -52,10 +52,20 @@ function functionCall(name, node, context) {
     });
 }
 
+const REFERENCE_TYPE_TO_CONTEXT = {
+    Identifier: "reference",
+    FunctionCall: "dynamic",
+    BooleanLiteral: "boolean",
+    NumberLiteral: "number",
+    StringLiteral: "string",
+    ArrayLiteral: "array",
+    ObjectLiteral: "object",
+};
+
 function traverse(scope, node) {
     if (node.type === "ImportStatement") {
         throwIfFound("program", node.value.name, node, "import");
-        addIdentifier("program", node.value.name, node);
+        addIdentifier("program", node.value.name, { type: "import", line: node.line });
 
         if (!/^[A-Z][a-z]+(?:[A-Z][a-z]+)*$/.test(node.value.name)) {
             state = EMPTY();
@@ -63,10 +73,10 @@ function traverse(scope, node) {
         }
     }
     if (node.type === "VariableDeclaration") {
-        throwIfFound(scope, node.value.name, node, "let");
-        addIdentifier(scope, node.value.name, node);
-
         const reference = node.value.value;
+        throwIfFound(scope, node.value.name, node, "let");
+        addIdentifier(scope, node.value.name, { type: REFERENCE_TYPE_TO_CONTEXT[reference.type], line: node.line });
+
         if (reference.type === "Identifier") {
             throwIfNotFound(state.path, reference.value, node, "letValueDoesNotExist");
         }
@@ -76,11 +86,11 @@ function traverse(scope, node) {
     }
     if (node.type === "FunctionDeclaration") {
         throwIfFound(scope, node.value.name, node, "function");
-        addIdentifier(scope, node.value.name, node);
-        addIdentifier(`function_${node.value.name}`, node.value.name, node);
+        addIdentifier(scope, node.value.name, { type: "function", line: node.line });
+        addIdentifier(`function_${node.value.name}`, node.value.name, { type: "function", line: node.line });
         node.value.params.forEach(param => {
             throwIfFound(`function_${node.value.name}`, param.value, node, "functionParamDoesNotExist");
-            addIdentifier(`function_${node.value.name}`, param.value, node);
+            addIdentifier(`function_${node.value.name}`, param.value, { type: "functionParam", line: node.line });
         });
         state.path = `program.function_${node.value.name}`;
         traverse(`function_${node.value.name}`, node.value);
