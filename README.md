@@ -152,7 +152,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   //   │  ^^^^^^^^ This identifier has already been declared.
   // You can't declare a variable with this name. It has already been declared.
   ```
-  If the variable name is not created inside a function, this rule does not apply if the name exists outside of it.  
+  This rule does not apply if the variable name exists outside of it.  
   ```js
   let userName = "Anna"
   function greet(name) {
@@ -214,7 +214,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   ```js
   import String from "silk/string"
 
-  String.upcase("avocado")
+  let fruit = String.upcase("avocado")
   //   ┌─ error: SyntaxError
   // 3 │  upcase
   //   │  ^^^^^^ This property has not been declared.
@@ -229,7 +229,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   - [x] Program scope
   - [x] Inner scopes
 - [x] Warn about errors in a nicer way
-- [ ] Sugest code fixes for errors
+- [ ] Sugest code fix for errors
 - [ ] Standard library
 - [ ] Support imports
 - [ ] CLI
