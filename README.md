@@ -241,6 +241,7 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   - [ ] Know the shape of objects
   - [ ] Know the types of variables
   - [ ] Know the return types of functions
+  - [ ] Know the shape of a module
 - [ ] Editor integration (Language Server)
 - [ ] Generate TS code
   - [ ] Generate types
