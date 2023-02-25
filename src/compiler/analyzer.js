@@ -9,6 +9,11 @@ const EMPTY = () => ({
 
 let state = EMPTY();
 
+function addScope(scope) {
+    if (!state.scopes[scope]) {
+        state.scopes[scope] = {};
+    }
+}
 function addIdentifier(scope, name, node) {
     if (!state.scopes[scope]) {
         state.scopes[scope] = {};
@@ -87,7 +92,7 @@ function traverse(scope, node) {
     if (node.type === "FunctionDeclaration") {
         throwIfFound(scope, node.value.name, node, "function");
         addIdentifier(scope, node.value.name, { type: "function", line: node.line });
-        addIdentifier(`function_${node.value.name}`, node.value.name, { type: "function", line: node.line });
+        addScope(`function_${node.value.name}`, node.value.name);
         node.value.params.forEach(param => {
             throwIfFound(`function_${node.value.name}`, param.value, node, "functionParamDoesNotExist");
             addIdentifier(`function_${node.value.name}`, param.value, { type: "functionParam", line: node.line });
@@ -126,5 +131,6 @@ function traverse(scope, node) {
 
 export default function Analyzer(ast) {
     traverse("program", ast);
+    console.log(JSON.stringify(state, null, 2));
     state = EMPTY();
 };
