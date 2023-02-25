@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import Parser from "../src/compiler/parser";
-import Analyzer from "../src/compiler/analyzer";
+import Parser from "../../src/compiler/parser";
+import Analyzer from "../../src/compiler/analyzer";
 
 describe("Identifier errors", () => {
     it("should throw if import not in PascalCase", () => {
@@ -54,7 +54,7 @@ describe("Reference errors", () => {
 
     it("should throw if reference is not declared in function scope", () => {
         const parser = new Parser();
-        expect(() => Analyzer(parser.parse("function a() { let a = b }")))
+        expect(() => Analyzer(parser.parse("function a() { let b = c }")))
             .toThrowError(/This identifier has not been declared./);
     });
     it("should throw if function call param not declared", () => {
