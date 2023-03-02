@@ -120,7 +120,7 @@ pub fn get_next_token(mut tokenizer Tokenizer) TokenMatchResult {
 	mut token := Token{}
 	piece := tokenizer.code.substr(tokenizer.cursor, tokenizer.code.len)
 
-	for spec in tokenizer.tokens_spec {
+	for spec in tokens_spec {
 		matched := match_token(spec.pattern, piece)
 		if matched.found {
 			if matched.value.contains('\n') {
