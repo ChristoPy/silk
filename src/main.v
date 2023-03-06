@@ -3,8 +3,7 @@ module main
 import cli { Command }
 import term
 import os
-import src.types { Tokenizer }
-import src.tokenizer { get_next_token }
+import src.compiler { Compiler }
 
 fn main() {
 	mut command := Command{
@@ -46,15 +45,13 @@ fn make_project(command Command) ! {
 }
 
 fn build_project(command Command) ! {
-	mut var := Tokenizer{
-		code: 'let a = 0'
-		line: 1
+	file_content := os.read_file('main.silk') or {
+		println(term.warn_message('Could not read main.silk: ${err}'))
+		return
 	}
-	println(get_next_token(mut var))
-	println(get_next_token(mut var))
-	println(get_next_token(mut var))
-	println(get_next_token(mut var))
-	println(get_next_token(mut var))
-	println(get_next_token(mut var))
-	println(var)
+
+	mut state := Compiler{}
+	ast := state.compile('main.silk', file_content)
+
+	println(ast)
 }
