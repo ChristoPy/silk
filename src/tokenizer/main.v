@@ -43,6 +43,8 @@ pub mut:
 }
 
 pub fn (mut state Tokenizer) get_next_token() !Token {
+	state.eof = !state.has_more_tokens()
+
 	mut token := Token{}
 	piece := state.code.substr(state.cursor, state.code.len)
 
@@ -70,10 +72,10 @@ pub fn (mut state Tokenizer) get_next_token() !Token {
 	if token.name == 'SKIP' {
 		return state.get_next_token()
 	}
-	if token.name == '' {
+	if token.name == '' && state.eof == false {
 		return error('Unexpected token: ${token.value}')
 	}
-	if !state.has_more_tokens() {
+	if state.has_more_tokens() == false {
 		state.eof = true
 	}
 

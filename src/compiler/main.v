@@ -8,10 +8,13 @@ mut:
 	tokenizer Tokenizer
 }
 
-pub fn (mut state Compiler) compile(file_name string, source string) AST {
+pub fn (mut state Compiler) compile(file_name string, source string) !AST {
 	mut ast := AST{
 		name: 'program'
 		nodes: []Token{}
+	}
+	if source.len == 0 {
+		return error('source is empty')
 	}
 	state.tokenizer = Tokenizer{
 		code: source
@@ -19,10 +22,10 @@ pub fn (mut state Compiler) compile(file_name string, source string) AST {
 		eof: false
 	}
 	for {
-		if !state.tokenizer.has_more_tokens() {
+		if state.tokenizer.eof {
 			break
 		}
-		result := state.tokenizer.get_next_token() or { exit(1) }
+		result := state.tokenizer.get_next_token()!
 		ast.nodes << result
 	}
 	return ast
