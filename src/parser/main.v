@@ -1,6 +1,7 @@
 module parser
 
-import src.types { ASTLeafNode, ASTNode, ASTRootNode, Token, VariableDeclarationNode }
+import src.util { throw_error }
+import src.types { ASTLeafNode, ASTNode, ASTRootNode, CompileError, Token, VariableDeclarationNode }
 import src.tokenizer { Tokenizer }
 
 pub struct Parser {
@@ -10,8 +11,8 @@ pub mut:
 	lookahead Token
 }
 
-pub fn (mut state Parser) parse(code string) {
-	state.tokenizer.init(code)
+pub fn (mut state Parser) parse(file string, code string) {
+	state.tokenizer.init(file, code)
 	state.lookahead = state.tokenizer.get_next_token()
 	state.ast.name = 'Program'
 
@@ -33,8 +34,37 @@ fn (mut state Parser) statement() ASTNode {
 	token := state.lookahead
 
 	match token.name {
-		'LET' { return state.variable_declaration() }
-		else { panic(token.name) }
+		'CONST' {
+			return state.constant_declaration()
+		}
+		else {
+			throw_error(CompileError{
+				kind: 'SyntaxError'
+				message: 'Unexpected token'
+				context: 'Expected token of type CONST, got ${token.name}'
+				line: token.line
+				line_content: state.tokenizer.code.split('\n')[token.line - 1]
+				column: token.column
+				wrong_bit: token.value
+				file_name: state.tokenizer.file
+			})
+			exit(1)
+		}
+	}
+}
+
+fn (mut state Parser) constant_declaration() VariableDeclarationNode {
+	keyword := state.eat('CONST')
+	identifier := state.eat('IDENTIFIER')
+	state.eat('EQUALS')
+	value := state.expression_value()
+
+	return VariableDeclarationNode{
+		kind: 'ConstantDeclaration'
+		name: identifier.value
+		value: value
+		line: keyword.line
+		column: keyword.column
 	}
 }
 
@@ -66,8 +96,20 @@ fn (mut state Parser) expression_value() ASTLeafNode {
 		'BOOLEAN' {
 			return state.boolean_literal()
 		}
+		'IDENTIFIER' {
+			return state.identifier()
+		}
 		else {
-			println('Error: Unexpected token ${token.value[0].ascii_str()}')
+			throw_error(CompileError{
+				kind: 'SyntaxError'
+				message: 'Unexpected token'
+				context: 'Expected token of type NUMBER, STRING, BOOLEAN or IDENTIFIER, got ${token.name}'
+				line: token.line
+				line_content: state.tokenizer.code.split('\n')[token.line - 1]
+				column: token.column
+				wrong_bit: token.value
+				file_name: state.tokenizer.file
+			})
 			exit(1)
 		}
 	}
@@ -100,6 +142,17 @@ fn (mut state Parser) boolean_literal() ASTLeafNode {
 
 	return ASTLeafNode{
 		name: 'BooleanLiteral'
+		value: token.value
+		line: token.line
+		column: token.column
+	}
+}
+
+fn (mut state Parser) identifier() ASTLeafNode {
+	token := state.eat('IDENTIFIER')
+
+	return ASTLeafNode{
+		name: 'Identifier'
 		value: token.value
 		line: token.line
 		column: token.column

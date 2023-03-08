@@ -10,6 +10,7 @@ const tokens_spec = [
 	TokenSpec{ name: 'SKIP' pattern: regex.regex_opt(r'^//.*') or { panic(err) } },
 	TokenSpec{ name: 'NUMBER' pattern: regex.regex_opt(r'^\d+') or { panic(err) } },
 	TokenSpec{ name: 'STRING' pattern: regex.regex_opt(r'^"[^"]*"') or { panic(err) } },
+	TokenSpec{ name: 'CONST' pattern: regex.regex_opt(r'^const') or { panic(err) } },
 	TokenSpec{ name: 'LET' pattern: regex.regex_opt(r'^let') or { panic(err) } },
 	TokenSpec{ name: 'FUNCTION' pattern: regex.regex_opt(r'^function') or { panic(err) } },
 	TokenSpec{ name: 'BOOLEAN' pattern: regex.regex_opt(r'^true') or { panic(err) } },
@@ -40,14 +41,18 @@ pub mut:
 	code   string
 	line   int
 	cursor int
+	column int
 	eof    bool
+	file   string
 }
 
-pub fn (mut state Tokenizer) init(code string) {
+pub fn (mut state Tokenizer) init(file string, code string) {
 	state.code = code
 	state.line = 1
 	state.cursor = 0
+	state.column = 1
 	state.eof = false
+	state.file = file
 }
 
 pub fn (mut state Tokenizer) get_next_token() Token {
@@ -70,17 +75,23 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 			continue
 		}
 
+		mut has_new_line := false
 		if matched.contains('\n') {
+			has_new_line = true
 			state.line += matched.split('\n').len - 1
+			state.column = 1
 		}
-
-		state.cursor += matched.len
 
 		token = Token{
 			name: spec.name
-			column: state.cursor
+			column: state.column
 			line: state.line
 			value: matched
+		}
+
+		state.cursor += matched.len
+		if !has_new_line {
+			state.column += matched.len
 		}
 		break
 	}
@@ -96,6 +107,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 			column: state.cursor
 			wrong_bit: piece[0].ascii_str()
 			context: 'I was not expecting this.'
+			file_name: state.file
 		})
 	}
 

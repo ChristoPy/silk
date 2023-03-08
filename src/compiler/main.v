@@ -8,5 +8,5 @@ pub mut:
 }
 
 pub fn (mut state Compiler) parse(file_name string, source string) {
-	state.parser.parse(source)
+	state.parser.parse(file_name, source)
 }

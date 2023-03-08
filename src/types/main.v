@@ -56,10 +56,12 @@ pub:
 
 pub struct CompileError {
 pub:
-	kind      string
-	message   string
-	column    int
-	line      int
-	wrong_bit string
-	context   string
+	kind         string
+	message      string
+	column       int
+	line         int
+	line_content string
+	wrong_bit    string
+	context      string
+	file_name    string
 }
