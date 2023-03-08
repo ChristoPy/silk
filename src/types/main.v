@@ -17,16 +17,32 @@ pub mut:
 	pattern regex.RE
 }
 
+pub type ASTNode = ASTRootNode | ASTLeafNode | VariableDeclarationNode
+
 pub struct AST {
 pub mut:
 	name  string
-	nodes []Token
+	nodes []ASTNode
 }
 
-pub struct ASTNode {
+pub struct VariableDeclarationNode {
+pub mut:
+	kind  string
+	name string
+	value ASTLeafNode
+	column int
+	line   int
+}
+
+pub struct ASTRootNode {
 pub mut:
 	name   string
-	nodes  []Token
+	nodes  []ASTNode
+}
+
+pub struct ASTLeafNode {
+pub mut:
+	name   string
 	value  string
 	column int
 	line   int

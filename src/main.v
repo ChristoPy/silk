@@ -51,7 +51,5 @@ fn build_project(command Command) ! {
 	}
 
 	mut state := Compiler{}
-	ast := state.compile('main.silk', file_content)!
-
-	println(ast)
+	state.parse('main.silk', file_content)
 }

@@ -42,8 +42,23 @@ pub mut:
 	eof    bool
 }
 
-pub fn (mut state Tokenizer) get_next_token() !Token {
-	state.eof = !state.has_more_tokens()
+pub fn (mut state Tokenizer) init(code string) {
+	state.code = code
+	state.line = 1
+	state.cursor = 0
+	state.eof = false
+}
+
+pub fn (mut state Tokenizer) get_next_token() Token {
+	if !state.has_more_tokens() {
+		state.eof = true
+		return Token{
+			name: 'EOF'
+			column: state.cursor
+			line: state.line
+			value: ''
+		}
+	}
 
 	mut token := Token{}
 	piece := state.code.substr(state.cursor, state.code.len)
@@ -55,7 +70,7 @@ pub fn (mut state Tokenizer) get_next_token() !Token {
 		}
 
 		if matched.contains('\n') {
-			state.line += matched.split('\n').len
+			state.line += matched.split('\n').len - 1
 		}
 
 		state.cursor += matched.len
@@ -73,10 +88,8 @@ pub fn (mut state Tokenizer) get_next_token() !Token {
 		return state.get_next_token()
 	}
 	if token.name == '' && state.eof == false {
-		return error('Unexpected token: ${token.value}')
-	}
-	if state.has_more_tokens() == false {
-		state.eof = true
+		println('Unexpected token: ${piece[0].ascii_str()}')
+		exit(1)
 	}
 
 	return token
