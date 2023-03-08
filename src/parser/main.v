@@ -1,11 +1,11 @@
 module parser
 
-import src.types { AST, Token, ASTRootNode, ASTLeafNode, VariableDeclarationNode, ASTNode }
+import src.types { ASTLeafNode, ASTNode, ASTRootNode, Token, VariableDeclarationNode }
 import src.tokenizer { Tokenizer }
 
 pub struct Parser {
 pub mut:
-	ast ASTRootNode
+	ast       ASTRootNode
 	tokenizer Tokenizer
 	lookahead Token
 }
@@ -33,7 +33,7 @@ fn (mut state Parser) statement() ASTNode {
 	token := state.lookahead
 
 	match token.name {
-		"LET" { return state.variable_declaration()}
+		'LET' { return state.variable_declaration() }
 		else { panic(token.name) }
 	}
 }
@@ -44,12 +44,12 @@ fn (mut state Parser) variable_declaration() VariableDeclarationNode {
 	state.eat('EQUALS')
 	value := state.expression_value()
 
-	return VariableDeclarationNode {
-		kind: 'VariableDeclaration',
-		name: identifier.value,
-		value: value,
-		line: keyword.line,
-		column: keyword.column,
+	return VariableDeclarationNode{
+		kind: 'VariableDeclaration'
+		name: identifier.value
+		value: value
+		line: keyword.line
+		column: keyword.column
 	}
 }
 
@@ -57,43 +57,52 @@ fn (mut state Parser) expression_value() ASTLeafNode {
 	token := state.lookahead
 
 	match token.name {
-		"NUMBER" { return state.number_literal() }
-		"STRING" { return state.string_literal() }
-		"BOOLEAN" { return state.boolean_literal() }
-		else { println('Error: Unexpected token ${token.value[0].ascii_str()}') exit(1) }
+		'NUMBER' {
+			return state.number_literal()
+		}
+		'STRING' {
+			return state.string_literal()
+		}
+		'BOOLEAN' {
+			return state.boolean_literal()
+		}
+		else {
+			println('Error: Unexpected token ${token.value[0].ascii_str()}')
+			exit(1)
+		}
 	}
 }
 
 fn (mut state Parser) number_literal() ASTLeafNode {
 	token := state.eat('NUMBER')
 
-	return ASTLeafNode {
-		name: 'NumberLiteral',
-		value: token.value,
-		line: token.line,
-		column: token.column,
+	return ASTLeafNode{
+		name: 'NumberLiteral'
+		value: token.value
+		line: token.line
+		column: token.column
 	}
 }
 
 fn (mut state Parser) string_literal() ASTLeafNode {
 	token := state.eat('STRING')
 
-	return ASTLeafNode {
-		name: 'StringLiteral',
-		value: token.value,
-		line: token.line,
-		column: token.column,
+	return ASTLeafNode{
+		name: 'StringLiteral'
+		value: token.value
+		line: token.line
+		column: token.column
 	}
 }
 
 fn (mut state Parser) boolean_literal() ASTLeafNode {
 	token := state.eat('BOOLEAN')
 
-	return ASTLeafNode {
-		name: 'BooleanLiteral',
-		value: token.value,
-		line: token.line,
-		column: token.column,
+	return ASTLeafNode{
+		name: 'BooleanLiteral'
+		value: token.value
+		line: token.line
+		column: token.column
 	}
 }
 
@@ -101,7 +110,7 @@ fn (mut state Parser) eat(token_name string) Token {
 	token := state.lookahead
 
 	if token.name != token_name {
-		println('Error: Expected $token_name, got ${state.lookahead.name}')
+		println('Error: Expected ${token_name}, got ${state.lookahead.name}')
 		exit(1)
 	}
 

@@ -1,6 +1,5 @@
 module compiler
 
-import src.types { AST, Token }
 import src.parser { Parser }
 
 pub struct Compiler {

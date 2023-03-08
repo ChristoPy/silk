@@ -17,7 +17,7 @@ pub mut:
 	pattern regex.RE
 }
 
-pub type ASTNode = ASTRootNode | ASTLeafNode | VariableDeclarationNode
+pub type ASTNode = ASTLeafNode | ASTRootNode | VariableDeclarationNode
 
 pub struct AST {
 pub mut:
@@ -27,17 +27,17 @@ pub mut:
 
 pub struct VariableDeclarationNode {
 pub mut:
-	kind  string
-	name string
-	value ASTLeafNode
+	kind   string
+	name   string
+	value  ASTLeafNode
 	column int
 	line   int
 }
 
 pub struct ASTRootNode {
 pub mut:
-	name   string
-	nodes  []ASTNode
+	name  string
+	nodes []ASTNode
 }
 
 pub struct ASTLeafNode {
@@ -52,4 +52,12 @@ pub struct MatchResult {
 pub:
 	found bool
 	value string
+}
+
+pub struct Error {
+pub:
+	message   string
+	column    int
+	line      int
+	wrong_bit string
 }
