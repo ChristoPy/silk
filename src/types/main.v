@@ -54,10 +54,12 @@ pub:
 	value string
 }
 
-pub struct Error {
+pub struct CompileError {
 pub:
+	kind      string
 	message   string
 	column    int
 	line      int
 	wrong_bit string
+	context   string
 }

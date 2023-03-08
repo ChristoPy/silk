@@ -1,7 +1,8 @@
 module tokenizer
 
 import regex
-import src.types { Token, TokenSpec }
+import src.util { throw_error }
+import src.types { CompileError, Token, TokenSpec }
 
 // vfmt off
 const tokens_spec = [
@@ -88,8 +89,14 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		return state.get_next_token()
 	}
 	if token.name == '' && state.eof == false {
-		println('Unexpected token: ${piece[0].ascii_str()}')
-		exit(1)
+		throw_error(CompileError{
+			kind: 'Syntax'
+			message: 'Unexpected token.'
+			line: state.line
+			column: state.cursor
+			wrong_bit: piece[0].ascii_str()
+			context: 'I was not expecting this.'
+		})
 	}
 
 	return token
