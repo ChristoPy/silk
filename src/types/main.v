@@ -17,35 +17,43 @@ pub mut:
 	pattern regex.RE
 }
 
-pub type ASTNode = ASTLeafNode | ASTRootNode | VariableDeclarationNode
-
 pub struct AST {
 pub mut:
-	name  string
-	nodes []ASTNode
+	name string
+	body []ASTNode
 }
 
-pub struct VariableDeclarationNode {
+pub struct SubNodeAST {
 pub mut:
-	kind   string
-	name   string
-	value  ASTLeafNode
-	column int
-	line   int
+	name string
+	body []ASTNodeVariableMetaValue
 }
 
-pub struct ASTRootNode {
-pub mut:
-	name  string
-	nodes []ASTNode
-}
+pub type ASTNodeMeta = ASTNodeImportStatementMeta | ASTNodeVariableMeta
+pub type ASTNodeVariableMetaValue = SubNodeAST | Token
 
-pub struct ASTLeafNode {
+pub struct ASTNode {
 pub mut:
 	name   string
-	value  string
 	column int
 	line   int
+	meta   ASTNodeMeta
+}
+
+pub struct ASTNodeVariableMeta {
+pub mut:
+	keyword Token
+	name    Token
+	equal   Token
+	value   ASTNodeVariableMetaValue
+}
+
+pub struct ASTNodeImportStatementMeta {
+pub mut:
+	keyword Token
+	name    Token
+	from    Token
+	path    Token
 }
 
 pub struct MatchResult {
