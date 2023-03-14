@@ -7,7 +7,7 @@ import src.types { CompileError, Token, TokenSpec }
 // vfmt off
 const tokens_spec = [
 	TokenSpec{ name: 'SKIP'       pattern: regex.regex_opt(r'^\s+')                    or { panic(err) } },
-	TokenSpec{ name: 'SKIP'       pattern: regex.regex_opt(r'^//.*')                   or { panic(err) } },
+	TokenSpec{ name: 'COMMENT'    pattern: regex.regex_opt(r'^//.*')                   or { panic(err) } },
 	TokenSpec{ name: 'NUMBER'     pattern: regex.regex_opt(r'^\d+')                    or { panic(err) } },
 	TokenSpec{ name: 'STRING'     pattern: regex.regex_opt(r'^"[^"]*"')                or { panic(err) } },
 	TokenSpec{ name: 'CONST'      pattern: regex.regex_opt(r'^const')                  or { panic(err) } },
@@ -94,7 +94,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		break
 	}
 
-	if token.name == 'SKIP' {
+	if token.name == 'SKIP' || token.name == 'COMMENT'{
 		return state.get_next_token()
 	}
 	if token.name == '' && state.eof == false {
@@ -117,7 +117,12 @@ pub fn (mut state Tokenizer) has_more_tokens() bool {
 }
 
 fn match_token(name string, pattern regex.RE, value string) string {
-	start, end := pattern.match_string(value)
+	mut other_pattern := pattern
+
+	if name == 'COMMENT' {
+		other_pattern.flag = regex.f_nl
+	}
+	start, end := other_pattern.match_string(value)
 
 	if start == -1 {
 		return ''
