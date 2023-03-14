@@ -1,9 +1,10 @@
 module parser
 
 import src.util { throw_error }
-import src.types { AST, ASTNode, ASTNodeImportStatementMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
+import src.types { AST, ASTNode, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
 import src.tokenizer { Tokenizer }
 import json
+import term
 
 pub struct Parser {
 pub mut:
@@ -45,7 +46,7 @@ fn (mut state Parser) statement() ASTNode {
 			throw_error(CompileError{
 				kind: 'SyntaxError'
 				message: 'Unexpected token'
-				context: 'Expected token of type LET, got ${token.name}'
+				context: 'Expected ${term.cyan('import')} or ${term.cyan('const')}, got "${token.value}"'
 				line: token.line
 				line_content: state.tokenizer.code.split('\n')[token.line - 1]
 				column: token.column
@@ -116,11 +117,14 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 		'LBRACKET' {
 			return state.array_literal()
 		}
+		'LBRACE' {
+			return state.object_literal()
+		}
 		else {
 			throw_error(CompileError{
 				kind: 'SyntaxError'
-				message: 'Unexpected token'
-				context: 'Expected token of type NUMBER, STRING, BOOLEAN or IDENTIFIER, got ${token.name}'
+				message: 'Unexpected value'
+				context: 'Expected value of ${term.cyan('Number')}, ${term.cyan('String')}, ${term.cyan('Boolean')}, ${term.cyan('Identifier')}, ${term.cyan('Array')} or ${term.cyan('Object')}, got "${token.value}"'
 				line: token.line
 				line_content: state.tokenizer.code.split('\n')[token.line - 1]
 				column: token.column
@@ -134,8 +138,51 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 	return token
 }
 
+fn (mut state Parser) object_literal() SubNodeAST {
+	state.eat('LBRACE')
+
+	mut root := SubNodeAST{
+		name: 'ObjectLiteral'
+	}
+
+	mut dangling_comma := false
+	for state.lookahead.name != 'RBRACE' {
+		key := state.eat('IDENTIFIER')
+		state.eat('COLON')
+		value := state.expression_value()
+
+		root.body << ASTNodeObjectMetaValue{
+			key: key
+			value: value
+		}
+
+		if state.lookahead.name == 'COMMA' {
+			state.eat('COMMA')
+			dangling_comma = true
+		} else {
+			dangling_comma = false
+		}
+	}
+
+	if dangling_comma {
+		throw_error(CompileError{
+			kind: 'SyntaxError'
+			message: 'Unexpected token'
+			context: 'Cannot have a dangling comma'
+			line: state.lookahead.line
+			line_content: state.tokenizer.code.split('\n')[state.lookahead.line - 1]
+			column: state.lookahead.column
+			wrong_bit: state.lookahead.value
+			file_name: state.tokenizer.file
+		})
+	}
+
+	state.eat('RBRACE')
+	return root
+}
+
 fn (mut state Parser) array_literal() SubNodeAST {
-	mut token := state.eat('LBRACKET')
+	state.eat('LBRACKET')
 
 	mut root := SubNodeAST{
 		name: 'ArrayLiteral'
@@ -157,7 +204,7 @@ fn (mut state Parser) array_literal() SubNodeAST {
 		throw_error(CompileError{
 			kind: 'SyntaxError'
 			message: 'Unexpected token'
-			context: 'Expected dangling comma to be followed by a value'
+			context: 'Cannot have a dangling comma'
 			line: state.lookahead.line
 			line_content: state.tokenizer.code.split('\n')[state.lookahead.line - 1]
 			column: state.lookahead.column
@@ -166,9 +213,7 @@ fn (mut state Parser) array_literal() SubNodeAST {
 		})
 	}
 
-	token.name = 'ArrayLiteral'
 	state.eat('RBRACKET')
-
 	return root
 }
 

@@ -30,7 +30,7 @@ pub mut:
 }
 
 pub type ASTNodeMeta = ASTNodeImportStatementMeta | ASTNodeVariableMeta
-pub type ASTNodeVariableMetaValue = SubNodeAST | Token
+pub type ASTNodeVariableMetaValue = ASTNodeObjectMetaValue | SubNodeAST | Token
 
 pub struct ASTNode {
 pub mut:
@@ -46,6 +46,12 @@ pub mut:
 	name    Token
 	equal   Token
 	value   ASTNodeVariableMetaValue
+}
+
+pub struct ASTNodeObjectMetaValue {
+pub mut:
+	key   Token
+	value ASTNodeVariableMetaValue
 }
 
 pub struct ASTNodeImportStatementMeta {
