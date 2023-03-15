@@ -94,7 +94,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		break
 	}
 
-	if token.name == 'SKIP' || token.name == 'COMMENT'{
+	if token.name == 'SKIP' || token.name == 'COMMENT' {
 		return state.get_next_token()
 	}
 	if token.name == '' && state.eof == false {

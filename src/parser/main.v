@@ -1,7 +1,7 @@
 module parser
 
 import src.util { throw_error }
-import src.types { AST, ASTNode, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
+import src.types { AST, ASTNode, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
 import src.tokenizer { Tokenizer }
 import json
 import term
@@ -32,6 +32,16 @@ fn (mut state Parser) program() {
 	state.ast.body << statements
 }
 
+fn (mut state Parser) nested_block() []ASTNode {
+	mut statements := []ASTNode{}
+
+	for state.lookahead.name != 'RBRACE' {
+		statements << state.nested_statement()
+	}
+
+	return statements
+}
+
 fn (mut state Parser) statement() ASTNode {
 	mut token := state.lookahead
 
@@ -42,11 +52,39 @@ fn (mut state Parser) statement() ASTNode {
 		'CONST' {
 			return state.constant_declaration()
 		}
+		'FUNCTION' {
+			return state.function_declaration()
+		}
 		else {
 			throw_error(CompileError{
 				kind: 'SyntaxError'
 				message: 'Unexpected token'
 				context: 'Expected ${term.cyan('import')} or ${term.cyan('const')}, got "${token.value}"'
+				line: token.line
+				line_content: state.tokenizer.code.split('\n')[token.line - 1]
+				column: token.column
+				wrong_bit: token.value
+				file_name: state.tokenizer.file
+			})
+		}
+	}
+
+	// Should never reach here
+	return ASTNode{}
+}
+
+fn (mut state Parser) nested_statement() ASTNode {
+	mut token := state.lookahead
+
+	match token.name {
+		'CONST' {
+			return state.constant_declaration()
+		}
+		else {
+			throw_error(CompileError{
+				kind: 'SyntaxError'
+				message: 'Unexpected token'
+				context: 'Expected ${term.cyan('const')}, got "${token.value}"'
 				line: token.line
 				line_content: state.tokenizer.code.split('\n')[token.line - 1]
 				column: token.column
@@ -98,6 +136,34 @@ fn (mut state Parser) constant_declaration() ASTNode {
 	}
 }
 
+fn (mut state Parser) function_declaration() ASTNode {
+	keyword := state.eat('FUNCTION')
+	name := state.eat('IDENTIFIER')
+
+	mut args := []Token{}
+	mut ref := &args
+
+	state.identifier_list('LPAREN', 'RPAREN', fn [mut ref] (param Token) {
+		ref << param
+	})
+
+	state.eat('LBRACE')
+	body := state.nested_block()
+	state.eat('RBRACE')
+
+	return ASTNode{
+		name: 'FunctionDeclaration'
+		line: keyword.line
+		column: keyword.column
+		meta: ASTNodeFunctionMeta{
+			keyword: keyword
+			name: name
+			args: args
+			body: body
+		}
+	}
+}
+
 fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 	token := state.lookahead
 
@@ -138,12 +204,13 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 	return token
 }
 
-fn (mut state Parser) list(limiter string, callback fn (ASTNodeVariableMetaValue)) {
+fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) {
+	state.eat(left)
 	mut dangling_comma := false
 	for state.lookahead.name != limiter {
-		callback(state.expression_value())
+		callback()
 
-		if state.lookahead.name == 'COMMA' {
+		if state.lookahead.name != limiter {
 			state.eat('COMMA')
 			dangling_comma = true
 		} else {
@@ -163,17 +230,28 @@ fn (mut state Parser) list(limiter string, callback fn (ASTNodeVariableMetaValue
 			file_name: state.tokenizer.file
 		})
 	}
+	state.eat(limiter)
+}
+
+fn (mut state Parser) list(left string, limiter string, callback fn (ASTNodeVariableMetaValue)) {
+	state.generic_list(left, limiter, fn [callback, mut state] () {
+		callback(state.expression_value())
+	})
+}
+
+fn (mut state Parser) identifier_list(left string, limiter string, callback fn (Token)) {
+	state.generic_list(left, limiter, fn [callback, mut state] () {
+		callback(state.identifier())
+	})
 }
 
 fn (mut state Parser) object_literal() SubNodeAST {
-	state.eat('LBRACE')
-
 	mut root := SubNodeAST{
 		name: 'ObjectLiteral'
 	}
 
 	mut ref := &root
-	state.list('RBRACE', fn [mut ref, mut state] (key ASTNodeVariableMetaValue) {
+	state.list('LBRACE', 'RBRACE', fn [mut ref, mut state] (key ASTNodeVariableMetaValue) {
 		state.eat('COLON')
 		value := state.expression_value()
 
@@ -183,23 +261,19 @@ fn (mut state Parser) object_literal() SubNodeAST {
 		}
 	})
 
-	state.eat('RBRACE')
 	return root
 }
 
 fn (mut state Parser) array_literal() SubNodeAST {
-	state.eat('LBRACKET')
-
 	mut root := SubNodeAST{
 		name: 'ArrayLiteral'
 	}
 
 	mut ref := &root
-	state.list('RBRACKET', fn [mut ref] (value ASTNodeVariableMetaValue) {
+	state.list('LBRACKET', 'RBRACKET', fn [mut ref] (value ASTNodeVariableMetaValue) {
 		ref.body << value
 	})
 
-	state.eat('RBRACKET')
 	return root
 }
 
@@ -231,7 +305,16 @@ fn (mut state Parser) eat(token_name string) Token {
 	token := state.lookahead
 
 	if token.name != token_name {
-		println('Error: Expected ${token_name}, got ${state.lookahead.name}')
+		throw_error(CompileError{
+			kind: 'SyntaxError'
+			message: 'Unexpected Token'
+			context: 'Expected ${term.cyan(token_name)} got "${state.lookahead.name}"'
+			line: token.line
+			line_content: state.tokenizer.code.split('\n')[token.line - 1]
+			column: token.column
+			wrong_bit: token.value
+			file_name: state.tokenizer.file
+		})
 		exit(1)
 	}
 

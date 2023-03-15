@@ -29,7 +29,7 @@ pub mut:
 	body []ASTNodeVariableMetaValue
 }
 
-pub type ASTNodeMeta = ASTNodeImportStatementMeta | ASTNodeVariableMeta
+pub type ASTNodeMeta = ASTNodeFunctionMeta | ASTNodeImportStatementMeta | ASTNodeVariableMeta
 pub type ASTNodeVariableMetaValue = ASTNodeObjectMetaValue | SubNodeAST | Token
 
 pub struct ASTNode {
@@ -38,6 +38,14 @@ pub mut:
 	column int
 	line   int
 	meta   ASTNodeMeta
+}
+
+pub struct ASTNodeFunctionMeta {
+pub mut:
+	keyword Token
+	name    Token
+	args    []Token
+	body    []ASTNode
 }
 
 pub struct ASTNodeVariableMeta {
