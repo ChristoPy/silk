@@ -138,23 +138,10 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 	return token
 }
 
-fn (mut state Parser) object_literal() SubNodeAST {
-	state.eat('LBRACE')
-
-	mut root := SubNodeAST{
-		name: 'ObjectLiteral'
-	}
-
+fn (mut state Parser) list(limiter string, callback fn (ASTNodeVariableMetaValue)) {
 	mut dangling_comma := false
-	for state.lookahead.name != 'RBRACE' {
-		key := state.eat('IDENTIFIER')
-		state.eat('COLON')
-		value := state.expression_value()
-
-		root.body << ASTNodeObjectMetaValue{
-			key: key
-			value: value
-		}
+	for state.lookahead.name != limiter {
+		callback(state.expression_value())
 
 		if state.lookahead.name == 'COMMA' {
 			state.eat('COMMA')
@@ -176,6 +163,25 @@ fn (mut state Parser) object_literal() SubNodeAST {
 			file_name: state.tokenizer.file
 		})
 	}
+}
+
+fn (mut state Parser) object_literal() SubNodeAST {
+	state.eat('LBRACE')
+
+	mut root := SubNodeAST{
+		name: 'ObjectLiteral'
+	}
+
+	mut ref := &root
+	state.list('RBRACE', fn [mut ref, mut state] (key ASTNodeVariableMetaValue) {
+		state.eat('COLON')
+		value := state.expression_value()
+
+		ref.body << ASTNodeObjectMetaValue{
+			key: key as Token
+			value: value
+		}
+	})
 
 	state.eat('RBRACE')
 	return root
@@ -188,30 +194,10 @@ fn (mut state Parser) array_literal() SubNodeAST {
 		name: 'ArrayLiteral'
 	}
 
-	mut dangling_comma := false
-	for state.lookahead.name != 'RBRACKET' {
-		root.body << state.expression_value()
-
-		if state.lookahead.name == 'COMMA' {
-			state.eat('COMMA')
-			dangling_comma = true
-		} else {
-			dangling_comma = false
-		}
-	}
-
-	if dangling_comma {
-		throw_error(CompileError{
-			kind: 'SyntaxError'
-			message: 'Unexpected token'
-			context: 'Cannot have a dangling comma'
-			line: state.lookahead.line
-			line_content: state.tokenizer.code.split('\n')[state.lookahead.line - 1]
-			column: state.lookahead.column
-			wrong_bit: state.lookahead.value
-			file_name: state.tokenizer.file
-		})
-	}
+	mut ref := &root
+	state.list('RBRACKET', fn [mut ref] (value ASTNodeVariableMetaValue) {
+		ref.body << value
+	})
 
 	state.eat('RBRACKET')
 	return root
