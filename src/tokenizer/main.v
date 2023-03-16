@@ -96,6 +96,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 			kind: 'Syntax'
 			message: 'Unexpected token.'
 			line: state.line
+			line_content: state.code.split('\n')[state.line - 1]
 			column: state.column
 			wrong_bit: piece[0].ascii_str()
 			context: 'I was not expecting this.'
