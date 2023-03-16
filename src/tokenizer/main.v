@@ -57,7 +57,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 	if !state.has_more_tokens() {
 		state.eof = true
 		return Token{
-			name: 'EOF'
+			kind: 'EOF'
 			column: state.cursor
 			line: state.line
 			value: ''
@@ -79,7 +79,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		}
 
 		token = Token{
-			name: spec.name
+			kind: spec.name
 			column: state.column
 			line: state.line
 			value: matched
@@ -90,10 +90,10 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		break
 	}
 
-	if token.name == 'SKIP' || token.name == 'COMMENT' {
+	if token.kind == 'SKIP' || token.kind == 'COMMENT' {
 		return state.get_next_token()
 	}
-	if token.name == '' && state.eof == false {
+	if token.kind == '' && state.eof == false {
 		throw_error(CompileError{
 			kind: 'Syntax'
 			message: 'Unexpected token.'

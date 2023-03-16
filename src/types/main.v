@@ -2,9 +2,15 @@ module types
 
 import regex
 
+pub struct SubToken {
+pub mut:
+	column int
+	line   int
+}
+
 pub struct Token {
 pub mut:
-	name   string
+	kind   string
 	column int
 	line   int
 	value  string
@@ -52,7 +58,7 @@ pub mut:
 
 pub struct ASTNodeFunctionMeta {
 pub mut:
-	keyword Token
+	keyword SubToken
 	name    Token
 	args    []Token
 	body    []ASTNode
@@ -60,9 +66,9 @@ pub mut:
 
 pub struct ASTNodeVariableMeta {
 pub mut:
-	keyword Token
+	keyword SubToken
 	name    Token
-	equal   Token
+	equal   SubToken
 	value   ASTNodeVariableMetaValue
 }
 
@@ -74,9 +80,9 @@ pub mut:
 
 pub struct ASTNodeImportStatementMeta {
 pub mut:
-	keyword Token
+	keyword SubToken
 	name    Token
-	from    Token
+	from    SubToken
 	path    Token
 }
 
