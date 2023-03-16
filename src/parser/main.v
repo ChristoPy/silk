@@ -1,7 +1,7 @@
 module parser
 
 import src.util { throw_error }
-import src.types { AST, ASTNode, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
+import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
 import src.tokenizer { Tokenizer }
 import json
 import term
@@ -80,6 +80,12 @@ fn (mut state Parser) nested_statement() ASTNode {
 		'CONST' {
 			return state.constant_declaration()
 		}
+		'LET' {
+			return state.let_declaration()
+		}
+		'IDENTIFIER' {
+			return state.function_call_statement()
+		}
 		else {
 			throw_error(CompileError{
 				kind: 'SyntaxError'
@@ -132,6 +138,46 @@ fn (mut state Parser) constant_declaration() ASTNode {
 			name: name
 			equal: equal
 			value: value
+		}
+	}
+}
+
+fn (mut state Parser) let_declaration() ASTNode {
+	keyword := state.eat('LET')
+	name := state.eat('IDENTIFIER')
+	equal := state.eat('EQUALS')
+	value := state.expression_value()
+
+	return ASTNode{
+		name: 'LetDeclaration'
+		line: keyword.line
+		column: keyword.column
+		meta: ASTNodeVariableMeta{
+			keyword: keyword
+			name: name
+			equal: equal
+			value: value
+		}
+	}
+}
+
+fn (mut state Parser) function_call_statement() ASTNode {
+	name := state.eat('IDENTIFIER')
+
+	mut args := []Token{}
+	mut ref := &args
+
+	state.list('LPAREN', 'RPAREN', fn [mut ref] (param ASTNodeVariableMetaValue) {
+		ref << param as Token
+	})
+
+	return ASTNode{
+		name: 'FunctionCallStatement'
+		line: name.line
+		column: name.column
+		meta: ASTNodeFunctionCallMeta{
+			name: name
+			args: args
 		}
 	}
 }
