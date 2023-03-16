@@ -35,7 +35,7 @@ fn (mut state Parser) program() {
 fn (mut state Parser) nested_block() []ASTNode {
 	mut statements := []ASTNode{}
 
-	for state.lookahead.kind != 'RBRACE' {
+	for state.lookahead.kind != 'RBrace' {
 		statements << state.nested_statement()
 	}
 
@@ -46,13 +46,13 @@ fn (mut state Parser) statement() ASTNode {
 	mut token := state.lookahead
 
 	match token.kind {
-		'IMPORT' {
+		'Import' {
 			return state.import_statement()
 		}
-		'CONST' {
+		'Const' {
 			return state.constant_declaration()
 		}
-		'FUNCTION' {
+		'Function' {
 			return state.function_declaration()
 		}
 		else {
@@ -77,13 +77,13 @@ fn (mut state Parser) nested_statement() ASTNode {
 	mut token := state.lookahead
 
 	match token.kind {
-		'CONST' {
+		'Const' {
 			return state.constant_declaration()
 		}
-		'LET' {
+		'Let' {
 			return state.let_declaration()
 		}
-		'IDENTIFIER' {
+		'Identifier' {
 			return state.function_call_statement()
 		}
 		else {
@@ -105,10 +105,10 @@ fn (mut state Parser) nested_statement() ASTNode {
 }
 
 fn (mut state Parser) import_statement() ASTNode {
-	keyword := state.eat_sub('IMPORT')
-	name := state.eat('IDENTIFIER')
-	from := state.eat_sub('FROM')
-	path := state.eat('STRING')
+	keyword := state.eat_sub('Import')
+	name := state.eat('Identifier')
+	from := state.eat_sub('From')
+	path := state.eat('String')
 
 	return ASTNode{
 		name: 'ImportStatement'
@@ -124,9 +124,9 @@ fn (mut state Parser) import_statement() ASTNode {
 }
 
 fn (mut state Parser) constant_declaration() ASTNode {
-	keyword := state.eat_sub('CONST')
-	name := state.eat('IDENTIFIER')
-	equal := state.eat_sub('EQUALS')
+	keyword := state.eat_sub('Const')
+	name := state.eat('Identifier')
+	equal := state.eat_sub('Equals')
 	value := state.expression_value()
 
 	return ASTNode{
@@ -143,9 +143,9 @@ fn (mut state Parser) constant_declaration() ASTNode {
 }
 
 fn (mut state Parser) let_declaration() ASTNode {
-	keyword := state.eat_sub('LET')
-	name := state.eat('IDENTIFIER')
-	equal := state.eat_sub('EQUALS')
+	keyword := state.eat_sub('Let')
+	name := state.eat('Identifier')
+	equal := state.eat_sub('Equals')
 	value := state.expression_value()
 
 	return ASTNode{
@@ -162,12 +162,12 @@ fn (mut state Parser) let_declaration() ASTNode {
 }
 
 fn (mut state Parser) function_call_statement() ASTNode {
-	name := state.eat('IDENTIFIER')
+	name := state.eat('Identifier')
 
 	mut args := []Token{}
 	mut ref := &args
 
-	state.list('LPAREN', 'RPAREN', fn [mut ref] (param ASTNodeVariableMetaValue) {
+	state.list('LParen', 'RParen', fn [mut ref] (param ASTNodeVariableMetaValue) {
 		ref << param as Token
 	})
 
@@ -183,19 +183,19 @@ fn (mut state Parser) function_call_statement() ASTNode {
 }
 
 fn (mut state Parser) function_declaration() ASTNode {
-	keyword := state.eat_sub('FUNCTION')
-	name := state.eat('IDENTIFIER')
+	keyword := state.eat_sub('Function')
+	name := state.eat('Identifier')
 
 	mut args := []Token{}
 	mut ref := &args
 
-	state.identifier_list('LPAREN', 'RPAREN', fn [mut ref] (param Token) {
+	state.identifier_list('LParen', 'RParen', fn [mut ref] (param Token) {
 		ref << param
 	})
 
-	state.eat('LBRACE')
+	state.eat('LBrace')
 	body := state.nested_block()
-	state.eat('RBRACE')
+	state.eat('RBrace')
 
 	return ASTNode{
 		name: 'FunctionDeclaration'
@@ -214,22 +214,22 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 	token := state.lookahead
 
 	match token.kind {
-		'NUMBER' {
-			return state.number_literal()
+		'Number' {
+			return state.eat('Number')
 		}
-		'STRING' {
-			return state.string_literal()
+		'String' {
+			return state.eat('String')
 		}
-		'BOOLEAN' {
-			return state.boolean_literal()
+		'Boolean' {
+			return state.eat('Boolean')
 		}
-		'IDENTIFIER' {
+		'Identifier' {
 			return state.identifier()
 		}
-		'LBRACKET' {
+		'LBracket' {
 			return state.array_literal()
 		}
-		'LBRACE' {
+		'LBrace' {
 			return state.object_literal()
 		}
 		else {
@@ -257,7 +257,7 @@ fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) 
 		callback()
 
 		if state.lookahead.kind != limiter {
-			state.eat('COMMA')
+			state.eat('Comma')
 			dangling_comma = true
 		} else {
 			dangling_comma = false
@@ -297,8 +297,8 @@ fn (mut state Parser) object_literal() SubNodeAST {
 	}
 
 	mut ref := &root
-	state.list('LBRACE', 'RBRACE', fn [mut ref, mut state] (key ASTNodeVariableMetaValue) {
-		state.eat('COLON')
+	state.list('LBrace', 'RBrace', fn [mut ref, mut state] (key ASTNodeVariableMetaValue) {
+		state.eat('Colon')
 		value := state.expression_value()
 
 		ref.body << ASTNodeObjectMetaValue{
@@ -312,38 +312,19 @@ fn (mut state Parser) object_literal() SubNodeAST {
 
 fn (mut state Parser) array_literal() SubNodeAST {
 	mut root := SubNodeAST{
-		name: 'ArrayLiteral'
+		name: 'Array'
 	}
 
 	mut ref := &root
-	state.list('LBRACKET', 'RBRACKET', fn [mut ref] (value ASTNodeVariableMetaValue) {
+	state.list('LBracket', 'RBracket', fn [mut ref] (value ASTNodeVariableMetaValue) {
 		ref.body << value
 	})
 
 	return root
 }
 
-fn (mut state Parser) number_literal() Token {
-	mut token := state.eat('NUMBER')
-	token.kind = 'NumberLiteral'
-	return token
-}
-
-fn (mut state Parser) string_literal() Token {
-	mut token := state.eat('STRING')
-	token.kind = 'StringLiteral'
-	return token
-}
-
-fn (mut state Parser) boolean_literal() Token {
-	mut token := state.eat('BOOLEAN')
-	token.kind = 'BooleanLiteral'
-	return token
-}
-
-
 fn (mut state Parser) identifier() Token {
-	mut token := state.eat('IDENTIFIER')
+	mut token := state.eat('Identifier')
 	token.kind = 'Identifier'
 	return token
 }

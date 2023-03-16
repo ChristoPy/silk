@@ -6,31 +6,29 @@ import src.types { CompileError, Token, TokenSpec }
 
 // vfmt off
 const tokens_spec = [
-	TokenSpec{ name: 'SKIP'       pattern: regex.regex_opt(r'^\s+')                    or { panic(err) } },
-	TokenSpec{ name: 'COMMENT'    pattern: regex.regex_opt(r'^//.*')                   or { panic(err) } },
-	TokenSpec{ name: 'NUMBER'     pattern: regex.regex_opt(r'^\d+')                    or { panic(err) } },
-	TokenSpec{ name: 'STRING'     pattern: regex.regex_opt(r'^"[^"]*"')                or { panic(err) } },
-	TokenSpec{ name: 'CONST'      pattern: regex.regex_opt(r'^const')                  or { panic(err) } },
-	TokenSpec{ name: 'LET'        pattern: regex.regex_opt(r'^let')                    or { panic(err) } },
-	TokenSpec{ name: 'FUNCTION'   pattern: regex.regex_opt(r'^function')               or { panic(err) } },
-	TokenSpec{ name: 'BOOLEAN'    pattern: regex.regex_opt(r'^true')                   or { panic(err) } },
-	TokenSpec{ name: 'BOOLEAN'    pattern: regex.regex_opt(r'^false')                  or { panic(err) } },
-	TokenSpec{ name: 'IMPORT'     pattern: regex.regex_opt(r'^import')                 or { panic(err) } },
-	TokenSpec{ name: 'FROM'       pattern: regex.regex_opt(r'^from')                   or { panic(err) } },
-	TokenSpec{ name: 'MATCH'      pattern: regex.regex_opt(r'^match')                  or { panic(err) } },
-	TokenSpec{ name: 'IDENTIFIER' pattern: regex.regex_opt(r'^[a-zA-Z_][a-zA-Z0-9_]*') or { panic(err) } },
-	TokenSpec{ name: 'EQUALS'     pattern: regex.regex_opt(r'^=')                      or { panic(err) } },
-	TokenSpec{ name: 'LPAREN'     pattern: regex.regex_opt(r'^\(')                     or { panic(err) } },
-	TokenSpec{ name: 'RPAREN'     pattern: regex.regex_opt(r'^)')                      or { panic(err) } },
-	TokenSpec{ name: 'LBRACE'     pattern: regex.regex_opt(r'^{')                      or { panic(err) } },
-	TokenSpec{ name: 'RBRACE'     pattern: regex.regex_opt(r'^}')                      or { panic(err) } },
-	TokenSpec{ name: 'LBRACKET'   pattern: regex.regex_opt(r'^\[')                     or { panic(err) } },
-	TokenSpec{ name: 'RBRACKET'   pattern: regex.regex_opt(r'^]')                      or { panic(err) } },
-	TokenSpec{ name: 'LBRACE'     pattern: regex.regex_opt(r'^{')                      or { panic(err) } },
-	TokenSpec{ name: 'RBRACE'     pattern: regex.regex_opt(r'^}')                      or { panic(err) } },
-	TokenSpec{ name: 'COLON'      pattern: regex.regex_opt(r'^:')                      or { panic(err) } },
-	TokenSpec{ name: 'COMMA'      pattern: regex.regex_opt(r'^,')                      or { panic(err) } },
-	TokenSpec{ name: 'DOT'        pattern: regex.regex_opt(r'^\.')                     or { panic(err) } },
+	TokenSpec{ name: 'Skip'       pattern: regex.regex_opt(r'^\s+')                    or { panic(err) } },
+	TokenSpec{ name: 'Comment'    pattern: regex.regex_opt(r'^//.*')                   or { panic(err) } },
+	TokenSpec{ name: 'Number'     pattern: regex.regex_opt(r'^\d+')                    or { panic(err) } },
+	TokenSpec{ name: 'String'     pattern: regex.regex_opt(r'^"[^"]*"')                or { panic(err) } },
+	TokenSpec{ name: 'Const'      pattern: regex.regex_opt(r'^const')                  or { panic(err) } },
+	TokenSpec{ name: 'Let'        pattern: regex.regex_opt(r'^let')                    or { panic(err) } },
+	TokenSpec{ name: 'Function'   pattern: regex.regex_opt(r'^function')               or { panic(err) } },
+	TokenSpec{ name: 'Boolean'    pattern: regex.regex_opt(r'^true')                   or { panic(err) } },
+	TokenSpec{ name: 'Boolean'    pattern: regex.regex_opt(r'^false')                  or { panic(err) } },
+	TokenSpec{ name: 'Import'     pattern: regex.regex_opt(r'^import')                 or { panic(err) } },
+	TokenSpec{ name: 'From'       pattern: regex.regex_opt(r'^from')                   or { panic(err) } },
+	TokenSpec{ name: 'Match'      pattern: regex.regex_opt(r'^match')                  or { panic(err) } },
+	TokenSpec{ name: 'Identifier' pattern: regex.regex_opt(r'^[a-zA-Z_][a-zA-Z0-9_]*') or { panic(err) } },
+	TokenSpec{ name: 'Equals'     pattern: regex.regex_opt(r'^=')                      or { panic(err) } },
+	TokenSpec{ name: 'LParen'     pattern: regex.regex_opt(r'^\(')                     or { panic(err) } },
+	TokenSpec{ name: 'RParen'     pattern: regex.regex_opt(r'^)')                      or { panic(err) } },
+	TokenSpec{ name: 'LBrace'     pattern: regex.regex_opt(r'^{')                      or { panic(err) } },
+	TokenSpec{ name: 'RBrace'     pattern: regex.regex_opt(r'^}')                      or { panic(err) } },
+	TokenSpec{ name: 'LBracket'   pattern: regex.regex_opt(r'^\[')                     or { panic(err) } },
+	TokenSpec{ name: 'RBracket'   pattern: regex.regex_opt(r'^]')                      or { panic(err) } },
+	TokenSpec{ name: 'Colon'      pattern: regex.regex_opt(r'^:')                      or { panic(err) } },
+	TokenSpec{ name: 'Comma'      pattern: regex.regex_opt(r'^,')                      or { panic(err) } },
+	TokenSpec{ name: 'Dot'        pattern: regex.regex_opt(r'^\.')                     or { panic(err) } },
 ]
 // vfmt on
 
@@ -90,7 +88,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		break
 	}
 
-	if token.kind == 'SKIP' || token.kind == 'COMMENT' {
+	if token.kind == 'Skip' || token.kind == 'Comment' {
 		return state.get_next_token()
 	}
 	if token.kind == '' && state.eof == false {
@@ -115,7 +113,7 @@ pub fn (mut state Tokenizer) has_more_tokens() bool {
 fn match_token(name string, pattern regex.RE, value string) string {
 	mut other_pattern := pattern
 
-	if name == 'COMMENT' {
+	if name == 'Comment' {
 		other_pattern.flag = regex.f_nl
 	}
 	start, end := other_pattern.match_string(value)
