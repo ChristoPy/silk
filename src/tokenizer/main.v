@@ -73,11 +73,9 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 			continue
 		}
 
-		mut has_new_line := false
 		if matched.contains('\n') {
-			has_new_line = true
 			state.line += matched.split('\n').len - 1
-			state.column = 1
+			state.column = 0
 		}
 
 		token = Token{
@@ -88,9 +86,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 		}
 
 		state.cursor += matched.len
-		if !has_new_line {
-			state.column += matched.len
-		}
+		state.column += matched.len
 		break
 	}
 
@@ -102,7 +98,7 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 			kind: 'Syntax'
 			message: 'Unexpected token.'
 			line: state.line
-			column: state.cursor
+			column: state.column
 			wrong_bit: piece[0].ascii_str()
 			context: 'I was not expecting this.'
 			file_name: state.file
