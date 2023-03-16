@@ -1,7 +1,7 @@
 module parser
 
 import src.util { throw_error }
-import src.types { SubToken, AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, Token }
+import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import src.tokenizer { Tokenizer }
 import json
 import term
@@ -163,7 +163,10 @@ fn (mut state Parser) let_declaration() ASTNode {
 
 fn (mut state Parser) function_call_statement() ASTNode {
 	name := state.eat('Identifier')
+	return state.generic_function_call(name)
+}
 
+fn (mut state Parser) generic_function_call(name Token) ASTNode {
 	mut args := []Token{}
 	mut ref := &args
 
@@ -224,7 +227,7 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 			return state.eat('Boolean')
 		}
 		'Identifier' {
-			return state.eat('Identifier')
+			return state.identifier_or_function_call()
 		}
 		'LBracket' {
 			return state.array_literal()
@@ -321,6 +324,16 @@ fn (mut state Parser) array_literal() SubNodeAST {
 	})
 
 	return root
+}
+
+fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
+	name := state.eat('Identifier')
+
+	if state.lookahead.kind == 'LParen' {
+		return state.generic_function_call(name)
+	}
+
+	return name
 }
 
 fn (mut state Parser) eat(token_name string) Token {

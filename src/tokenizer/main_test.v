@@ -4,9 +4,9 @@ fn test_get_next_token() {
 	mut state := Tokenizer{}
 	state.init('test', '1 2 3')
 
-	assert state.get_next_token().name == 'Number'
-	assert state.get_next_token().name == 'Number'
-	assert state.get_next_token().name == 'Number'
+	assert state.get_next_token().kind == 'Number'
+	assert state.get_next_token().kind == 'Number'
+	assert state.get_next_token().kind == 'Number'
 }
 
 fn test_eof() {
@@ -14,8 +14,8 @@ fn test_eof() {
 	state.init('test', '1')
 
 	assert state.eof == false
-	assert state.get_next_token().name == 'Number'
-	assert state.get_next_token().name == 'EOF'
+	assert state.get_next_token().kind == 'Number'
+	assert state.get_next_token().kind == 'EOF'
 	assert state.eof == true
 }
 
@@ -24,7 +24,7 @@ fn test_skip_comments() {
 	state.init('test', '// comment
 	1')
 
-	assert state.get_next_token().name == 'Number'
+	assert state.get_next_token().kind == 'Number'
 }
 
 fn test_line_number() {
