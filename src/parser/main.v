@@ -224,7 +224,7 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 			return state.eat('Boolean')
 		}
 		'Identifier' {
-			return state.identifier()
+			return state.eat('Identifier')
 		}
 		'LBracket' {
 			return state.array_literal()
@@ -287,13 +287,13 @@ fn (mut state Parser) list(left string, limiter string, callback fn (ASTNodeVari
 
 fn (mut state Parser) identifier_list(left string, limiter string, callback fn (Token)) {
 	state.generic_list(left, limiter, fn [callback, mut state] () {
-		callback(state.identifier())
+		callback(state.eat('Identifier'))
 	})
 }
 
 fn (mut state Parser) object_literal() SubNodeAST {
 	mut root := SubNodeAST{
-		name: 'ObjectLiteral'
+		name: 'Object'
 	}
 
 	mut ref := &root
@@ -321,12 +321,6 @@ fn (mut state Parser) array_literal() SubNodeAST {
 	})
 
 	return root
-}
-
-fn (mut state Parser) identifier() Token {
-	mut token := state.eat('Identifier')
-	token.kind = 'Identifier'
-	return token
 }
 
 fn (mut state Parser) eat(token_name string) Token {
