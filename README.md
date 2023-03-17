@@ -1,6 +1,9 @@
-# Silk
-The Smooth JavaScript subset!  
+<div style="display:grid;place-items:center;">
+<h1>Silk</h1>
+<p>The Smooth JavaScript subset!</p>
 
+[Roadmap](./ROADMAP.md)
+</div>
 
 # About and motivation
 Silk is a programming language that was designed to reduce programming errors caused by the inherent flexibility and power of JavaScript. Although JavaScript is an incredibly powerful language that allows developers to do almost anything, its flexibility can sometimes lead to unexpected results and errors.
@@ -53,16 +56,16 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
     ```js
     let name = getName(user)
     ```
-### Branching
-- [x] **If (inside a function)**
+### Control flow (Only inside functions)
+- [ ] **Match**
   ```js
-  if (name) {}
+  match user.type {
+    "admin" => "Hello, Admin!"
+    "user" => "Hello, ${user.name}!"
+    _ => "Hello, visitor!"
+  }
   ```
-- [x] **Else if**
-  ```js
-  else if (name) {}
-  ```
-- [x] **Return (inside a function or if)**
+- [x] **Return**
   ```js
   return a + b
   ```
@@ -134,10 +137,10 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   import Math from "silk/math"
 
   let Math = 1
-  //   ┌─ error: SyntaxError
+  //   ╭─ ReferenceError: This identifier has already been declared.
   // 3 │  Math
-  //   │  ^^^^ This identifier has already been declared.
-  // You can't declare a variable with this name. It has already been declared.
+  //   │  ^^^^
+  //   • You can't declare a variable with this name. It has already been declared.
   ```
   Same for variables inside a function.  
   Note that function parameters are variables, so they cannot be recreated inside of it too. Example:
@@ -147,10 +150,10 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
     let userName = String.titleCase(name)
     return "Hello, " + userName
   }
-  //   ┌─ error: SyntaxError
+  //   ╭─ ReferenceError: This identifier has already been declared.
   // 3 │  userName
-  //   │  ^^^^^^^^ This identifier has already been declared.
-  // You can't declare a variable with this name. It has already been declared.
+  //   │  ^^^^^^^^
+  //   • You can't declare a variable with this name. It has already been declared.
   ```
   This rule does not apply if the variable name exists outside of it.  
   ```js
@@ -164,9 +167,9 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   Silk will warn you about a non defined reference and won't compile. This rule applies for: variables, function calls, function calls parameters.
   ```js
   let a = b
-  // Error:   ┌─ error: SyntaxError
+  //   ╭─ ReferenceError: This identifier has not been declared.
   // 1 │  b
-  //   │  ^ This identifier has not been declared.
+  //   │  ^
   // You can't use this variable as value. It does not exist.
   ```
   Example inside a function:
@@ -176,10 +179,10 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
     let newScore = scor + value // note the typo
     return newScore
   }
-  // Error:   ┌─ error: SyntaxError
+  //   ╭─ ReferenceError: This identifier has not been declared.
   // 3 │  scor
-  //   │  ^^^^ This identifier has not been declared.
-  // You can't use this variable as value. It does not exist.
+  //   │  ^^^^
+  //   • You can't use this variable as value. It does not exist.
   ```
 - [x] **No dynamic values**  
   This rule is a boundary to prevent you from accessing a property in a dynamic value which (Silk) can't garantee it exists (yet).
@@ -189,10 +192,10 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
   // a value returned from a function call cannot be accessed since its dynamic
   // and this makes more difficult to catch errors
   let name = Module.doSomething().dynamicValue
-  //   ┌─ error: SyntaxError
+  //   ╭─ SyntaxError: I was not expecting this.
   // 6 │  .
-  //   │  ^ I was not expecting this.
-  // Expected: Import, Let or Function
+  //   │  ^
+  //   • Expected: Import, Let or Function
   ```
 - [ ] **Reference to non defined nested value**  
   This rule prevents you from accessing a path in an object that does not exist.  
@@ -205,44 +208,18 @@ It's worth noting that Silk is currently a small subset of JavaScript, designed 
     return "Hi, " + name
   }
   greet(user.lastName)
-  //   ┌─ error: SyntaxError
+  //   ╭─ SyntaxError: This property has not been declared.
   // 8 │  lastName
-  //   │  ^^^^^^^^ This property has not been declared.
-  // You can't use this variable as value. It does not exist.
+  //   │  ^^^^^^^^
+  //   • You can't use this variable as value. It does not exist.
   ```
   Same when you call a nested function which is not a function or does not exist.  
   ```js
   import String from "silk/string"
 
   let fruit = String.upcase("avocado")
-  //   ┌─ error: SyntaxError
+  //   ╭─ SyntaxError: This property has not been declared.
   // 3 │  upcase
-  //   │  ^^^^^^ This property has not been declared.
-  // You can't use this variable as value. It does not exist.
+  //   │  ^^^^^^
+  //   • You can't use this variable as value. It does not exist.
   ```
-
-### Roadmap
-- [x] Prevent name clashes
-  - [x] Program scope
-  - [x] Inner scopes
-- [x] Prevent undefined errors
-  - [x] Program scope
-  - [x] Inner scopes
-- [x] Warn about errors in a nicer way
-- [ ] Sugest code fix for errors
-- [ ] Standard library
-- [ ] Support imports
-- [ ] CLI
-  - [ ] Bootstrap a project
-  - [ ] Compile the project to JS
-- [ ] Documentation
-- [ ] Silk <-> JS interoperability
-- [ ] Small type system
-  - [ ] Know the shape of objects
-  - [ ] Know the types of variables
-  - [ ] Know the return types of functions
-  - [ ] Know the shape of a module
-- [ ] Editor integration (Language Server)
-- [ ] Generate TS code
-  - [ ] Generate types
-- [ ] Rewrite Silk in Silk itself
