@@ -13,6 +13,7 @@ const tokens_spec = [
 	TokenSpec{ name: 'Const'      pattern: regex.regex_opt(r'^const')                  or { panic(err) } },
 	TokenSpec{ name: 'Let'        pattern: regex.regex_opt(r'^let')                    or { panic(err) } },
 	TokenSpec{ name: 'Function'   pattern: regex.regex_opt(r'^function')               or { panic(err) } },
+	TokenSpec{ name: 'Return'     pattern: regex.regex_opt(r'^return')                 or { panic(err) } },
 	TokenSpec{ name: 'Boolean'    pattern: regex.regex_opt(r'^true')                   or { panic(err) } },
 	TokenSpec{ name: 'Boolean'    pattern: regex.regex_opt(r'^false')                  or { panic(err) } },
 	TokenSpec{ name: 'Import'     pattern: regex.regex_opt(r'^import')                 or { panic(err) } },

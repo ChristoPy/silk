@@ -1,7 +1,7 @@
 module parser
 
 import src.util { throw_error }
-import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import src.tokenizer { Tokenizer }
 import json
 import term
@@ -83,6 +83,9 @@ fn (mut state Parser) nested_statement() ASTNode {
 		'Let' {
 			return state.let_declaration()
 		}
+		'Return' {
+			return state.return_statement()
+		}
 		'Identifier' {
 			return state.function_call_statement()
 		}
@@ -156,6 +159,21 @@ fn (mut state Parser) let_declaration() ASTNode {
 			keyword: keyword
 			name: name
 			equal: equal
+			value: value
+		}
+	}
+}
+
+fn (mut state Parser) return_statement() ASTNode {
+	keyword := state.eat_sub('Return')
+	value := state.expression_value()
+
+	return ASTNode{
+		name: 'ReturnStatement'
+		line: keyword.line
+		column: keyword.column
+		meta: ASTNodeReturnMeta{
+			keyword: keyword
 			value: value
 		}
 	}
