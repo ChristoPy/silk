@@ -1,4 +1,4 @@
-<div style="display:grid;place-items:center;">
+<div align="center" style="display:grid;place-items:center;">
 <h1>Silk</h1>
 <p>The Smooth JavaScript subset!</p>
 
