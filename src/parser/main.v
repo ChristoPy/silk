@@ -16,7 +16,7 @@ pub mut:
 pub fn (mut state Parser) parse(file string, code string) {
 	state.tokenizer.init(file, code)
 	state.lookahead = state.tokenizer.get_next_token()
-	state.ast.name = 'Program'
+	state.ast.name = file
 
 	state.program()
 	println(json.encode(state.ast))
@@ -42,6 +42,13 @@ fn (mut state Parser) nested_block() []ASTNode {
 	return statements
 }
 
+/**
+* Statement
+*   : ImportStatement
+*   | ConstantDeclaration
+*   | FunctionDeclaration
+*   ;
+*/
 fn (mut state Parser) statement() ASTNode {
 	mut token := state.lookahead
 
@@ -73,6 +80,14 @@ fn (mut state Parser) statement() ASTNode {
 	return ASTNode{}
 }
 
+/**
+* NestedStatement
+*   : ConsttandDeclaration
+*   | LetDeclaration
+*   | ReturnStatement
+*   | FunctionCallStatement
+*   ;
+*/
 fn (mut state Parser) nested_statement() ASTNode {
 	mut token := state.lookahead
 
@@ -107,6 +122,11 @@ fn (mut state Parser) nested_statement() ASTNode {
 	return ASTNode{}
 }
 
+/**
+* ImportStatement
+*   : Import Identifier From String
+*   ;
+*/
 fn (mut state Parser) import_statement() ASTNode {
 	keyword := state.eat_sub('Import')
 	name := state.eat('Identifier')
@@ -126,6 +146,11 @@ fn (mut state Parser) import_statement() ASTNode {
 	}
 }
 
+/**
+* ConstantDeclaration
+*   : Const Identifier Equals ExpressionValue
+*   ;
+*/
 fn (mut state Parser) constant_declaration() ASTNode {
 	keyword := state.eat_sub('Const')
 	name := state.eat('Identifier')
@@ -145,6 +170,11 @@ fn (mut state Parser) constant_declaration() ASTNode {
 	}
 }
 
+/**
+* LetDeclaration
+*   : Let Identifier Equals ExpressionValue
+*   ;
+*/
 fn (mut state Parser) let_declaration() ASTNode {
 	keyword := state.eat_sub('Let')
 	name := state.eat('Identifier')
@@ -164,6 +194,11 @@ fn (mut state Parser) let_declaration() ASTNode {
 	}
 }
 
+/**
+* ReturnStatement
+*   : Return ExpressionValue
+*   ;
+*/
 fn (mut state Parser) return_statement() ASTNode {
 	keyword := state.eat_sub('Return')
 	value := state.expression_value()
@@ -179,11 +214,22 @@ fn (mut state Parser) return_statement() ASTNode {
 	}
 }
 
+/**
+* FunctionCallStatement
+*   : Identifier GenericFunctionCall
+*   ;
+*/
 fn (mut state Parser) function_call_statement() ASTNode {
 	name := state.eat('Identifier')
 	return state.generic_function_call(name)
 }
 
+/**
+* GenericFunctionCall
+*   : LParen RParen
+*   | LParen ExpressionValueList RParen
+*   ;
+*/
 fn (mut state Parser) generic_function_call(name Token) ASTNode {
 	mut args := []Token{}
 	mut ref := &args
@@ -203,6 +249,12 @@ fn (mut state Parser) generic_function_call(name Token) ASTNode {
 	}
 }
 
+/*
+* FunctionDeclaration
+*   : Function Identifier LParen RParen Block
+*   | Function Identifier LParen IdentifierList RParen Block
+*   ;
+*/
 fn (mut state Parser) function_declaration() ASTNode {
 	keyword := state.eat_sub('Function')
 	name := state.eat('Identifier')
@@ -231,6 +283,16 @@ fn (mut state Parser) function_declaration() ASTNode {
 	}
 }
 
+/**
+* ExpressionValue
+*   : Number
+*   | String
+*   | Boolean
+*   | Identifier
+*   | ArrayLiteral
+*   | ObjectLiteral
+*   ;
+*/
 fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 	token := state.lookahead
 
@@ -300,18 +362,37 @@ fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) 
 	state.eat(limiter)
 }
 
+/**
+* ExpressionValueList
+*   : ExpressionValue
+*   | ExpressionValue Comma ExpressionValueList
+*   ;
+*/
 fn (mut state Parser) list(left string, limiter string, callback fn (ASTNodeVariableMetaValue)) {
 	state.generic_list(left, limiter, fn [callback, mut state] () {
 		callback(state.expression_value())
 	})
 }
 
+/**
+* IdentifierList
+*   : Identifier
+*   | Identifier Comma IdentifierList
+*   ;
+*/
 fn (mut state Parser) identifier_list(left string, limiter string, callback fn (Token)) {
 	state.generic_list(left, limiter, fn [callback, mut state] () {
 		callback(state.eat('Identifier'))
 	})
 }
 
+/**
+* ObjectLiteral
+*   : LBrace RBrace
+*   | LBrace Identifier Colon ExpressionValue RBrace
+*   | LBrace Identifier Colon ExpressionValue Comma ObjectLiteral
+*   ;
+*/
 fn (mut state Parser) object_literal() SubNodeAST {
 	mut root := SubNodeAST{
 		name: 'Object'
@@ -331,6 +412,13 @@ fn (mut state Parser) object_literal() SubNodeAST {
 	return root
 }
 
+/**
+* ArrayLiteral
+*   : LBracket RBracket
+*   | LBracket ExpressionValue RBracket
+*   | LBracket ExpressionValue Comma ArrayLiteral
+*   ;
+*/
 fn (mut state Parser) array_literal() SubNodeAST {
 	mut root := SubNodeAST{
 		name: 'Array'
@@ -344,6 +432,12 @@ fn (mut state Parser) array_literal() SubNodeAST {
 	return root
 }
 
+/**
+* IdentifierOrFunctionCall
+*   : Identifier
+*   | Identifier GenericFunctionCall
+*   ;
+*/
 fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
 	name := state.eat('Identifier')
 
