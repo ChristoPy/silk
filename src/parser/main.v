@@ -3,7 +3,6 @@ module parser
 import src.util { throw_error }
 import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import src.tokenizer { Tokenizer }
-import json
 import term
 
 pub struct Parser {
@@ -19,7 +18,6 @@ pub fn (mut state Parser) parse(file string, code string) {
 	state.ast.name = file
 
 	state.program()
-	println(json.encode(state.ast))
 }
 
 fn (mut state Parser) program() {
