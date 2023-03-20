@@ -12,14 +12,15 @@ struct Analyzer {
 pub mut:
 	scope []string
 	names []Scope
+	error bool
 }
 
 fn (mut state Analyzer) prevent_name_clash(name string) {
 	for scope in state.names {
 		for n in scope.names {
 			if n == name {
-				println('name clash: $name')
-				exit(1)
+				state.error = true
+				break
 			}
 		}
 	}
@@ -54,18 +55,26 @@ fn (mut state Analyzer) traverse(name string, body []types.ASTNode) {
 	for _, node in body {
 		if node.name == 'ImportStatement' {
 			state.on_import_statement(node.meta as ASTNodeImportStatementMeta)
+			if state.error {
+				break
+			}
 		}
 		if node.name == 'ConstantDeclaration' {
 			state.on_variable_declaration(node.meta as ASTNodeVariableMeta)
+			if state.error {
+				break
+			}
 		}
 		if node.name == "FunctionDeclaration" {
 			state.on_function_declaration(node.meta as ASTNodeFunctionMeta)
+			if state.error {
+				break
+			}
 		}
 	}
-	println('scope: $state.scope')
 }
 
-fn analize(ast AST) {
+fn analize(ast AST) Analyzer {
 	mut state := Analyzer{
 		scope: ["program"]
 		names: [
@@ -76,5 +85,5 @@ fn analize(ast AST) {
 		]
 	}
 	state.traverse(ast.name, ast.body)
-	println('names: $state.names')
+	return state
 }
