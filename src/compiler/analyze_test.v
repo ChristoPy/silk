@@ -9,6 +9,11 @@ fn test_no_name_clashes() {
 	assert result.error == true
 
 	state = Parser{}
+	state.parse('testfile', 'const a = b')
+	result = analize(state.ast)
+	assert result.error == true
+
+	state = Parser{}
 	state.parse('testfile', 'const a = 0 const a = 1')
 	result = analize(state.ast)
 	assert result.error == true
