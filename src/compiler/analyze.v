@@ -1,6 +1,6 @@
 module compiler
 
-import src.types { AST, ASTNode, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
+import src.types { AST, ASTNode, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeFunctionCallMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -73,6 +73,13 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 		}
 		SubNodeAST {
 			state.verify_variable_reference(meta)
+		}
+		ASTNode {
+			nested_meta := meta.meta as ASTNodeFunctionCallMeta
+			state.prevent_undefined_reference(nested_meta.name.value)
+			for _, node in nested_meta.args {
+				state.on_variable_value(node)
+			}
 		}
 		else {
 			panic('not implemented: ${meta}')

@@ -44,4 +44,14 @@ fn test_no_undefined_references() {
 	state.parse('testfile', 'const a = {key: {key: a}}')
 	result = analize(state.ast)
 	assert result.error == true
+
+	state = Parser{}
+	state.parse('testfile', 'const a = call(1)')
+	result = analize(state.ast)
+	assert result.error == true
+
+	state = Parser{}
+	state.parse('testfile', 'function call() {} const a = call(b)')
+	result = analize(state.ast)
+	assert result.error == true
 }
