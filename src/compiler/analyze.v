@@ -10,9 +10,9 @@ pub mut:
 
 struct AnalyzerError {
 pub mut:
-	occured bool
-	token   Token
-	context string
+	occurred bool
+	token    Token
+	context  string
 }
 
 struct Analyzer {
@@ -26,7 +26,7 @@ fn (mut state Analyzer) prevent_name_clash(token Token) {
 	for scope in state.names {
 		for n in scope.names {
 			if n == token.value {
-				state.error.occured = true
+				state.error.occurred = true
 				state.error.token = token
 				break
 			}
@@ -35,7 +35,7 @@ fn (mut state Analyzer) prevent_name_clash(token Token) {
 }
 
 fn (mut state Analyzer) prevent_undefined_reference(token Token) {
-	if state.error.occured {
+	if state.error.occurred {
 		return
 	}
 
@@ -50,13 +50,13 @@ fn (mut state Analyzer) prevent_undefined_reference(token Token) {
 	}
 
 	if !reference_exists {
-		state.error.occured = true
+		state.error.occurred = true
 		state.error.token = token
 	}
 }
 
 fn (mut state Analyzer) add_name_on_scope(name string) {
-	if state.error.occured {
+	if state.error.occurred {
 		return
 	}
 
@@ -69,8 +69,15 @@ fn (mut state Analyzer) add_name_on_scope(name string) {
 	}
 }
 
+fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
+	state.prevent_undefined_reference(meta.name)
+	for _, node in meta.args {
+		state.on_variable_value(node)
+	}
+}
+
 fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
-	if state.error.occured {
+	if state.error.occurred {
 		return
 	}
 
@@ -84,11 +91,7 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 			state.verify_variable_reference(meta)
 		}
 		ASTNode {
-			nested_meta := meta.meta as ASTNodeFunctionCallMeta
-			state.prevent_undefined_reference(nested_meta.name)
-			for _, node in nested_meta.args {
-				state.on_variable_value(node)
-			}
+			state.on_function_call(meta.meta as ASTNodeFunctionCallMeta)
 		}
 		else {
 			panic('not implemented: ${meta}')
@@ -97,7 +100,7 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 }
 
 fn (mut state Analyzer) verify_variable_reference(reference SubNodeAST) {
-	if state.error.occured {
+	if state.error.occurred {
 		return
 	}
 
@@ -133,6 +136,15 @@ fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
 fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	state.prevent_name_clash(meta.name)
 	state.add_name_on_scope(meta.name.value)
+
+	state.scope << meta.name.value
+	state.names << Scope{
+		id: meta.name.value
+		names: []string{}
+	}
+
+	state.traverse(meta.name.value, meta.body)
+	state.scope.pop()
 }
 
 fn (mut state Analyzer) traverse(name string, body []ASTNode) {
@@ -147,11 +159,17 @@ fn (mut state Analyzer) traverse(name string, body []ASTNode) {
 			'FunctionDeclaration' {
 				state.on_function_declaration(node.meta as ASTNodeFunctionMeta)
 			}
+			'LetDeclaration' {
+				state.on_variable_declaration(node.meta as ASTNodeVariableMeta)
+			}
+			'FunctionCallStatement' {
+				state.on_function_call(node.meta as ASTNodeFunctionCallMeta)
+			}
 			else {
 				panic('not implemented: ${node}')
 			}
 		}
-		if state.error.occured {
+		if state.error.occurred {
 			break
 		}
 	}
