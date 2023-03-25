@@ -1,6 +1,6 @@
 module compiler
 
-import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
+import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -164,6 +164,10 @@ fn (mut state Analyzer) traverse(name string, body []ASTNode) {
 			}
 			'FunctionCallStatement' {
 				state.on_function_call(node.meta as ASTNodeFunctionCallMeta)
+			}
+			'ReturnStatement' {
+				meta := node.meta as ASTNodeReturnMeta
+				state.on_variable_value(meta.value)
 			}
 			else {
 				panic('not implemented: ${node}')
