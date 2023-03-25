@@ -23,9 +23,13 @@ pub mut:
 }
 
 fn (mut state Analyzer) prevent_name_clash(token Token) {
-	for scope in state.names {
-		for n in scope.names {
-			if n == token.value {
+	if state.error.occurred {
+		return
+	}
+
+	for mut scope in state.names {
+		if scope.id == state.scope.last() {
+			if scope.names.contains(token.value) {
 				state.error.occurred = true
 				state.error.token = token
 				break
@@ -141,6 +145,11 @@ fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	state.names << Scope{
 		id: meta.name.value
 		names: []string{}
+	}
+
+	for _, node in meta.args {
+		state.prevent_name_clash(node)
+		state.add_name_on_scope(node.value)
 	}
 
 	state.traverse(meta.name.value, meta.body)
