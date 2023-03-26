@@ -3,7 +3,6 @@ module parser
 import src.util { throw_error }
 import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import src.tokenizer { Tokenizer }
-import term
 
 pub struct Parser {
 pub mut:
@@ -62,14 +61,12 @@ fn (mut state Parser) statement() ASTNode {
 		}
 		else {
 			throw_error(CompileError{
-				kind: 'SyntaxError'
-				message: 'Unexpected token'
-				context: 'Expected ${term.cyan('import')} or ${term.cyan('const')}, got "${token.value}"'
-				line: token.line
-				line_content: state.tokenizer.code.split('\n')[token.line - 1]
-				column: token.column
-				wrong_bit: token.value
+				kind: 'Syntax'
+				id: 'unexpected_token'
+				context: 'statement'
 				file_name: state.tokenizer.file
+				wrong_token: token
+				line_content: state.tokenizer.code.split('\n')[token.line - 1]
 			})
 		}
 	}
@@ -104,14 +101,12 @@ fn (mut state Parser) nested_statement() ASTNode {
 		}
 		else {
 			throw_error(CompileError{
-				kind: 'SyntaxError'
-				message: 'Unexpected token'
-				context: 'Expected ${term.cyan('const')}, got "${token.value}"'
-				line: token.line
-				line_content: state.tokenizer.code.split('\n')[token.line - 1]
-				column: token.column
-				wrong_bit: token.value
+				kind: 'Syntax'
+				id: 'unexpected_token'
+				context: 'nested_statement'
 				file_name: state.tokenizer.file
+				wrong_token: token
+				line_content: state.tokenizer.code.split('\n')[token.line - 1]
 			})
 		}
 	}
@@ -315,14 +310,12 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 		}
 		else {
 			throw_error(CompileError{
-				kind: 'SyntaxError'
-				message: 'Unexpected value'
-				context: 'Expected value of ${term.cyan('Number')}, ${term.cyan('String')}, ${term.cyan('Boolean')}, ${term.cyan('Identifier')}, ${term.cyan('Array')} or ${term.cyan('Object')}, got "${token.value}"'
-				line: token.line
-				line_content: state.tokenizer.code.split('\n')[token.line - 1]
-				column: token.column
-				wrong_bit: token.value
+				kind: 'Syntax'
+				id: 'unexpected_token'
+				context: 'expression_value'
 				file_name: state.tokenizer.file
+				wrong_token: token
+				line_content: state.tokenizer.code.split('\n')[token.line - 1]
 			})
 		}
 	}
@@ -347,14 +340,12 @@ fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) 
 
 	if dangling_comma {
 		throw_error(CompileError{
-			kind: 'SyntaxError'
-			message: 'Unexpected token'
-			context: 'Cannot have a dangling comma'
-			line: state.lookahead.line
-			line_content: state.tokenizer.code.split('\n')[state.lookahead.line - 1]
-			column: state.lookahead.column
-			wrong_bit: state.lookahead.value
+			kind: 'Syntax'
+			id: 'unexpected_token'
+			context: 'dangling_comma'
 			file_name: state.tokenizer.file
+			wrong_token: state.lookahead
+			line_content: state.tokenizer.code.split('\n')[state.lookahead.line - 1]
 		})
 	}
 	state.eat(limiter)
@@ -451,14 +442,12 @@ fn (mut state Parser) eat(token_name string) Token {
 
 	if token.kind != token_name {
 		throw_error(CompileError{
-			kind: 'SyntaxError'
-			message: 'Unexpected Token'
-			context: 'Expected ${term.cyan(token_name)} got "${state.lookahead.kind}"'
-			line: token.line
-			line_content: state.tokenizer.code.split('\n')[token.line - 1]
-			column: token.column
-			wrong_bit: token.value
+			kind: 'Syntax'
+			id: 'unexpected_token'
+			context: 'undefined_token'
 			file_name: state.tokenizer.file
+			wrong_token: token
+			line_content: state.tokenizer.code.split('\n')[token.line - 1]
 		})
 		exit(1)
 	}

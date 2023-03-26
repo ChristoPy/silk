@@ -12,6 +12,8 @@ struct AnalyzerError {
 pub mut:
 	occurred bool
 	token    Token
+	kind     string
+	id       string
 	context  string
 }
 
@@ -32,6 +34,9 @@ fn (mut state Analyzer) prevent_name_clash(token Token) {
 			if scope.names.contains(token.value) {
 				state.error.occurred = true
 				state.error.token = token
+				state.error.kind = 'Reference'
+				state.error.id = 'identifier_already_declared'
+				state.error.context = 'name_clash'
 				break
 			}
 		}
@@ -56,6 +61,9 @@ fn (mut state Analyzer) prevent_undefined_reference(token Token) {
 	if !reference_exists {
 		state.error.occurred = true
 		state.error.token = token
+		state.error.kind = 'Reference'
+		state.error.id = 'identifier_not_declared'
+		state.error.context = 'undefined_reference'
 	}
 }
 

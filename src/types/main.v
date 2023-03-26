@@ -99,13 +99,11 @@ pub:
 }
 
 pub struct CompileError {
-pub:
+pub mut:
 	kind         string
-	message      string
-	column       int
-	line         int
-	line_content string
-	wrong_bit    string
+	id           string
 	context      string
 	file_name    string
+	wrong_token  Token
+	line_content string
 }

@@ -1,7 +1,7 @@
 module tokenizer
 
 import regex
-import src.util { throw_error }
+import src.util { throw_error, throw_error }
 import src.types { CompileError, Token, TokenSpec }
 
 // vfmt off
@@ -69,6 +69,9 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 	for spec in tokenizer.tokens_spec {
 		matched := match_token(spec.name, spec.pattern, piece)
 		if matched.len == 0 {
+			token.column = state.column
+			token.line = state.line
+			token.value = piece.substr(0, 1)
 			continue
 		}
 
@@ -95,13 +98,11 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 	if token.kind == '' && state.eof == false {
 		throw_error(CompileError{
 			kind: 'Syntax'
-			message: 'Unexpected token.'
-			line: state.line
-			line_content: state.code.split('\n')[state.line - 1]
-			column: state.column
-			wrong_bit: piece[0].ascii_str()
-			context: 'I was not expecting this.'
+			id: 'unexpected_token'
+			context: 'undefined_token'
 			file_name: state.file
+			wrong_token: token
+			line_content: state.code.split('\n')[state.line - 1]
 		})
 	}
 
