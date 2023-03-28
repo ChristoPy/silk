@@ -52,4 +52,23 @@ fn build_project(command Command) ! {
 
 	mut state := Compiler{}
 	state.parse('main.silk', file_content)
+
+	if os.exists('.build') {
+		os.rm('.build') or {
+			println(term.warn_message('Could not remove build folder: ${err}'))
+			return
+		}
+	}
+
+	os.mkdir('.build') or {
+		println(term.warn_message('Could not make build folder: ${err}'))
+		return
+	}
+
+	os.write_file('.build/main.js', state.generate_js()) or {
+		println(term.warn_message('Could not write build files: ${err}'))
+		return
+	}
+
+	println(term.ok_message('Project built successfuly!'))
 }

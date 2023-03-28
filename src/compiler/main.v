@@ -31,3 +31,8 @@ fn (mut state Compiler) compile() {
 		return
 	}
 }
+
+pub fn (mut state Compiler) generate_js() string {
+	// TODO implement JS code generation
+	return state.parser.tokenizer.code
+}
