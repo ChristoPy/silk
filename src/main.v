@@ -44,30 +44,64 @@ fn make_project(command Command) ! {
 	println(term.ok_message('Project ${term.bold(name)} created successfuly!'))
 }
 
-fn build_project(command Command) ! {
-	file_content := os.read_file('main.silk') or {
-		println(term.warn_message('Could not read main.silk: ${err}'))
-		return
+fn get_project_files() []string {
+	files_on_disk := os.ls('.') or {
+		println(term.warn_message('Could not read project files: ${err}'))
+		return []
 	}
 
-	mut state := Compiler{}
-	state.parse('main.silk', file_content)
+	mut files := []string{}
+	for file in files_on_disk {
+		if file.ends_with('.silk') {
+			files << file
+		}
+	}
+	return files
+}
 
+fn prepare_build_folder() ! {
 	if os.exists('.build') {
-		os.rm('.build') or {
-			println(term.warn_message('Could not remove build folder: ${err}'))
+		old_files := os.ls('.build') or {
+			println(term.warn_message('Could not read build folder: ${err}'))
+			return
+		}
+		for file in old_files {
+			os.rm('.build/${file}') or {
+				println(term.warn_message('Could not remove build file: ${err}'))
+				return
+			}
+		}
+	} else {
+		os.mkdir('.build') or {
+			println(term.warn_message('Could not make build folder: ${err}'))
 			return
 		}
 	}
+}
 
-	os.mkdir('.build') or {
-		println(term.warn_message('Could not make build folder: ${err}'))
+fn build_project(command Command) ! {
+	files := get_project_files()
+
+	if files.len == 0 {
+		println(term.warn_message('No .silk files found in project folder.'))
 		return
 	}
 
-	os.write_file('.build/main.js', state.generate_js()) or {
-		println(term.warn_message('Could not write build files: ${err}'))
-		return
+	prepare_build_folder() or { return }
+
+	mut state := Compiler{}
+	for file in files {
+		file_content := os.read_file(file) or {
+			println(term.warn_message('Could not read main.silk: ${err}'))
+			return
+		}
+		state.parse(file, file_content)
+
+		name := file.split('.')[0]
+		os.write_file('.build/${name}.js', state.generate_js()) or {
+			println(term.warn_message('Could not write build file: ${err}'))
+			return
+		}
 	}
 
 	println(term.ok_message('Project built successfuly!'))

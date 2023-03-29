@@ -15,6 +15,7 @@ pub fn (mut state Parser) parse(file string, code string) {
 	state.tokenizer.init(file, code)
 	state.lookahead = state.tokenizer.get_next_token()
 	state.ast.name = file
+	state.ast.body = []ASTNode{}
 
 	state.program()
 }
