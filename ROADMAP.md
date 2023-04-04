@@ -6,6 +6,10 @@
   - [x] Program scope
   - [x] Inner scopes
 - [x] Warn about errors in a nice way
+- [ ] Control flow
+  - [x] Return statement
+  - [ ] Match/switch
+- [ ] Math (Numbers only)
 - [ ] Sugest code fix for errors
 - [ ] Standard library
 - [ ] Support imports
