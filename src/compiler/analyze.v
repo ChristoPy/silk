@@ -182,6 +182,15 @@ fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	}
 
 	if meta.exported {
+		if meta.name.value != 'main' {
+			state.error.occurred = true
+			state.error.token = meta.name
+			state.error.kind = 'Reference'
+			state.error.id = 'cannot_export_function'
+			state.error.context = 'exported_function_must_be_main'
+			return
+		}
+
 		state.exported_names << meta.name.value
 	}
 

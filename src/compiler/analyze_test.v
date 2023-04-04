@@ -112,7 +112,12 @@ fn test_exported_functions() {
 	assert result.exported_names == []
 
 	state = Parser{}
+	state.parse('testfile', 'export function main() {}')
+	result = analize(state.ast, compiler.modules)
+	assert result.exported_names == ['main']
+
+	state = Parser{}
 	state.parse('testfile', 'export function test() {}')
 	result = analize(state.ast, compiler.modules)
-	assert result.exported_names == ['test']
+	assert result.error.occurred == true
 }
