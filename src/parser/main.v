@@ -1,7 +1,7 @@
 module parser
 
 import util { throw_error }
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import tokenizer { Tokenizer }
 
 pub struct Parser {
@@ -451,7 +451,6 @@ fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
 
 	return name
 }
-
 
 fn (mut state Parser) eat(token_name string) Token {
 	token := state.lookahead
