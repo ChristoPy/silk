@@ -1,12 +1,13 @@
 module compiler
 
-import src.types { CompileError }
-import src.util { throw_error }
-import src.parser { Parser }
+import types { CompileError, Module }
+import util { throw_error }
+import parser { Parser }
 
 pub struct Compiler {
 pub mut:
-	parser Parser
+	parser  Parser
+	modules map[string]Module
 }
 
 pub fn (mut state Compiler) parse(file_name string, source string) {
@@ -29,6 +30,13 @@ fn (mut state Compiler) compile() {
 			line_content: state.parser.tokenizer.code.split('\n')[wrong_token.line - 1]
 		})
 		return
+	}
+
+	state.modules[state.parser.tokenizer.file] = Module{
+		name: state.parser.tokenizer.file
+	}
+	for name in result.exported_names {
+		state.modules[state.parser.tokenizer.file].functions[name] = name
 	}
 }
 

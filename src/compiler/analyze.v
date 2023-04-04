@@ -1,6 +1,6 @@
 module compiler
 
-import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -19,9 +19,10 @@ pub mut:
 
 struct Analyzer {
 pub mut:
-	scope []string
-	names []Scope
-	error AnalyzerError
+	scope          []string
+	names          []Scope
+	exported_names []string
+	error          AnalyzerError
 }
 
 fn (mut state Analyzer) prevent_name_clash(token Token) {
@@ -153,6 +154,10 @@ fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	state.names << Scope{
 		id: meta.name.value
 		names: []string{}
+	}
+
+	if meta.exported {
+		state.exported_names << meta.name.value
 	}
 
 	for _, node in meta.args {

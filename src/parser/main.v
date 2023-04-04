@@ -1,8 +1,8 @@
 module parser
 
-import src.util { throw_error }
-import src.types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
-import src.tokenizer { Tokenizer }
+import util { throw_error }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import tokenizer { Tokenizer }
 
 pub struct Parser {
 pub mut:
@@ -45,6 +45,7 @@ fn (mut state Parser) nested_block() []ASTNode {
 *   : ImportStatement
 *   | ConstantDeclaration
 *   | FunctionDeclaration
+*   | ExportStatement
 *   ;
 */
 fn (mut state Parser) statement() ASTNode {
@@ -58,7 +59,10 @@ fn (mut state Parser) statement() ASTNode {
 			return state.constant_declaration()
 		}
 		'Function' {
-			return state.function_declaration()
+			return state.function_declaration(false)
+		}
+		'Export' {
+			return state.export_statement()
 		}
 		else {
 			throw_error(CompileError{
@@ -249,7 +253,7 @@ fn (mut state Parser) generic_function_call(name Token) ASTNode {
 *   | Function Identifier LParen IdentifierList RParen Block
 *   ;
 */
-fn (mut state Parser) function_declaration() ASTNode {
+fn (mut state Parser) function_declaration(exported bool) ASTNode {
 	keyword := state.eat_sub('Function')
 	name := state.eat('Identifier')
 
@@ -269,6 +273,7 @@ fn (mut state Parser) function_declaration() ASTNode {
 		line: keyword.line
 		column: keyword.column
 		meta: ASTNodeFunctionMeta{
+			exported: exported
 			keyword: keyword
 			name: name
 			args: args
@@ -277,12 +282,17 @@ fn (mut state Parser) function_declaration() ASTNode {
 	}
 }
 
+fn (mut state Parser) export_statement() ASTNode {
+	state.eat_sub('Export')
+	return state.function_declaration(true)
+}
+
 /**
 * ExpressionValue
 *   : Number
 *   | String
 *   | Boolean
-*   | Identifier
+*   | IdentifierOrFunctionCall
 *   | ArrayLiteral
 *   | ObjectLiteral
 *   ;
@@ -426,16 +436,37 @@ fn (mut state Parser) array_literal() SubNodeAST {
 * IdentifierOrFunctionCall
 *   : Identifier
 *   | Identifier GenericFunctionCall
+*   | Identifier DOT
 *   ;
 */
 fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
 	name := state.eat('Identifier')
+	no_follow := ['LParen', 'Dot']
 
-	if state.lookahead.kind == 'LParen' {
-		return state.generic_function_call(name)
+	if state.lookahead.kind in no_follow {
+		if state.lookahead.kind == 'LParen' {
+			return state.generic_function_call(name)
+		} else if state.lookahead.kind == 'Dot' {
+			return state.member_expression(name)
+		}
 	}
 
 	return name
+}
+
+fn (mut state Parser) member_expression(name Token) ASTNodeVariableMetaValue {
+	state.eat_sub('Dot')
+	property := state.identifier_or_function_call()
+
+	return ASTNode{
+		name: 'MemberExpression'
+		line: name.line
+		column: name.column
+		meta: ASTNodeMemberExpressionMeta{
+			name: name
+			property: property
+		}
+	}
 }
 
 fn (mut state Parser) eat(token_name string) Token {

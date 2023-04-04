@@ -38,6 +38,7 @@ pub mut:
 pub type ASTNodeMeta = ASTNodeFunctionCallMeta
 	| ASTNodeFunctionMeta
 	| ASTNodeImportStatementMeta
+	| ASTNodeMemberExpressionMeta
 	| ASTNodeReturnMeta
 	| ASTNodeVariableMeta
 pub type ASTNodeVariableMetaValue = ASTNode | ASTNodeObjectMetaValue | SubNodeAST | Token
@@ -58,10 +59,16 @@ pub mut:
 
 pub struct ASTNodeFunctionMeta {
 pub mut:
-	keyword SubToken
-	name    Token
-	args    []Token
-	body    []ASTNode
+	keyword  SubToken
+	name     Token
+	args     []Token
+	body     []ASTNode
+	exported bool
+}
+
+pub struct ASTNodeExportMeta {
+pub mut:
+	value SubToken
 }
 
 pub struct ASTNodeVariableMeta {
@@ -90,6 +97,12 @@ pub mut:
 	name    Token
 	from    SubToken
 	path    Token
+}
+
+pub struct ASTNodeMemberExpressionMeta {
+pub mut:
+	name     Token
+	property ASTNodeVariableMetaValue
 }
 
 pub struct MatchResult {

@@ -1,8 +1,8 @@
 module tokenizer
 
 import regex
-import src.util { throw_error, throw_error }
-import src.types { CompileError, Token, TokenSpec }
+import util { throw_error, throw_error }
+import types { CompileError, Token, TokenSpec }
 
 // vfmt off
 const tokens_spec = [
@@ -19,6 +19,7 @@ const tokens_spec = [
 	TokenSpec{ name: 'Import'     pattern: regex.regex_opt(r'^import')                 or { panic(err) } },
 	TokenSpec{ name: 'From'       pattern: regex.regex_opt(r'^from')                   or { panic(err) } },
 	TokenSpec{ name: 'Match'      pattern: regex.regex_opt(r'^match')                  or { panic(err) } },
+	TokenSpec{ name: 'Export'     pattern: regex.regex_opt(r'^export')                 or { panic(err) } },
 	TokenSpec{ name: 'Identifier' pattern: regex.regex_opt(r'^[a-zA-Z_][a-zA-Z0-9_]*') or { panic(err) } },
 	TokenSpec{ name: 'Equals'     pattern: regex.regex_opt(r'^=')                      or { panic(err) } },
 	TokenSpec{ name: 'LParen'     pattern: regex.regex_opt(r'^\(')                     or { panic(err) } },

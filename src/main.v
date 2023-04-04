@@ -3,7 +3,7 @@ module main
 import cli { Command }
 import term
 import os
-import src.compiler { Compiler }
+import compiler { Compiler }
 
 fn main() {
 	mut command := Command{

@@ -1,6 +1,6 @@
 module compiler
 
-import src.parser { Parser }
+import parser { Parser }
 
 fn test_no_name_clashes() {
 	mut state := Parser{}
@@ -94,4 +94,16 @@ fn test_no_undefined_references() {
 	state.parse('testfile', 'const a = 0 function test() { return a }')
 	result = analize(state.ast)
 	assert result.error.occurred == false
+}
+
+fn test_exported_functions() {
+	mut state := Parser{}
+	state.parse('testfile', 'function test() {}')
+	mut result := analize(state.ast)
+	assert result.exported_names == []
+
+	state = Parser{}
+	state.parse('testfile', 'export function test() {}')
+	result = analize(state.ast)
+	assert result.exported_names == ['test']
 }

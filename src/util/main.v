@@ -1,7 +1,7 @@
 module util
 
 import term
-import src.types { CompileError }
+import types { CompileError }
 
 const errors_map = {
 	'unexpected_token':            'I was not expecting this.'
