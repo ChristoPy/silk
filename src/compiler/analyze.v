@@ -1,6 +1,6 @@
 module compiler
 
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -21,6 +21,7 @@ struct Analyzer {
 pub mut:
 	scope          []string
 	names          []Scope
+	global_names   Modules
 	exported_names []string
 	error          AnalyzerError
 }
@@ -82,6 +83,29 @@ fn (mut state Analyzer) add_name_on_scope(name string) {
 	}
 }
 
+fn (mut state Analyzer) verify_name_on_global_scope(token Token) {
+	if state.error.occurred {
+		return
+	}
+
+	name := token.value.substr(1, token.value.len - 1)
+	mut found := false
+	for _, mut mmodule in state.global_names {
+		if mmodule.name == name {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		state.error.occurred = true
+		state.error.token = token
+		state.error.kind = 'Reference'
+		state.error.id = 'module_not_found'
+		state.error.context = 'undefined_reference'
+	}
+}
+
 fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
 	state.prevent_undefined_reference(meta.name)
 	for _, node in meta.args {
@@ -138,6 +162,7 @@ fn (mut state Analyzer) verify_variable_reference(reference SubNodeAST) {
 fn (mut state Analyzer) on_import_statement(meta ASTNodeImportStatementMeta) {
 	state.prevent_name_clash(meta.name)
 	state.add_name_on_scope(meta.name.value)
+	state.verify_name_on_global_scope(meta.path)
 }
 
 fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
@@ -201,7 +226,7 @@ fn (mut state Analyzer) traverse(name string, body []ASTNode) {
 	}
 }
 
-fn analize(ast AST) Analyzer {
+fn analize(ast AST, modules Modules) Analyzer {
 	mut state := Analyzer{
 		scope: ['program']
 		names: [
@@ -210,6 +235,7 @@ fn analize(ast AST) Analyzer {
 				names: []string{}
 			},
 		]
+		global_names: modules
 	}
 	state.traverse(ast.name, ast.body)
 	return state

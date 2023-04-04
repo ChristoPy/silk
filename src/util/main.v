@@ -8,6 +8,7 @@ const errors_map = {
 	'unexpected_eof':              'The program ended unexpectedly.'
 	'identifier_already_declared': 'This identifier has already been declared.'
 	'identifier_not_declared':     'This identifier has not been declared.'
+	'module_not_found':            'This module could not be found.'
 }
 
 const reasons_map = {

@@ -1,22 +1,32 @@
 module compiler
 
-import types { CompileError, Module }
+import types { CompileError, Module, Modules }
 import util { throw_error }
 import parser { Parser }
+
+const standard_module = Module{
+	name: 'std'
+	functions: {
+		'print': 'print'
+	}
+}
 
 pub struct Compiler {
 pub mut:
 	parser  Parser
-	modules map[string]Module
+	modules Modules
 }
 
 pub fn (mut state Compiler) parse(file_name string, source string) {
 	state.parser.parse(file_name, source)
+	state.modules = {
+		'std': compiler.standard_module
+	}
 	state.compile()
 }
 
 fn (mut state Compiler) compile() {
-	result := analize(state.parser.ast)
+	result := analize(state.parser.ast, state.modules)
 
 	if result.error.occurred {
 		wrong_token := result.error.token
