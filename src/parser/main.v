@@ -441,33 +441,17 @@ fn (mut state Parser) array_literal() SubNodeAST {
 */
 fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
 	name := state.eat('Identifier')
-	no_follow := ['LParen', 'Dot']
+	no_follow := ['LParen']
 
 	if state.lookahead.kind in no_follow {
 		if state.lookahead.kind == 'LParen' {
 			return state.generic_function_call(name)
-		} else if state.lookahead.kind == 'Dot' {
-			return state.member_expression(name)
 		}
 	}
 
 	return name
 }
 
-fn (mut state Parser) member_expression(name Token) ASTNodeVariableMetaValue {
-	state.eat_sub('Dot')
-	property := state.identifier_or_function_call()
-
-	return ASTNode{
-		name: 'MemberExpression'
-		line: name.line
-		column: name.column
-		meta: ASTNodeMemberExpressionMeta{
-			name: name
-			property: property
-		}
-	}
-}
 
 fn (mut state Parser) eat(token_name string) Token {
 	token := state.lookahead
