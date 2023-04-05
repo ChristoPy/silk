@@ -1,14 +1,15 @@
 module compiler
 
-import types { CompileError, Module, Modules }
+import types { CompileError, Module, Function, Modules }
 import util { throw_error }
 import parser { Parser }
 
 const standard_module = Module{
-	name: 'std'
-	functions: {
-		'print': 'print'
-	}
+	name: 'std/print'
+	functions: [Function{
+		name: 'print'
+		arguments: ['value']
+	}]
 }
 
 pub struct Compiler {
@@ -20,7 +21,7 @@ pub mut:
 pub fn (mut state Compiler) parse(file_name string, source string) {
 	state.parser.parse(file_name, source)
 	state.modules = {
-		'std': compiler.standard_module
+		'std/print': compiler.standard_module
 	}
 	state.compile()
 }
@@ -46,7 +47,10 @@ fn (mut state Compiler) compile() {
 		name: state.parser.tokenizer.file
 	}
 	for name in result.exported_names {
-		state.modules[state.parser.tokenizer.file].functions[name] = name
+		state.modules[state.parser.tokenizer.file].functions << Function{
+			name: name
+			arguments: []
+		}
 	}
 }
 
