@@ -19,11 +19,12 @@ pub mut:
 
 struct Analyzer {
 pub mut:
-	scope          []string
-	names          []Scope
-	global_names   Modules
-	exported_names []string
-	error          AnalyzerError
+	scope                   []string
+	names                   []Scope
+	global_names            Modules
+	exported_names          []string
+	error                   AnalyzerError
+	top_level_seen_non_import bool
 }
 
 fn (mut state Analyzer) prevent_name_clash(token Token) {
@@ -160,6 +161,14 @@ fn (mut state Analyzer) verify_variable_reference(reference SubNodeAST) {
 }
 
 fn (mut state Analyzer) on_import_statement(meta ASTNodeImportStatementMeta) {
+	if state.scope.len == 1 && state.top_level_seen_non_import {
+		state.error.occurred = true
+		state.error.token = meta.name
+		state.error.kind = 'Syntax'
+		state.error.id = 'import_not_at_top_level'
+		state.error.context = 'import_after_statement'
+		return
+	}
 	state.prevent_name_clash(meta.name)
 	state.add_name_on_scope(meta.name.value)
 	state.verify_name_on_global_scope(meta.path)
@@ -210,9 +219,15 @@ fn (mut state Analyzer) traverse(name string, body []ASTNode) {
 				state.on_import_statement(node.meta as ASTNodeImportStatementMeta)
 			}
 			'ConstantDeclaration' {
+				if state.scope.len == 1 {
+					state.top_level_seen_non_import = true
+				}
 				state.on_variable_declaration(node.meta as ASTNodeVariableMeta)
 			}
 			'FunctionDeclaration' {
+				if state.scope.len == 1 {
+					state.top_level_seen_non_import = true
+				}
 				state.on_function_declaration(node.meta as ASTNodeFunctionMeta)
 			}
 			'LetDeclaration' {

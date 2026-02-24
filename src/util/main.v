@@ -10,6 +10,7 @@ const errors_map = {
 	'identifier_not_declared':     'This identifier has not been declared.'
 	'module_not_found':            'This module could not be found.'
 	'cannot_export_function':      'Can only export main.'
+	'import_not_at_top_level':     'Imports must appear at the top level.'
 }
 
 const reasons_map = {
@@ -28,6 +29,7 @@ const reasons_map = {
 	'undefined_reference':            'Cannot use this name. It has not been declared.'
 	'undefined_token':                'This token cannot be used by the language.'
 	'exported_function_must_be_main': 'The exported function must be called main.'
+	'import_after_statement':         'All ${term.cyan("import")} statements must come before any other statement.'
 }
 
 pub fn throw_error(error CompileError) {
