@@ -11,6 +11,7 @@ const errors_map = {
 	'module_not_found':            'This module could not be found.'
 	'cannot_export_function':      'Can only export main.'
 	'import_not_at_top_level':     'Imports must appear at the top level.'
+	'nested_property_not_declared': 'This property has not been declared.'
 }
 
 const reasons_map = {
@@ -30,6 +31,7 @@ const reasons_map = {
 	'undefined_token':                'This token cannot be used by the language.'
 	'exported_function_must_be_main': 'The exported function must be called main.'
 	'import_after_statement':         'All ${term.cyan("import")} statements must come before any other statement.'
+	'undefined_nested_reference':     'Cannot access this nested property. It does not exist on the object.'
 }
 
 pub fn throw_error(error CompileError) {

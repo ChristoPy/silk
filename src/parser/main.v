@@ -1,7 +1,7 @@
 module parser
 
 import util { throw_error }
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import tokenizer { Tokenizer }
 
 pub struct Parser {
@@ -229,11 +229,11 @@ fn (mut state Parser) function_call_statement() ASTNode {
 *   ;
 */
 fn (mut state Parser) generic_function_call(name Token) ASTNode {
-	mut args := []Token{}
+	mut args := []ASTNodeVariableMetaValue{}
 	mut ref := &args
 
 	state.list('LParen', 'RParen', fn [mut ref] (param ASTNodeVariableMetaValue) {
-		ref << param as Token
+		ref << param
 	})
 
 	return ASTNode{
@@ -436,20 +436,49 @@ fn (mut state Parser) array_literal() SubNodeAST {
 * IdentifierOrFunctionCall
 *   : Identifier
 *   | Identifier GenericFunctionCall
-*   | Identifier DOT
+*   | Identifier ( Dot Identifier )*
 *   ;
 */
 fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
-	name := state.eat('Identifier')
-	no_follow := ['LParen']
+	base := state.eat('Identifier')
 
-	if state.lookahead.kind in no_follow {
-		if state.lookahead.kind == 'LParen' {
-			return state.generic_function_call(name)
-		}
+	if state.lookahead.kind == 'LParen' {
+		return state.generic_function_call(base)
 	}
 
-	return name
+	// Member chain: . prop . prop ...
+	mut props := []Token{}
+	for state.lookahead.kind == 'Dot' {
+		state.eat('Dot')
+		props << state.eat('Identifier')
+	}
+
+	if props.len == 0 {
+		return base
+	}
+
+	// Build nested MemberExpression from right to left, then attach to base
+	mut prop_expr := ASTNodeVariableMetaValue(props[props.len - 1])
+	for i := props.len - 2; i >= 0; i-- {
+		prop_expr = ASTNode{
+			name: 'MemberExpression'
+			line: props[i].line
+			column: props[i].column
+			meta: ASTNodeMemberExpressionMeta{
+				name: props[i]
+				property: prop_expr
+			}
+		}
+	}
+	return ASTNode{
+		name: 'MemberExpression'
+		line: base.line
+		column: base.column
+		meta: ASTNodeMemberExpressionMeta{
+			name: base
+			property: prop_expr
+		}
+	}
 }
 
 fn (mut state Parser) eat(token_name string) Token {

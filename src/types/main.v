@@ -54,7 +54,7 @@ pub mut:
 pub struct ASTNodeFunctionCallMeta {
 pub mut:
 	name Token
-	args []Token
+	args []ASTNodeVariableMetaValue
 }
 
 pub struct ASTNodeFunctionMeta {

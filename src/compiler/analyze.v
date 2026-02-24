@@ -1,11 +1,17 @@
 module compiler
 
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
 	id    string
 	names []string
+}
+
+// ObjectShape describes known keys (and nested shapes) of an object literal
+struct ObjectShape {
+pub mut:
+	fields map[string]ObjectShape
 }
 
 struct AnalyzerError {
@@ -19,12 +25,15 @@ pub mut:
 
 struct Analyzer {
 pub mut:
-	scope                   []string
-	names                   []Scope
-	global_names            Modules
-	exported_names          []string
-	error                   AnalyzerError
+	scope                     []string
+	names                     []Scope
+	global_names              Modules
+	exported_names            []string
+	error                     AnalyzerError
 	top_level_seen_non_import bool
+	object_shapes             map[string]map[string]ObjectShape
+	import_aliases            map[string]string
+	// alias name -> module path (for member access validation)
 }
 
 fn (mut state Analyzer) prevent_name_clash(token Token) {
@@ -107,6 +116,130 @@ fn (mut state Analyzer) verify_name_on_global_scope(token Token) {
 	}
 }
 
+// get_shape_for returns the shape for base_name from the innermost scope that
+// declares it. If that scope has no shape (e.g. parameter), returns none and
+// does not fall back to an outer scope (proper shadowing).
+fn (mut state Analyzer) get_shape_for(base_name string) ?ObjectShape {
+	for i := state.names.len - 1; i >= 0; i-- {
+		scope := state.names[i]
+		if !scope.names.contains(base_name) {
+			continue
+		}
+		// Innermost scope that declares base_name
+		if scope.id in state.object_shapes && base_name in state.object_shapes[scope.id] {
+			return state.object_shapes[scope.id][base_name]
+		}
+		return none
+	}
+	return none
+}
+
+fn (mut state Analyzer) on_member_expression(meta ASTNodeMemberExpressionMeta) {
+	if state.error.occurred {
+		return
+	}
+	state.prevent_undefined_reference(meta.name)
+	if state.error.occurred {
+		return
+	}
+	if shape := state.get_shape_for(meta.name.value) {
+		state.verify_member_chain(shape, meta.property)
+		return
+	}
+	// No object shape - check if base is an imported module (single-level .function only)
+	if meta.name.value in state.import_aliases {
+		path := state.import_aliases[meta.name.value]
+		if path in state.global_names {
+			mmodule := state.global_names[path]
+			// Only allow Identifier.property (one level)
+			match meta.property {
+				Token {
+					prop_tok := meta.property as Token
+					mut found := false
+					for f in mmodule.functions {
+						if f.name == prop_tok.value {
+							found = true
+							break
+						}
+					}
+					if !found {
+						state.error.occurred = true
+						state.error.token = prop_tok
+						state.error.kind = 'Reference'
+						state.error.id = 'nested_property_not_declared'
+						state.error.context = 'undefined_nested_reference'
+					}
+				}
+				else {
+					// e.g. IO.foo.bar not allowed on modules
+					prop_token := state.member_expression_property_token(meta.property)
+					state.error.occurred = true
+					state.error.token = prop_token
+					state.error.kind = 'Reference'
+					state.error.id = 'nested_property_not_declared'
+					state.error.context = 'undefined_nested_reference'
+				}
+			}
+		}
+		return
+	}
+	// No known shape and not an import - reject (no dynamic property access)
+	prop_token := state.member_expression_property_token(meta.property)
+	state.error.occurred = true
+	state.error.token = prop_token
+	state.error.kind = 'Reference'
+	state.error.id = 'nested_property_not_declared'
+	state.error.context = 'undefined_nested_reference'
+}
+
+fn (mut state Analyzer) member_expression_property_token(property ASTNodeVariableMetaValue) Token {
+	match property {
+		Token {
+			return property
+		}
+		ASTNode {
+			inner := property.meta as ASTNodeMemberExpressionMeta
+			// First key in chain is inner.name
+			return inner.name
+		}
+		else {
+			return Token{}
+		}
+	}
+}
+
+fn (mut state Analyzer) verify_member_chain(shape ObjectShape, property ASTNodeVariableMetaValue) {
+	if state.error.occurred {
+		return
+	}
+	match property {
+		Token {
+			if property.value !in shape.fields {
+				state.error.occurred = true
+				state.error.token = property
+				state.error.kind = 'Reference'
+				state.error.id = 'nested_property_not_declared'
+				state.error.context = 'undefined_nested_reference'
+			}
+		}
+		ASTNode {
+			inner := property.meta as ASTNodeMemberExpressionMeta
+			key := inner.name.value
+			if key !in shape.fields {
+				state.error.occurred = true
+				state.error.token = inner.name
+				state.error.kind = 'Reference'
+				state.error.id = 'nested_property_not_declared'
+				state.error.context = 'undefined_nested_reference'
+				return
+			}
+			sub_shape := shape.fields[key]
+			state.verify_member_chain(sub_shape, inner.property)
+		}
+		else {}
+	}
+}
+
 fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
 	state.prevent_undefined_reference(meta.name)
 	for _, node in meta.args {
@@ -129,7 +262,13 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 			state.verify_variable_reference(meta)
 		}
 		ASTNode {
-			state.on_function_call(meta.meta as ASTNodeFunctionCallMeta)
+			if meta.name == 'FunctionCallStatement' {
+				state.on_function_call(meta.meta as ASTNodeFunctionCallMeta)
+			} else if meta.name == 'MemberExpression' {
+				state.on_member_expression(meta.meta as ASTNodeMemberExpressionMeta)
+			} else {
+				panic('not implemented: ${meta}')
+			}
 		}
 		else {
 			panic('not implemented: ${meta}')
@@ -172,12 +311,54 @@ fn (mut state Analyzer) on_import_statement(meta ASTNodeImportStatementMeta) {
 	state.prevent_name_clash(meta.name)
 	state.add_name_on_scope(meta.name.value)
 	state.verify_name_on_global_scope(meta.path)
+	if !state.error.occurred {
+		path := meta.path.value.substr(1, meta.path.value.len - 1)
+		state.import_aliases[meta.name.value] = path
+	}
+}
+
+fn build_object_shape(obj SubNodeAST) ObjectShape {
+	mut fields := map[string]ObjectShape{}
+	for node in obj.body {
+		data := node as ASTNodeObjectMetaValue
+		key := data.key.value
+		match data.value {
+			SubNodeAST {
+				if data.value.name == 'Object' {
+					fields[key] = build_object_shape(data.value)
+				} else {
+					fields[key] = ObjectShape{}
+				}
+			}
+			else {
+				fields[key] = ObjectShape{}
+			}
+		}
+	}
+	return ObjectShape{
+		fields: fields
+	}
 }
 
 fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
 	state.prevent_name_clash(meta.name)
 	state.on_variable_value(meta.value)
 	state.add_name_on_scope(meta.name.value)
+
+	// Record object shape when value is an object literal
+	match meta.value {
+		SubNodeAST {
+			if meta.value.name == 'Object' {
+				shape := build_object_shape(meta.value)
+				scope_id := state.scope.last()
+				if scope_id !in state.object_shapes {
+					state.object_shapes[scope_id] = map[string]ObjectShape{}
+				}
+				state.object_shapes[scope_id][meta.name.value] = shape
+			}
+		}
+		else {}
+	}
 }
 
 fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
@@ -260,6 +441,8 @@ fn analize(ast AST, modules Modules) Analyzer {
 			},
 		]
 		global_names: modules
+		object_shapes: map[string]map[string]ObjectShape{}
+		import_aliases: map[string]string{}
 	}
 	state.traverse(ast.name, ast.body)
 	return state

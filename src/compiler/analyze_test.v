@@ -229,3 +229,242 @@ fn test_defined_function_call_no_error() {
 	mut result := analize(state.ast, compiler.modules)
 	assert result.error.occurred == false
 }
+
+fn test_nested_object_valid_access() {
+	mut state := Parser{}
+	state.parse('testfile', 'const user = { name: "Jane", details: { age: 30 } }
+function f() {
+  const x = user.details.age
+  return user.name
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_same_name_object_in_different_functions_scoped_shape() {
+	// Each function has its own "user" with a different shape; member access uses the inner scope.
+	mut state := Parser{}
+	state.parse('testfile', 'function f() {
+  const user = { name: "f" }
+  return user.name
+}
+function g() {
+  const user = { age: 30 }
+  return user.age
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// In f, user has only "name"; user.age should error
+	state = Parser{}
+	state.parse('testfile', 'function f() {
+  const user = { name: "f" }
+  return user.age
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+
+	// In g, user has only "age"; user.name should error
+	state = Parser{}
+	state.parse('testfile', 'function g() {
+  const user = { age: 30 }
+  return user.name
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+
+	// Global user shadowed by local user: inside f, user.x uses f's shape (only "name"), not global's
+	state = Parser{}
+	state.parse('testfile', 'const user = { name: "global", id: 1 }
+function f() {
+  const user = { name: "local" }
+  return user.name
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const user = { name: "global", id: 1 }
+function f() {
+  const user = { name: "local" }
+  return user.id
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_nested_object_invalid_key_at_leaf() {
+	mut state := Parser{}
+	state.parse('testfile', 'const user = { name: "Jane", details: { age: 30 } }
+const city = user.details.city')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+	assert result.error.context == 'undefined_nested_reference'
+}
+
+fn test_nested_object_invalid_key_first_level() {
+	mut state := Parser{}
+	state.parse('testfile', 'const user = { name: "Jane" }
+const x = user.foo')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_member_access_on_non_object_errors() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = 1
+const y = x.foo')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_member_valid() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/print"
+const x = 0
+function main() {
+  return x
+}')
+	mut result := analize(state.ast, compiler.modules_with_std_print)
+	assert result.error.occurred == false
+	// Reference IO.print as value (member expression) - valid
+	state = Parser{}
+	state.parse('testfile', 'import IO from "std/print"
+const fn_ref = IO.print')
+	result = analize(state.ast, compiler.modules_with_std_print)
+	assert result.error.occurred == false
+}
+
+fn test_import_member_invalid_property() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/print"
+const x = IO.unknown')
+	mut result := analize(state.ast, compiler.modules_with_std_print)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+	assert result.error.context == 'undefined_nested_reference'
+}
+
+fn test_member_access_in_assignments() {
+	// const and let assignments use the correct (innermost) shape
+	mut state := Parser{}
+	state.parse('testfile', 'function f() {
+  const user = { name: "a", id: 1 }
+  const n = user.name
+  let id = user.id
+  return n
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function f() {
+  const user = { name: "a" }
+  const bad = user.id
+  return bad
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_member_access_as_function_argument() {
+	// member access in call args uses correct scope
+	mut state := Parser{}
+	state.parse('testfile', 'const user = { name: "x" }
+function f(x) { return x }
+const a = f(user.name)')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function f(n) { return n }
+function g() {
+  const user = { id: 1 }
+  f(user.id)
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const user = { name: "x" }
+function f(x) { return x }
+const a = f(user.bad)')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_member_access_in_nested_assignments() {
+	// member access in object literal and array literal values
+	mut state := Parser{}
+	state.parse('testfile', 'const user = { name: "x", details: { age: 10 } }
+const obj = { label: user.name, inner: user.details.age }
+const arr = [user.name, user.details.age]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const user = { name: "x" }
+const obj = { bad: user.age }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+
+	state = Parser{}
+	state.parse('testfile', 'function f() {
+  const user = { a: 1, b: 2 }
+  const nested = { x: user.a, y: user.b, z: user.c }
+  return nested
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_member_access_with_parameter_shadowing() {
+	// Parameter shadows global: no shape for param, so user.prop errors (do not use global shape)
+	mut state := Parser{}
+	state.parse('testfile', 'const user = { name: "global", id: 1 }
+function f(user) {
+  return user.name
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+
+	// Same: param "u" shadows nothing; "user" in user.name refers to global - valid
+	state = Parser{}
+	state.parse('testfile', 'const user = { name: "global" }
+function f(u) {
+  return user.name
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// Param and local: local user shadows param; use local shape
+	state = Parser{}
+	state.parse('testfile', 'function f(user) {
+  const user = { name: "local" }
+  return user.name
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	// name clash: param user and const user in same scope
+	assert result.error.id == 'identifier_already_declared'
+
+	// Param "data" has no shape; data.x errors
+	state = Parser{}
+	state.parse('testfile', 'function f(data) {
+  return data.x
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
