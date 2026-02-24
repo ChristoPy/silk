@@ -2,15 +2,25 @@
 <h1>Silk  👘</h1>
 <p>The Smooth JavaScript subset!</p>
 
-[Roadmap](./ROADMAP.md) | [Docs](./DOCS.md)
+[Roadmap](./ROADMAP.md) · [Docs](./DOCS.md)
 </div>
 
-# About and motivation
-Silk is a programming language that was designed to reduce programming errors caused by the inherent flexibility and power of JavaScript. Although JavaScript is an incredibly powerful language that allows developers to do almost anything, its flexibility can sometimes lead to unexpected results and errors.
+---
 
-While TypeScript can help to reduce errors, Silk is not meant to replace JavaScript or TypeScript. TypeScript is primarily known for its type system, linting, and tooling capabilities, but it is also incredibly powerful in other ways, thanks to its compiler.
+Silk is a small programming language that compiles to JavaScript. It was designed to cut down on the kinds of mistakes that come from JavaScript’s flexibility—without replacing JavaScript or turning into a big, complex tool.
 
-Silk takes a different approach from TypeScript. It encourages developers to write functional code while still taking advantage of the full power of JavaScript. If TypeScript were used instead, it could become overwhelming quickly, as TypeScript grows in the same way as JavaScript does.
+**A small subset.** Silk stays intentionally small. You get a focused set of constructs: constants and variables, functions, objects, arrays, and a few rules. No extra syntax to grow into. Less surface area, fewer surprises.
 
-It's worth noting that Silk is currently a small subset of JavaScript, designed to provide developers with a more focused and streamlined approach to coding in JavaScript.
+**Static analysis.** The compiler checks your program before it runs. It enforces that every name is declared before use, that you don’t use the same name twice in the same scope, and that object property access matches what you actually defined. If something is wrong, you hear about it at compile time.
 
+**No undefined behavior.** You can’t reference a variable or function that doesn’t exist. You can’t read a property that isn’t on the object. Imports must be at the top; only known modules are allowed. The language is built so that whole class of “undefined at runtime” mistakes doesn’t exist.
+
+**One way to do things.** Top level is `const` only. Inside functions you use `const` or `let`. No `var`, no hoisting, no “many correct styles.” One clear style keeps code readable and the rules easy to remember.
+
+**No hoisting.** Declarations are not hoisted. What you see is the order the compiler sees. You declare, then you use. That keeps the mental model simple and avoids the classic “used before declared” confusion.
+
+---
+
+Silk is not meant to replace TypeScript. TypeScript adds a type system and a lot of power on top of JavaScript. Silk takes a different path: a small, strict subset that compiles to plain JavaScript and encourages straightforward, functional-style code. Less flexibility in the language, more predictability in your programs.
+
+If that sounds like a breath of fresh air, check the [Docs](./DOCS.md) for the language and the [Roadmap](./ROADMAP.md) for what’s next.
