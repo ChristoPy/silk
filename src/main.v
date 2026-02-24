@@ -60,19 +60,19 @@ fn get_project_files() []string {
 }
 
 fn prepare_build_folder() ! {
-	if os.exists('.build') {
-		old_files := os.ls('.build') or {
+	if os.exists('dist') {
+		old_files := os.ls('dist') or {
 			println(term.warn_message('Could not read build folder: ${err}'))
 			return
 		}
 		for file in old_files {
-			os.rm('.build/${file}') or {
+			os.rm('dist/${file}') or {
 				println(term.warn_message('Could not remove build file: ${err}'))
 				return
 			}
 		}
 	} else {
-		os.mkdir('.build') or {
+		os.mkdir('dist') or {
 			println(term.warn_message('Could not make build folder: ${err}'))
 			return
 		}
@@ -98,7 +98,7 @@ fn build_project(command Command) ! {
 		state.parse(file, file_content)
 
 		name := file.split('.')[0]
-		os.write_file('.build/${name}.js', state.generate_js()) or {
+		os.write_file('dist/${name}.js', state.generate_js()) or {
 			println(term.warn_message('Could not write build file: ${err}'))
 			return
 		}
