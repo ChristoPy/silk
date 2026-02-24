@@ -1,7 +1,7 @@
 module tokenizer
 
 import regex
-import util { throw_error, throw_error }
+import util { throw_error }
 import types { CompileError, Token, TokenSpec }
 
 // vfmt off
