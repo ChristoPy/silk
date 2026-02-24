@@ -13,6 +13,9 @@
     ```
 
 ### Variable declaration
+
+At **top level** (outside any function) you must use **`const`**. Inside a **function** you can use **`const`** or **`let`**.
+
 - **Boolean**
     ```js
     let loggedIn = true
