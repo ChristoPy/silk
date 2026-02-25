@@ -8,10 +8,12 @@ pub mut:
 	names []string
 }
 
-// ObjectShape describes known keys (and nested shapes) of an object literal
+// ObjectShape describes known keys (and nested shapes) of an object literal.
+// number_fields records which keys hold a number literal (for index validation).
 struct ObjectShape {
 pub mut:
-	fields map[string]ObjectShape
+	fields       map[string]ObjectShape
+	number_fields map[string]bool
 }
 
 struct AnalyzerError {
@@ -257,6 +259,36 @@ fn (mut state Analyzer) is_number_expression(value ASTNodeVariableMetaValue) boo
 				}
 			}
 		}
+		ASTNode {
+			if value.name == 'MemberExpression' {
+				member_meta := value.meta as ASTNodeMemberExpressionMeta
+				if shape := state.get_shape_for(member_meta.name.value) {
+					return state.shape_has_number_at(member_meta.property, shape)
+				}
+			}
+		}
+		else {}
+	}
+	return false
+}
+
+// shape_has_number_at returns true if the property path (single key or nested member) resolves to a number in shape.
+fn (mut state Analyzer) shape_has_number_at(property ASTNodeVariableMetaValue, shape ObjectShape) bool {
+	match property {
+		Token {
+			return property.value in shape.number_fields
+		}
+		ASTNode {
+			if property.name == 'MemberExpression' {
+				inner := property.meta as ASTNodeMemberExpressionMeta
+				key := inner.name.value
+				if key !in shape.fields {
+					return false
+				}
+				sub_shape := shape.fields[key]
+				return state.shape_has_number_at(inner.property, sub_shape)
+			}
+		}
 		else {}
 	}
 	return false
@@ -267,6 +299,10 @@ fn (mut state Analyzer) on_index_expression(meta ASTNodeIndexExpressionMeta) {
 		return
 	}
 	state.on_variable_value(meta.base)
+	if state.error.occurred {
+		return
+	}
+	state.on_variable_value(meta.index)
 	if state.error.occurred {
 		return
 	}
@@ -287,10 +323,29 @@ fn (mut state Analyzer) index_expression_index_token(value ASTNodeVariableMetaVa
 			return value
 		}
 		ASTNode {
-			// Nested index like arr[i][j] - use the inner index for error location
 			if value.name == 'IndexExpression' {
 				inner := value.meta as ASTNodeIndexExpressionMeta
 				return state.index_expression_index_token(inner.index)
+			}
+			if value.name == 'MemberExpression' {
+				inner := value.meta as ASTNodeMemberExpressionMeta
+				return state.member_expression_rightmost_token(inner.property)
+			}
+		}
+		else {}
+	}
+	return Token{}
+}
+
+fn (mut state Analyzer) member_expression_rightmost_token(property ASTNodeVariableMetaValue) Token {
+	match property {
+		Token {
+			return property
+		}
+		ASTNode {
+			if property.name == 'MemberExpression' {
+				inner := property.meta as ASTNodeMemberExpressionMeta
+				return state.member_expression_rightmost_token(inner.property)
 			}
 		}
 		else {}
@@ -379,10 +434,17 @@ fn (mut state Analyzer) on_import_statement(meta ASTNodeImportStatementMeta) {
 
 fn build_object_shape(obj SubNodeAST) ObjectShape {
 	mut fields := map[string]ObjectShape{}
+	mut number_fields := map[string]bool{}
 	for node in obj.body {
 		data := node as ASTNodeObjectMetaValue
 		key := data.key.value
 		match data.value {
+			Token {
+				if data.value.kind == 'Number' {
+					number_fields[key] = true
+				}
+				fields[key] = ObjectShape{}
+			}
 			SubNodeAST {
 				if data.value.name == 'Object' {
 					fields[key] = build_object_shape(data.value)
@@ -397,6 +459,7 @@ fn build_object_shape(obj SubNodeAST) ObjectShape {
 	}
 	return ObjectShape{
 		fields: fields
+		number_fields: number_fields
 	}
 }
 

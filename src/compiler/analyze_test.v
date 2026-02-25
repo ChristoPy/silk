@@ -558,3 +558,33 @@ function f() {
 	result = analize(state.ast, compiler.modules)
 	assert result.error.occurred == false
 }
+
+fn test_array_index_member_expression_number() {
+	// Index can be obj.param when that property is a number literal in the object shape
+	mut state := Parser{}
+	state.parse('testfile', 'const config = { index: 0, name: "x" }
+const arr = [10, 20, 30]
+const first = arr[config.index]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const opts = { i: 1 }
+const xs = ["a", "b", "c"]
+function f() {
+  return xs[opts.i]
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_array_index_member_expression_non_number_rejected() {
+	// Index obj.param when param is not a number (e.g. string) is rejected
+	mut state := Parser{}
+	state.parse('testfile', 'const config = { name: "x", index: 0 }
+const arr = [10, 20]
+const bad = arr[config.name]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_must_be_number'
+}
