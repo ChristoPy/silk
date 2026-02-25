@@ -1,7 +1,7 @@
 module parser
 
 import util { throw_error }
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import tokenizer { Tokenizer }
 
 pub struct Parser {
@@ -361,7 +361,8 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 			return state.eat('Boolean')
 		}
 		'Identifier' {
-			return state.identifier_or_function_call()
+			value := state.identifier_or_function_call()
+			return state.parse_index_suffix(value)
 		}
 		'LBracket' {
 			return state.array_literal()
@@ -527,6 +528,49 @@ fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
 		meta: ASTNodeMemberExpressionMeta{
 			name: base
 			property: prop_expr
+		}
+	}
+}
+
+// parse_index_suffix parses optional [ expression_value ] after an indexable value (identifier, member, or index).
+fn (mut state Parser) parse_index_suffix(start ASTNodeVariableMetaValue) ASTNodeVariableMetaValue {
+	match start {
+		ASTNode {
+			if start.name == 'FunctionCallStatement' {
+				return start
+			}
+		}
+		else {}
+	}
+	mut current := start
+	for state.lookahead.kind == 'LBracket' {
+		state.eat('LBracket')
+		index := state.expression_value()
+		state.eat('RBracket')
+		line, column := state.value_line_column(current)
+		current = ASTNode{
+			name: 'IndexExpression'
+			line: line
+			column: column
+			meta: ASTNodeIndexExpressionMeta{
+				base: current
+				index: index
+			}
+		}
+	}
+	return current
+}
+
+fn (mut state Parser) value_line_column(value ASTNodeVariableMetaValue) (int, int) {
+	match value {
+		Token {
+			return value.line, value.column
+		}
+		ASTNode {
+			return value.line, value.column
+		}
+		else {
+			return 0, 0
 		}
 	}
 }

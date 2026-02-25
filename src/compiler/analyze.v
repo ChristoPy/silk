@@ -1,6 +1,6 @@
 module compiler
 
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -33,7 +33,8 @@ pub mut:
 	top_level_seen_non_import bool
 	object_shapes             map[string]map[string]ObjectShape
 	import_aliases            map[string]string
-	// alias name -> module path (for member access validation)
+	number_vars               map[string]map[string]bool
+	// scope id -> var name -> true (variables known to hold a number literal)
 }
 
 fn (mut state Analyzer) prevent_name_clash(token Token) {
@@ -240,6 +241,63 @@ fn (mut state Analyzer) verify_member_chain(shape ObjectShape, property ASTNodeV
 	}
 }
 
+fn (mut state Analyzer) is_number_expression(value ASTNodeVariableMetaValue) bool {
+	match value {
+		Token {
+			if value.kind == 'Number' {
+				return true
+			}
+			if value.kind == 'Identifier' {
+				for i := state.names.len - 1; i >= 0; i-- {
+					scope := state.names[i]
+					if scope.names.contains(value.value) {
+						scope_id := scope.id
+						return scope_id in state.number_vars && value.value in state.number_vars[scope_id]
+					}
+				}
+			}
+		}
+		else {}
+	}
+	return false
+}
+
+fn (mut state Analyzer) on_index_expression(meta ASTNodeIndexExpressionMeta) {
+	if state.error.occurred {
+		return
+	}
+	state.on_variable_value(meta.base)
+	if state.error.occurred {
+		return
+	}
+	if !state.is_number_expression(meta.index) {
+		index_token := state.index_expression_index_token(meta.index)
+		state.error.occurred = true
+		state.error.token = index_token
+		state.error.kind = 'Reference'
+		state.error.id = 'index_must_be_number'
+		state.error.context = 'index_must_be_number_literal_or_reference'
+		return
+	}
+}
+
+fn (mut state Analyzer) index_expression_index_token(value ASTNodeVariableMetaValue) Token {
+	match value {
+		Token {
+			return value
+		}
+		ASTNode {
+			// Nested index like arr[i][j] - use the inner index for error location
+			if value.name == 'IndexExpression' {
+				inner := value.meta as ASTNodeIndexExpressionMeta
+				return state.index_expression_index_token(inner.index)
+			}
+		}
+		else {}
+	}
+	return Token{}
+}
+
 fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
 	state.on_variable_value(meta.callee)
 	for _, node in meta.args {
@@ -266,6 +324,8 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 				state.on_function_call(meta.meta as ASTNodeFunctionCallMeta)
 			} else if meta.name == 'MemberExpression' {
 				state.on_member_expression(meta.meta as ASTNodeMemberExpressionMeta)
+			} else if meta.name == 'IndexExpression' {
+				state.on_index_expression(meta.meta as ASTNodeIndexExpressionMeta)
 			} else {
 				panic('not implemented: ${meta}')
 			}
@@ -359,6 +419,19 @@ fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
 		}
 		else {}
 	}
+	// Record variables that hold a number literal (for array index validation)
+	match meta.value {
+		Token {
+			if meta.value.kind == 'Number' {
+				scope_id := state.scope.last()
+				if scope_id !in state.number_vars {
+					state.number_vars[scope_id] = map[string]bool{}
+				}
+				state.number_vars[scope_id][meta.name.value] = true
+			}
+		}
+		else {}
+	}
 }
 
 fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
@@ -443,6 +516,7 @@ fn analize(ast AST, modules Modules) Analyzer {
 		global_names: modules
 		object_shapes: map[string]map[string]ObjectShape{}
 		import_aliases: map[string]string{}
+		number_vars: map[string]map[string]bool{}
 	}
 	state.traverse(ast.name, ast.body)
 	return state

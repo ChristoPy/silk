@@ -476,3 +476,85 @@ function f(u) {
 	assert result.error.occurred == true
 	assert result.error.id == 'nested_property_not_declared'
 }
+
+fn test_array_index_number_literal() {
+	mut state := Parser{}
+	state.parse('testfile', 'const arr = [10, 20, 30]
+const first = arr[0]
+const second = arr[1]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function f() {
+  const xs = [1, 2, 3]
+  let i = 0
+  return xs[i]
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_array_index_reference_to_number() {
+	mut state := Parser{}
+	state.parse('testfile', 'const arr = [10, 20]
+const idx = 1
+const val = arr[idx]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_array_index_must_be_number() {
+	mut state := Parser{}
+	state.parse('testfile', 'const arr = [1, 2, 3]
+const x = arr["0"]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_must_be_number'
+
+	state = Parser{}
+	state.parse('testfile', 'const arr = [1, 2]
+const name = "x"
+const bad = arr[name]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_must_be_number'
+
+	state = Parser{}
+	state.parse('testfile', 'const arr = [1, 2]
+const idx = "not a number"
+const bad = arr[idx]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_must_be_number'
+}
+
+fn test_array_index_nested() {
+	mut state := Parser{}
+	state.parse('testfile', 'const matrix = [[1, 2], [3, 4]]
+const cell = matrix[0][1]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_array_index_outer_scope_number_variable() {
+	// Index variable from outer (program) scope: const at top level, used inside function
+	mut state := Parser{}
+	state.parse('testfile', 'const idx = 0
+const arr = [10, 20, 30]
+function main() {
+  return arr[idx]
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const i = 1
+const xs = ["a", "b", "c"]
+function f() {
+  const first = xs[i]
+  return first
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}

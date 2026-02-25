@@ -38,6 +38,7 @@ pub mut:
 pub type ASTNodeMeta = ASTNodeFunctionCallMeta
 	| ASTNodeFunctionMeta
 	| ASTNodeImportStatementMeta
+	| ASTNodeIndexExpressionMeta
 	| ASTNodeMemberExpressionMeta
 	| ASTNodeReturnMeta
 	| ASTNodeVariableMeta
@@ -103,6 +104,12 @@ pub struct ASTNodeMemberExpressionMeta {
 pub mut:
 	name     Token
 	property ASTNodeVariableMetaValue
+}
+
+pub struct ASTNodeIndexExpressionMeta {
+pub mut:
+	base  ASTNodeVariableMetaValue
+	index ASTNodeVariableMetaValue
 }
 
 pub struct MatchResult {

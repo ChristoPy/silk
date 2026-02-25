@@ -37,7 +37,7 @@ fn make_project(command Command) ! {
 		return
 	}
 
-	os.write_file('${name}/main.silk', 'import IO from "silk/io"\n\nfunction main() {\n  IO.print("Hello, from Silk!")\n}\n') or {
+	os.write_file('${name}/main.silk', 'import IO from "std/io"\n\nfunction main() {\n  IO.print("Hello, from Silk!")\n}\n') or {
 		println(term.warn_message('Could not write project files: ${err}'))
 		return
 	}
@@ -61,21 +61,18 @@ fn get_project_files() []string {
 
 fn prepare_build_folder() ! {
 	if os.exists('dist') {
-		old_files := os.ls('dist') or {
-			println(term.warn_message('Could not read build folder: ${err}'))
+		os.rmdir_all('dist') or {
+			println(term.warn_message('Could not clear build folder: ${err}'))
 			return
 		}
-		for file in old_files {
-			os.rm('dist/${file}') or {
-				println(term.warn_message('Could not remove build file: ${err}'))
-				return
-			}
-		}
-	} else {
-		os.mkdir('dist') or {
-			println(term.warn_message('Could not make build folder: ${err}'))
-			return
-		}
+	}
+	os.mkdir('dist') or {
+		println(term.warn_message('Could not make build folder: ${err}'))
+		return
+	}
+	os.cp_all('../src/std', 'dist/std', true) or {
+		println(term.warn_message('Could not copy standard library: ${err}'))
+		return
 	}
 }
 
