@@ -5,7 +5,7 @@ import util { throw_error }
 import parser { Parser }
 
 const standard_module = Module{
-	name: 'std/print'
+	name: 'std/io'
 	functions: [Function{
 		name: 'print'
 		arguments: ['value']
@@ -21,7 +21,7 @@ pub mut:
 pub fn (mut state Compiler) parse(file_name string, source string) {
 	state.parser.parse(file_name, source)
 	state.modules = {
-		'std/print': compiler.standard_module
+		'std/io': compiler.standard_module
 	}
 	state.compile()
 }

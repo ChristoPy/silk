@@ -6,8 +6,8 @@ const modules = {
 	'std': standard_module
 }
 
-const modules_with_std_print = {
-	'std/print': standard_module
+const modules_with_std_io = {
+	'std/io': standard_module
 }
 
 fn test_no_name_clashes() {
@@ -128,39 +128,39 @@ fn test_exported_functions() {
 
 fn test_import_clash_with_const() {
 	mut state := Parser{}
-	state.parse('testfile', 'import Foo from "std/print" const Foo = 1')
-	mut result := analize(state.ast, compiler.modules_with_std_print)
+	state.parse('testfile', 'import Foo from "std/io" const Foo = 1')
+	mut result := analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == true
 
 	state = Parser{}
-	state.parse('testfile', 'const Foo = 1 import Foo from "std/print"')
-	result = analize(state.ast, compiler.modules_with_std_print)
+	state.parse('testfile', 'const Foo = 1 import Foo from "std/io"')
+	result = analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == true
 }
 
 fn test_valid_import_no_error() {
 	mut state := Parser{}
-	state.parse('testfile', 'import IO from "std/print" const x = 1')
-	mut result := analize(state.ast, compiler.modules_with_std_print)
+	state.parse('testfile', 'import IO from "std/io" const x = 1')
+	mut result := analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == false
 }
 
 fn test_import_only_at_top_level() {
 	mut state := Parser{}
-	state.parse('testfile', 'const x = 1 import IO from "std/print"')
-	mut result := analize(state.ast, compiler.modules_with_std_print)
+	state.parse('testfile', 'const x = 1 import IO from "std/io"')
+	mut result := analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == true
 	assert result.error.id == 'import_not_at_top_level'
 
 	state = Parser{}
-	state.parse('testfile', 'function f() {} import IO from "std/print"')
-	result = analize(state.ast, compiler.modules_with_std_print)
+	state.parse('testfile', 'function f() {} import IO from "std/io"')
+	result = analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == true
 	assert result.error.id == 'import_not_at_top_level'
 
 	state = Parser{}
-	state.parse('testfile', 'import A from "std/print" import B from "std/print" const x = 1')
-	result = analize(state.ast, compiler.modules_with_std_print)
+	state.parse('testfile', 'import A from "std/io" import B from "std/io" const x = 1')
+	result = analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == false
 }
 
@@ -326,26 +326,26 @@ const y = x.foo')
 
 fn test_import_member_valid() {
 	mut state := Parser{}
-	state.parse('testfile', 'import IO from "std/print"
+	state.parse('testfile', 'import IO from "std/io"
 const x = 0
 function main() {
   return x
 }')
-	mut result := analize(state.ast, compiler.modules_with_std_print)
+	mut result := analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == false
 	// Reference IO.print as value (member expression) - valid
 	state = Parser{}
-	state.parse('testfile', 'import IO from "std/print"
+	state.parse('testfile', 'import IO from "std/io"
 const fn_ref = IO.print')
-	result = analize(state.ast, compiler.modules_with_std_print)
+	result = analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == false
 }
 
 fn test_import_member_invalid_property() {
 	mut state := Parser{}
-	state.parse('testfile', 'import IO from "std/print"
+	state.parse('testfile', 'import IO from "std/io"
 const x = IO.unknown')
-	mut result := analize(state.ast, compiler.modules_with_std_print)
+	mut result := analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == true
 	assert result.error.id == 'nested_property_not_declared'
 	assert result.error.context == 'undefined_nested_reference'
