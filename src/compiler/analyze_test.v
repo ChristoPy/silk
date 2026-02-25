@@ -339,6 +339,14 @@ function main() {
 const fn_ref = IO.print')
 	result = analize(state.ast, compiler.modules_with_std_io)
 	assert result.error.occurred == false
+	// Call IO.print(...) - valid
+	state = Parser{}
+	state.parse('testfile', 'import IO from "std/io"
+function main() {
+  IO.print("Hello, from Silk!")
+}')
+	result = analize(state.ast, compiler.modules_with_std_io)
+	assert result.error.occurred == false
 }
 
 fn test_import_member_invalid_property() {

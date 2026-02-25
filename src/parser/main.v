@@ -214,12 +214,61 @@ fn (mut state Parser) return_statement() ASTNode {
 
 /**
 * FunctionCallStatement
-*   : Identifier GenericFunctionCall
+*   : Callable LParen RParen
+*   | Callable LParen ExpressionValueList RParen
 *   ;
+* Callable : Identifier ( Dot Identifier )*
 */
 fn (mut state Parser) function_call_statement() ASTNode {
-	name := state.eat('Identifier')
-	return state.generic_function_call(name)
+	callable := state.parse_callable()
+	return state.generic_function_call(callable)
+}
+
+fn (mut state Parser) parse_callable() ASTNodeVariableMetaValue {
+	base := state.eat('Identifier')
+	mut props := []Token{}
+	for state.lookahead.kind == 'Dot' {
+		state.eat('Dot')
+		props << state.eat('Identifier')
+	}
+	if props.len == 0 {
+		return base
+	}
+	mut prop_expr := ASTNodeVariableMetaValue(props[props.len - 1])
+	for i := props.len - 2; i >= 0; i-- {
+		prop_expr = ASTNode{
+			name: 'MemberExpression'
+			line: props[i].line
+			column: props[i].column
+			meta: ASTNodeMemberExpressionMeta{
+				name: props[i]
+				property: prop_expr
+			}
+		}
+	}
+	return ASTNode{
+		name: 'MemberExpression'
+		line: base.line
+		column: base.column
+		meta: ASTNodeMemberExpressionMeta{
+			name: base
+			property: prop_expr
+		}
+	}
+}
+
+fn (mut state Parser) callable_line_column(callable ASTNodeVariableMetaValue) (int, int) {
+	match callable {
+		Token {
+			return callable.line, callable.column
+		}
+		ASTNode {
+			return callable.line, callable.column
+		}
+		else {
+			return 0, 0
+		}
+	}
 }
 
 /**
@@ -228,7 +277,7 @@ fn (mut state Parser) function_call_statement() ASTNode {
 *   | LParen ExpressionValueList RParen
 *   ;
 */
-fn (mut state Parser) generic_function_call(name Token) ASTNode {
+fn (mut state Parser) generic_function_call(callable ASTNodeVariableMetaValue) ASTNode {
 	mut args := []ASTNodeVariableMetaValue{}
 	mut ref := &args
 
@@ -236,12 +285,13 @@ fn (mut state Parser) generic_function_call(name Token) ASTNode {
 		ref << param
 	})
 
+	line, column := state.callable_line_column(callable)
 	return ASTNode{
 		name: 'FunctionCallStatement'
-		line: name.line
-		column: name.column
+		line: line
+		column: column
 		meta: ASTNodeFunctionCallMeta{
-			name: name
+			callee: callable
 			args: args
 		}
 	}

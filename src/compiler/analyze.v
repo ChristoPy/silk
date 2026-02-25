@@ -241,7 +241,7 @@ fn (mut state Analyzer) verify_member_chain(shape ObjectShape, property ASTNodeV
 }
 
 fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
-	state.prevent_undefined_reference(meta.name)
+	state.on_variable_value(meta.callee)
 	for _, node in meta.args {
 		state.on_variable_value(node)
 	}
