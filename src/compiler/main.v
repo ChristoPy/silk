@@ -39,6 +39,7 @@ fn (mut state Compiler) compile() {
 			file_name: state.parser.tokenizer.file
 			wrong_token: wrong_token
 			line_content: state.parser.tokenizer.code.split('\n')[wrong_token.line - 1]
+			suggestion: result.error.suggestion
 		})
 		return
 	}

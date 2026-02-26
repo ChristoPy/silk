@@ -18,11 +18,12 @@ pub mut:
 
 struct AnalyzerError {
 pub mut:
-	occurred bool
-	token    Token
-	kind     string
-	id       string
-	context  string
+	occurred   bool
+	token      Token
+	kind       string
+	id         string
+	context    string
+	suggestion string // e.g. closest declared name for "did you mean?"
 }
 
 struct Analyzer {
@@ -79,6 +80,7 @@ fn (mut state Analyzer) prevent_undefined_reference(token Token) {
 		state.error.kind = 'Reference'
 		state.error.id = 'identifier_not_declared'
 		state.error.context = 'undefined_reference'
+		state.error.suggestion = state.suggest_closest_name(token.value)
 	}
 }
 
@@ -94,6 +96,67 @@ fn (mut state Analyzer) add_name_on_scope(name string) {
 			}
 		}
 	}
+}
+
+// levenshtein returns edit distance between a and b (number of insert/delete/substitute).
+fn levenshtein(a string, b string) int {
+	if a.len == 0 {
+		return b.len
+	}
+	if b.len == 0 {
+		return a.len
+	}
+	mut row := []int{len: b.len + 1}
+	for i := 0; i <= b.len; i++ {
+		row[i] = i
+	}
+	for i := 1; i <= a.len; i++ {
+		mut prev := row[0]
+		row[0] = i
+		for j := 1; j <= b.len; j++ {
+			mut sub_cost := 0
+			if a[i - 1] != b[j - 1] {
+				sub_cost = 1
+			}
+			mut curr := prev + sub_cost
+			if row[j] + 1 < curr {
+				curr = row[j] + 1
+			}
+			if row[j - 1] + 1 < curr {
+				curr = row[j - 1] + 1
+			}
+			prev = row[j]
+			row[j] = curr
+		}
+	}
+	return row[b.len]
+}
+
+// suggest_closest_name returns the declared name closest to `bad`, or "" if none close enough.
+fn (mut state Analyzer) suggest_closest_name(bad string) string {
+	mut candidates := map[string]bool{}
+	for scope in state.names {
+		for n in scope.names {
+			candidates[n] = true
+		}
+	}
+	if bad in candidates {
+		return ''
+	}
+	mut best_name := ''
+	mut best_dist := 999
+	for name, _ in candidates {
+		d := levenshtein(bad, name)
+		if d < best_dist {
+			best_dist = d
+			best_name = name
+		}
+	}
+	// Only suggest if within a small edit distance (typo-like)
+	if best_name != '' && best_dist <= 3 {
+		return best_name
+	}
+	return ''
 }
 
 fn (mut state Analyzer) verify_name_on_global_scope(token Token) {

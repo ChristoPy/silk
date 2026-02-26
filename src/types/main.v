@@ -126,4 +126,5 @@ pub mut:
 	file_name    string
 	wrong_token  Token
 	line_content string
+	suggestion   string // e.g. "Did you mean: score?" when identifier not declared
 }

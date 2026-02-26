@@ -60,5 +60,8 @@ pub fn throw_error(error CompileError) {
 		context := util.reasons_map[error.context]
 		println('${pad_left} • ${context}')
 	}
+	if error.suggestion != '' {
+		println('${pad_left} • ${term.bold('Did you mean:')} ${term.cyan(error.suggestion)}?')
+	}
 	exit(1)
 }

@@ -42,6 +42,35 @@ fn test_no_name_clashes() {
 	assert result.error.occurred == true
 }
 
+fn test_did_you_mean_suggestion() {
+	// Typo "scor" -> suggest "score"
+	mut state := Parser{}
+	state.parse('testfile', 'const score = 98
+function sumScore(value) {
+  let newScore = scor
+  return newScore
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'identifier_not_declared'
+	assert result.error.suggestion == 'score'
+
+	// Typo in top level: "usar" -> suggest "user"
+	state = Parser{}
+	state.parse('testfile', 'const user = { name: "x" }
+const x = usar.name')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.suggestion == 'user'
+
+	// No suggestion when nothing close (or no declarations)
+	state = Parser{}
+	state.parse('testfile', 'const a = xyzzy')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.suggestion == ''
+}
+
 fn test_no_undefined_references() {
 	mut state := Parser{}
 	state.parse('testfile', 'const a = b')
