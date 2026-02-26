@@ -360,6 +360,9 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 		'Boolean' {
 			return state.eat('Boolean')
 		}
+		'Null' {
+			return state.eat('Null')
+		}
 		'Identifier' {
 			value := state.identifier_or_function_call()
 			return state.parse_index_suffix(value)

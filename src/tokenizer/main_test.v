@@ -102,6 +102,14 @@ fn test_boolean_tokens() {
 	assert state.get_next_token().kind == 'EOF'
 }
 
+fn test_null_token() {
+	mut state := Tokenizer{}
+	state.init('test', 'null')
+	t := state.get_next_token()
+	assert t.kind == 'Null' && t.value == 'null'
+	assert state.get_next_token().kind == 'EOF'
+}
+
 fn test_keywords_and_punctuation() {
 	mut state := Tokenizer{}
 	state.init('test', 'function return import from export let ( ) { } [ ] : , .')

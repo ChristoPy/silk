@@ -588,3 +588,25 @@ const bad = arr[config.name]')
 	assert result.error.occurred == true
 	assert result.error.id == 'index_must_be_number'
 }
+
+fn test_null_as_variable_value() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = null')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function f() { let maybe = null\nreturn maybe }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const obj = { a: null }\nconst arr = [null, 1]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function f() { return null }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
