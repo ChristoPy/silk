@@ -12,7 +12,7 @@
 - [ ] Math (Numbers only)
 - [ ] Sugest code fix for errors
 - [ ] Standard library
-- [ ] Support imports
+- [x] Support imports
 - [ ] CLI
   - [ ] Easy installation
   - [x] Bootstrap a project
