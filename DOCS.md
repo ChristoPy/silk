@@ -29,6 +29,14 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
     ```js
     let age = 32
     ```
+- **Arithmetic (variable declarations only)**  
+  In `const` and `let` declarations you can use `+`, `-`, `*`, `/` with number literals and references to numbers. Both operands must be numbers.
+    ```js
+    const a = 1 + 2
+    const b = 10 - 3
+    let c = a + b
+    const half = 100 / 2
+    ```
 - **Null**
     ```js
     let value = null
@@ -144,15 +152,15 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
   }
   ```
 - **Reference to non defined value**  
-  Silk reports a compile-time error when you use a name that has not been declared. This applies to variables, function calls, and function call arguments.
+  Silk reports a compile-time error when you use a name that has not been declared. This applies to variables, function calls, and function call arguments.*Did you mean: score?*
   ```js
   const a = b
   //   ╭─ ReferenceError: This identifier has not been declared.
   // 1 │  b
   //   │  ^
-  //   • You can't use this variable as value. It does not exist.
+  //   • Cannot use this name. It has not been declared.
   ```
-  Example inside a function:
+  When the name looks like a typo of a declared name (e.g. `scor` when `score` exists), Silk suggests: 
   ```js
   const score = 98
   function sumScore(value) {
@@ -162,7 +170,8 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
   //   ╭─ ReferenceError: This identifier has not been declared.
   // 3 │  scor
   //   │  ^^^^
-  //   • You can't use this variable as value. It does not exist.
+  //   • Cannot use this name. It has not been declared.
+  //   • Did you mean: score?
   ```
 - **No dynamic values**  
   This rule is a boundary to prevent you from accessing a property in a dynamic value which (Silk) can't garantee it exists (yet).
