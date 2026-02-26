@@ -142,6 +142,57 @@ fn test_reserved_words_tokenized_as_keywords() {
 	assert state.get_next_token().kind == 'EOF'
 }
 
+fn test_all_reserved_words_are_keywords_not_identifiers() {
+	// Every entry in reserved_words must be tokenized as its keyword kind, not Identifier
+	mut state := Tokenizer{}
+	words := [
+		['const', 'Const'],
+		['let', 'Let'],
+		['function', 'Function'],
+		['return', 'Return'],
+		['true', 'Boolean'],
+		['false', 'Boolean'],
+		['null', 'Null'],
+		['import', 'Import'],
+		['from', 'From'],
+		['match', 'Match'],
+		['export', 'Export'],
+		['if', 'If'],
+		['else', 'Else'],
+		['for', 'For'],
+		['while', 'While'],
+	]
+	for pair in words {
+		state.init('test', pair[0])
+		t := state.get_next_token()
+		assert t.kind == pair[1] && t.value == pair[0], 'expected ${pair[0]} as ${pair[1]}, got ${t.kind}'
+		assert state.get_next_token().kind == 'EOF'
+	}
+}
+
+fn test_identifiers_similar_to_reserved_words_stay_identifiers() {
+	// Words that start with or contain a reserved word must be a single Identifier
+	mut state := Tokenizer{}
+	cases := ['nullish', 'constant', 'letter', 'functional', 'returnValue', 'const_ok', 'iffy',
+		'elsewhere', 'forever', 'whileLoop', 'imported', 'form', 'matching', 'exported']
+	for word in cases {
+		state.init('test', word)
+		t := state.get_next_token()
+		assert t.kind == 'Identifier' && t.value == word, 'expected Identifier "${word}", got ${t.kind} "${t.value}"'
+		assert state.get_next_token().kind == 'EOF'
+	}
+}
+
+fn test_is_reserved_word_kind() {
+	assert tokenizer.is_reserved_word_kind('Const') == true
+	assert tokenizer.is_reserved_word_kind('If') == true
+	assert tokenizer.is_reserved_word_kind('Null') == true
+	assert tokenizer.is_reserved_word_kind('Boolean') == true
+	assert tokenizer.is_reserved_word_kind('Identifier') == false
+	assert tokenizer.is_reserved_word_kind('Number') == false
+	assert tokenizer.is_reserved_word_kind('') == false
+}
+
 fn test_keywords_and_punctuation() {
 	mut state := Tokenizer{}
 	state.init('test', 'function return import from export let ( ) { } [ ] : , .')
