@@ -14,7 +14,7 @@
 
 ### Variable declaration
 
-At **top level** (outside any function) you must use **`const`**. Inside a **function** you can use **`const`** or **`let`**.
+At **top level** (outside any function) you must use **`const`** only. Inside a **function** you can use **`const`** or **`let`**.
 
 - **Boolean**
     ```js
@@ -29,6 +29,11 @@ At **top level** (outside any function) you must use **`const`**. Inside a **fun
     ```js
     let age = 32
     ```
+- **Null**
+    ```js
+    let value = null
+    const maybe = null
+    ```
 - **Map**
     ```js
     let user = {name: "Kyle", age: 32}
@@ -36,6 +41,15 @@ At **top level** (outside any function) you must use **`const`**. Inside a **fun
 - **List**
     ```js
     let fruits = ["banana", "apple", "avocado"]
+    ```
+- **List index access**  
+  You can read an element by index with `[expression]`. The index must be a number: a literal, a variable that was assigned a number literal, or an object property that holds a number (e.g. `obj.index`).
+    ```js
+    const i = 0
+    const items = [10, 20, 30]
+    const first = items[i]
+    const config = { index: 1 }
+    const second = items[config.index]
     ```
 - **References**
     ```js
@@ -76,43 +90,44 @@ At **top level** (outside any function) you must use **`const`**. Inside a **fun
   ```
 
 ### Modules
-- **Import**
+- **Import**  
+  Imports are only allowed at the top of the file (before any other statement). The only standard module currently supported is **`std/io`**.
   ```js
-  import Math from "silk/math"
+  import IO from "std/io"
   ```
 - **Export**
   ```js
   export function main() {}
   ```
-- **Module usage (soon)**
+- **Standard module: std/io**  
+  Use the `IO` object to call the standard I/O function `print`.
   ```js
-  import Math from "silk/math"
-  import String from "silk/string"
+  import IO from "std/io"
 
-  String.uppercase("avocado")
-  let random = Math.random()
-  let PI = Math.PI
+  function main() {
+    IO.print("Hello, from Silk!")
+    IO.print(42)
+  }
   ```
 
 ## Compiler Rules
 - **Duplicated identifier**
 
-  This rule makes impossible to create functions/variables with the same name.  
+  You cannot create functions or variables with the same name in the same scope.  
   ```js
-  import Math from "silk/math"
+  import IO from "std/io"
 
-  let Math = 1
+  const IO = 1
   //   ╭─ ReferenceError: This identifier has already been declared.
-  // 3 │  Math
-  //   │  ^^^^
+  // 3 │  IO
+  //   │  ^^
   //   • You can't declare a variable with this name. It has already been declared.
   ```
-  Same for variables inside a function.  
-  Note that function parameters are variables, so they cannot be recreated inside of it too. Example:
+  Same for variables inside a function. Function parameters are variables, so you cannot declare the same name again inside that function.  
   ```js
-  let name = "Anna"
+  const name = "Anna"
   function greet(userName) {
-    let userName = String.titleCase(name)
+    let userName = name
     return "Hello, " + userName
   }
   //   ╭─ ReferenceError: This identifier has already been declared.
@@ -120,26 +135,26 @@ At **top level** (outside any function) you must use **`const`**. Inside a **fun
   //   │  ^^^^^^^^
   //   • You can't declare a variable with this name. It has already been declared.
   ```
-  This rule does not apply if the variable name exists outside of it.  
+  This rule does not apply when the inner variable has a different scope (e.g. a parameter shadows an outer variable and you declare another variable with the outer name inside).  
   ```js
-  let userName = "Anna"
+  const userName = "Anna"
   function greet(name) {
-    let userName = String.titleCase(name)
+    let userName = name
     return "Hello, " + userName
   }
   ```
 - **Reference to non defined value**  
-  Silk will warn you about a non defined reference and won't compile. This rule applies for: variables, function calls, function calls parameters.
+  Silk reports a compile-time error when you use a name that has not been declared. This applies to variables, function calls, and function call arguments.
   ```js
-  let a = b
+  const a = b
   //   ╭─ ReferenceError: This identifier has not been declared.
   // 1 │  b
   //   │  ^
-  // You can't use this variable as value. It does not exist.
+  //   • You can't use this variable as value. It does not exist.
   ```
   Example inside a function:
   ```js
-  let score = 98
+  const score = 98
   function sumScore(value) {
     let newScore = scor + value // note the typo
     return newScore
@@ -162,10 +177,10 @@ At **top level** (outside any function) you must use **`const`**. Inside a **fun
   //   │  ^
   //   • Expected: Import, Let or Function
   ```
-- **Reference to non defined nested value (soon)**
-  This rule prevents you from accessing a path in an object that does not exist.  
+- **Reference to non defined nested value**
+  Property access is checked against the shape of the object. You cannot read a property that was not defined on that object (or on a nested object along the path).  
   ```js
-  let user = {
+  const user = {
     name: "Jane",
     age: 25
   }
@@ -173,18 +188,27 @@ At **top level** (outside any function) you must use **`const`**. Inside a **fun
     return "Hi, " + name
   }
   greet(user.lastName)
-  //   ╭─ SyntaxError: This property has not been declared.
+  //   ╭─ ReferenceError: This property has not been declared.
   // 8 │  lastName
   //   │  ^^^^^^^^
   //   • You can't use this variable as value. It does not exist.
   ```
-  Same when you call a nested function which is not a function or does not exist.  
+  The same applies to module members: you can only call or use properties that exist on the imported module (e.g. `IO.print`, not `IO.other`).  
   ```js
-  import String from "silk/string"
+  import IO from "std/io"
 
-  let fruit = String.upcase("avocado")
-  //   ╭─ SyntaxError: This property has not been declared.
-  // 3 │  upcase
-  //   │  ^^^^^^
+  IO.unknown("avocado")
+  //   ╭─ ReferenceError: This property has not been declared.
+  // 3 │  unknown
+  //   │  ^^^^^^^
   //   • You can't use this variable as value. It does not exist.
+  ```
+- **Array index must be a number**
+  The expression inside `arr[index]` must be a number: a number literal, a variable that was assigned a number literal, or a member expression that refers to an object property whose value is a number (e.g. `arr[obj.index]`). Using a string or other non-number index is a compile-time error.  
+  ```js
+  const config = { name: "x" }
+  const list = [1, 2, 3]
+  const bad = list[config.name]
+  //   ╭─ ReferenceError: Index must be a number (literal or reference to a number).
+  //   • ...
   ```
