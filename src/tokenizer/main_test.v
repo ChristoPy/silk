@@ -110,6 +110,38 @@ fn test_null_token() {
 	assert state.get_next_token().kind == 'EOF'
 }
 
+fn test_identifier_starting_with_keyword() {
+	// "nullish" must be one Identifier, not Null + "ish"
+	mut state := Tokenizer{}
+	state.init('test', 'nullish')
+	t := state.get_next_token()
+	assert t.kind == 'Identifier' && t.value == 'nullish'
+	assert state.get_next_token().kind == 'EOF'
+
+	// "null" alone is still Null
+	state.init('test', 'null')
+	assert state.get_next_token().kind == 'Null'
+	assert state.get_next_token().kind == 'EOF'
+
+	// "constant" must be one Identifier, not Const + "ant"
+	state.init('test', 'constant')
+	t2 := state.get_next_token()
+	assert t2.kind == 'Identifier' && t2.value == 'constant'
+}
+
+fn test_reserved_words_tokenized_as_keywords() {
+	// Reserved words (e.g. if, else, for, while) are tokenized as keywords, not Identifier
+	mut state := Tokenizer{}
+	state.init('test', 'if')
+	assert state.get_next_token().kind == 'If'
+	assert state.get_next_token().kind == 'EOF'
+	state.init('test', 'else for while')
+	assert state.get_next_token().kind == 'Else'
+	assert state.get_next_token().kind == 'For'
+	assert state.get_next_token().kind == 'While'
+	assert state.get_next_token().kind == 'EOF'
+}
+
 fn test_keywords_and_punctuation() {
 	mut state := Tokenizer{}
 	state.init('test', 'function return import from export let ( ) { } [ ] : , .')

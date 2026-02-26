@@ -2,12 +2,12 @@ module parser
 
 import util { throw_error }
 import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
-import tokenizer { Tokenizer }
+import tokenizer
 
 pub struct Parser {
 pub mut:
 	ast       AST
-	tokenizer Tokenizer
+	tokenizer tokenizer.Tokenizer
 	lookahead Token
 }
 
@@ -582,10 +582,16 @@ fn (mut state Parser) eat(token_name string) Token {
 	token := state.lookahead
 
 	if token.kind != token_name {
+		mut err_id := 'unexpected_token'
+		mut err_context := 'undefined_token'
+		if token_name == 'Identifier' && tokenizer.is_reserved_word_kind(token.kind) {
+			err_id = 'reserved_word_as_identifier'
+			err_context = 'reserved_word_as_identifier'
+		}
 		throw_error(CompileError{
 			kind: 'Syntax'
-			id: 'unexpected_token'
-			context: 'undefined_token'
+			id: err_id
+			context: err_context
 			file_name: state.tokenizer.file
 			wrong_token: token
 			line_content: state.tokenizer.code.split('\n')[token.line - 1]

@@ -10,17 +10,6 @@ const tokens_spec = [
 	TokenSpec{ name: 'Comment'    pattern: regex.regex_opt(r'^//.*')                   or { panic(err) } },
 	TokenSpec{ name: 'Number'     pattern: regex.regex_opt(r'^\d+')                    or { panic(err) } },
 	TokenSpec{ name: 'String'     pattern: regex.regex_opt(r'^"[^"]*"')                or { panic(err) } },
-	TokenSpec{ name: 'Const'      pattern: regex.regex_opt(r'^const')                  or { panic(err) } },
-	TokenSpec{ name: 'Let'        pattern: regex.regex_opt(r'^let')                    or { panic(err) } },
-	TokenSpec{ name: 'Function'   pattern: regex.regex_opt(r'^function')               or { panic(err) } },
-	TokenSpec{ name: 'Return'     pattern: regex.regex_opt(r'^return')                 or { panic(err) } },
-	TokenSpec{ name: 'Boolean'    pattern: regex.regex_opt(r'^true')                   or { panic(err) } },
-	TokenSpec{ name: 'Boolean'    pattern: regex.regex_opt(r'^false')                  or { panic(err) } },
-	TokenSpec{ name: 'Null'       pattern: regex.regex_opt(r'^null')                    or { panic(err) } },
-	TokenSpec{ name: 'Import'     pattern: regex.regex_opt(r'^import')                 or { panic(err) } },
-	TokenSpec{ name: 'From'       pattern: regex.regex_opt(r'^from')                   or { panic(err) } },
-	TokenSpec{ name: 'Match'      pattern: regex.regex_opt(r'^match')                  or { panic(err) } },
-	TokenSpec{ name: 'Export'     pattern: regex.regex_opt(r'^export')                 or { panic(err) } },
 	TokenSpec{ name: 'Identifier' pattern: regex.regex_opt(r'^[a-zA-Z_][a-zA-Z0-9_]*') or { panic(err) } },
 	TokenSpec{ name: 'Equals'     pattern: regex.regex_opt(r'^=')                      or { panic(err) } },
 	TokenSpec{ name: 'LParen'     pattern: regex.regex_opt(r'^\(')                     or { panic(err) } },
@@ -34,6 +23,38 @@ const tokens_spec = [
 	TokenSpec{ name: 'Dot'        pattern: regex.regex_opt(r'^\.')                     or { panic(err) } },
 ]
 // vfmt on
+
+// reserved_words: lexeme -> token kind. Any word matching the identifier pattern is
+// first tokenized as Identifier; if the lexeme is in this map, we reclassify as the
+// keyword. So "nullish" stays Identifier, "null" becomes Null. This also allows us to
+// prevent the use of reserved keywords as identifiers.
+const reserved_words = {
+	'const':    'Const'
+	'let':      'Let'
+	'function': 'Function'
+	'return':   'Return'
+	'true':     'Boolean'
+	'false':    'Boolean'
+	'null':     'Null'
+	'import':   'Import'
+	'from':     'From'
+	'match':    'Match'
+	'export':   'Export'
+	'if':       'If'
+	'else':     'Else'
+	'for':      'For'
+	'while':    'While'
+}
+
+// is_reserved_word_kind returns true if this token kind is a reserved word (cannot be used as identifier).
+pub fn is_reserved_word_kind(kind string) bool {
+	for _, v in tokenizer.reserved_words {
+		if v == kind {
+			return true
+		}
+	}
+	return false
+}
 
 pub struct Tokenizer {
 pub mut:
@@ -91,6 +112,10 @@ pub fn (mut state Tokenizer) get_next_token() Token {
 
 		state.cursor += matched.len
 		state.column += matched.len
+		// Reserved words: reclassify Identifier as keyword when lexeme is in the map
+		if token.kind == 'Identifier' && token.value in tokenizer.reserved_words {
+			token.kind = tokenizer.reserved_words[token.value]
+		}
 		break
 	}
 

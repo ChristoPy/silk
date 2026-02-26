@@ -13,6 +13,7 @@ const errors_map = {
 	'import_not_at_top_level':      'Imports must appear at the top level.'
 	'nested_property_not_declared': 'This property has not been declared.'
 	'index_must_be_number':         'Array index must be a number literal or a reference to a number.'
+	'reserved_word_as_identifier': 'A reserved word cannot be used as an identifier (variable or function name).'
 }
 
 const reasons_map = {
@@ -34,6 +35,7 @@ const reasons_map = {
 	'import_after_statement':         'All ${term.cyan("import")} statements must come before any other statement.'
 	'undefined_nested_reference':     'Cannot access this nested property. It does not exist on the object.'
 	'index_must_be_number_literal_or_reference': 'Index must be a number literal (e.g. 0) or a variable that holds a number.'
+	'reserved_word_as_identifier': 'Use a different name; this word is reserved by the language.'
 }
 
 pub fn throw_error(error CompileError) {
