@@ -639,3 +639,41 @@ fn test_null_as_variable_value() {
 	result = analize(state.ast, compiler.modules)
 	assert result.error.occurred == false
 }
+
+fn test_math_in_variable_declaration() {
+	mut state := Parser{}
+	state.parse('testfile', 'const a = 1 + 2
+const b = 10 - 3
+function f() {
+  let c = a + b
+  return c
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const x = 1
+const y = 2
+const sum = x + y
+const arr = [10, 20, 30]
+const first = arr[sum]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_math_operands_must_be_numbers() {
+	mut state := Parser{}
+	state.parse('testfile', 'const name = "x"
+const bad = 1 + name')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_operands_must_be_numbers'
+
+	state = Parser{}
+	state.parse('testfile', 'const a = 1
+const b = "y"
+const bad = a + b')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_operands_must_be_numbers'
+}

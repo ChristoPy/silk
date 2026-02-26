@@ -1,6 +1,6 @@
 module compiler
 
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -329,6 +329,10 @@ fn (mut state Analyzer) is_number_expression(value ASTNodeVariableMetaValue) boo
 					return state.shape_has_number_at(member_meta.property, shape)
 				}
 			}
+			if value.name == 'BinaryExpression' {
+				bin_meta := value.meta as ASTNodeBinaryExpressionMeta
+				return state.is_number_expression(bin_meta.left) && state.is_number_expression(bin_meta.right)
+			}
 		}
 		else {}
 	}
@@ -444,6 +448,12 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 				state.on_member_expression(meta.meta as ASTNodeMemberExpressionMeta)
 			} else if meta.name == 'IndexExpression' {
 				state.on_index_expression(meta.meta as ASTNodeIndexExpressionMeta)
+			} else if meta.name == 'BinaryExpression' {
+				state.error.occurred = true
+				state.error.token = (meta.meta as ASTNodeBinaryExpressionMeta).op
+				state.error.kind = 'Syntax'
+				state.error.id = 'binary_only_in_declaration'
+				state.error.context = 'binary_only_in_declaration'
 			} else {
 				panic('not implemented: ${meta}')
 			}
@@ -526,9 +536,40 @@ fn build_object_shape(obj SubNodeAST) ObjectShape {
 	}
 }
 
+fn (mut state Analyzer) on_declaration_value(value ASTNodeVariableMetaValue) {
+	if state.error.occurred {
+		return
+	}
+	match value {
+		ASTNode {
+			if value.name == 'BinaryExpression' {
+				bin_meta := value.meta as ASTNodeBinaryExpressionMeta
+				state.on_variable_value(bin_meta.left)
+				if state.error.occurred {
+					return
+				}
+				state.on_variable_value(bin_meta.right)
+				if state.error.occurred {
+					return
+				}
+				if !state.is_number_expression(bin_meta.left) || !state.is_number_expression(bin_meta.right) {
+					state.error.occurred = true
+					state.error.token = bin_meta.op
+					state.error.kind = 'Reference'
+					state.error.id = 'binary_operands_must_be_numbers'
+					state.error.context = 'binary_operands_must_be_numbers'
+				}
+				return
+			}
+		}
+		else {}
+	}
+	state.on_variable_value(value)
+}
+
 fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
 	state.prevent_name_clash(meta.name)
-	state.on_variable_value(meta.value)
+	state.on_declaration_value(meta.value)
 	state.add_name_on_scope(meta.name.value)
 
 	// Record object shape when value is an object literal
@@ -545,18 +586,13 @@ fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
 		}
 		else {}
 	}
-	// Record variables that hold a number literal (for array index validation)
-	match meta.value {
-		Token {
-			if meta.value.kind == 'Number' {
-				scope_id := state.scope.last()
-				if scope_id !in state.number_vars {
-					state.number_vars[scope_id] = map[string]bool{}
-				}
-				state.number_vars[scope_id][meta.name.value] = true
-			}
+	// Record variables that hold a number (literal, reference, or number binary expr) for array index validation
+	if state.is_number_expression(meta.value) {
+		scope_id := state.scope.last()
+		if scope_id !in state.number_vars {
+			state.number_vars[scope_id] = map[string]bool{}
 		}
-		else {}
+		state.number_vars[scope_id][meta.name.value] = true
 	}
 }
 

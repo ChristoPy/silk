@@ -21,6 +21,10 @@ const tokens_spec = [
 	TokenSpec{ name: 'Colon'      pattern: regex.regex_opt(r'^:')                      or { panic(err) } },
 	TokenSpec{ name: 'Comma'      pattern: regex.regex_opt(r'^,')                      or { panic(err) } },
 	TokenSpec{ name: 'Dot'        pattern: regex.regex_opt(r'^\.')                     or { panic(err) } },
+	TokenSpec{ name: 'Plus'       pattern: regex.regex_opt(r'^\+')                     or { panic(err) } },
+	TokenSpec{ name: 'Minus'      pattern: regex.regex_opt(r'^-')                      or { panic(err) } },
+	TokenSpec{ name: 'Star'       pattern: regex.regex_opt(r'^\*')                     or { panic(err) } },
+	TokenSpec{ name: 'Slash'      pattern: regex.regex_opt(r'^/')                       or { panic(err) } },
 ]
 // vfmt on
 

@@ -1,7 +1,7 @@
 module parser
 
 import util { throw_error }
-import types { AST, ASTNode, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import tokenizer
 
 pub struct Parser {
@@ -153,7 +153,7 @@ fn (mut state Parser) constant_declaration() ASTNode {
 	keyword := state.eat_sub('Const')
 	name := state.eat('Identifier')
 	equal := state.eat_sub('Equals')
-	value := state.expression_value()
+	value := state.declaration_value()
 
 	return ASTNode{
 		name: 'ConstantDeclaration'
@@ -177,7 +177,7 @@ fn (mut state Parser) let_declaration() ASTNode {
 	keyword := state.eat_sub('Let')
 	name := state.eat('Identifier')
 	equal := state.eat_sub('Equals')
-	value := state.expression_value()
+	value := state.declaration_value()
 
 	return ASTNode{
 		name: 'LetDeclaration'
@@ -387,6 +387,31 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 
 	// Should never reach here
 	return token
+}
+
+/**
+* DeclarationValue (variable declarations only)
+*   : ExpressionValue ( ( Plus | Minus | Star | Slash ) ExpressionValue )*
+*   ;
+*/
+fn (mut state Parser) declaration_value() ASTNodeVariableMetaValue {
+	mut left := state.expression_value()
+	for state.lookahead.kind in ['Plus', 'Minus', 'Star', 'Slash'] {
+		op_tok := state.eat(state.lookahead.kind)
+		right := state.expression_value()
+		line, column := state.value_line_column(left)
+		left = ASTNode{
+			name: 'BinaryExpression'
+			line: line
+			column: column
+			meta: ASTNodeBinaryExpressionMeta{
+				left: left
+				op: op_tok
+				right: right
+			}
+		}
+	}
+	return left
 }
 
 fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) {

@@ -193,6 +193,16 @@ fn test_is_reserved_word_kind() {
 	assert tokenizer.is_reserved_word_kind('') == false
 }
 
+fn test_arithmetic_operators() {
+	mut state := Tokenizer{}
+	state.init('test', '+ - * /')
+	assert state.get_next_token().kind == 'Plus'
+	assert state.get_next_token().kind == 'Minus'
+	assert state.get_next_token().kind == 'Star'
+	assert state.get_next_token().kind == 'Slash'
+	assert state.get_next_token().kind == 'EOF'
+}
+
 fn test_keywords_and_punctuation() {
 	mut state := Tokenizer{}
 	state.init('test', 'function return import from export let ( ) { } [ ] : , .')
