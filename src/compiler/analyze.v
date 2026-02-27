@@ -543,12 +543,14 @@ fn (mut state Analyzer) on_declaration_value(value ASTNodeVariableMetaValue) {
 	match value {
 		ASTNode {
 			if value.name == 'BinaryExpression' {
+				// Recursively analyze math expressions in declarations, so nested
+				// binary expressions are still treated as declaration math.
 				bin_meta := value.meta as ASTNodeBinaryExpressionMeta
-				state.on_variable_value(bin_meta.left)
+				state.on_declaration_value(bin_meta.left)
 				if state.error.occurred {
 					return
 				}
-				state.on_variable_value(bin_meta.right)
+				state.on_declaration_value(bin_meta.right)
 				if state.error.occurred {
 					return
 				}

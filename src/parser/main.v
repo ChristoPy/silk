@@ -363,6 +363,14 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 		'Null' {
 			return state.eat('Null')
 		}
+		'LParen' {
+			// Parenthesized value: reuse declaration_value so math inside parentheses
+			// follows the same rules as top-level declaration expressions.
+			state.eat('LParen')
+			value := state.declaration_value()
+			state.eat('RParen')
+			return value
+		}
 		'Identifier' {
 			value := state.identifier_or_function_call()
 			return state.parse_index_suffix(value)
