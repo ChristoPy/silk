@@ -677,3 +677,37 @@ const bad = a + b')
 	assert result.error.occurred == true
 	assert result.error.id == 'binary_operands_must_be_numbers'
 }
+
+fn test_math_only_in_declarations() {
+	// Parenthesized math in return is rejected
+	mut state := Parser{}
+	state.parse('testfile', 'function f() {
+  return (1 + 2)
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_only_in_declaration'
+
+	// Parenthesized math in array literal value is rejected
+	state = Parser{}
+	state.parse('testfile', 'const xs = [(1 + 2)]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_only_in_declaration'
+
+	// Parenthesized math in object literal value is rejected
+	state = Parser{}
+	state.parse('testfile', 'const obj = { v: (1 + 2) }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_only_in_declaration'
+
+	// Parenthesized math in index expression is rejected
+	state = Parser{}
+	state.parse('testfile', 'const arr = [10, 20]
+const idx = 0
+const val = arr[(idx + 1)]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_only_in_declaration'
+}
