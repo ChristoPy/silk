@@ -8,6 +8,15 @@ pub mut:
 	line   int
 }
 
+pub fn (s SubToken) as_token() Token {
+	return Token{
+		kind: ''
+		column: s.column
+		line: s.line
+		value: ''
+	}
+}
+
 pub struct Token {
 pub mut:
 	kind   string
@@ -36,6 +45,8 @@ pub mut:
 }
 
 pub type ASTNodeMeta = ASTNodeBinaryExpressionMeta
+	| ASTNodeIfMeta
+	| ASTNodeElseMeta
 	| ASTNodeFunctionCallMeta
 	| ASTNodeFunctionMeta
 	| ASTNodeImportStatementMeta
@@ -118,6 +129,19 @@ pub mut:
 	left  ASTNodeVariableMetaValue
 	op    Token // Plus, Minus, Star, Slash
 	right ASTNodeVariableMetaValue
+}
+
+pub struct ASTNodeIfMeta {
+pub mut:
+	keyword   SubToken
+	condition ASTNodeVariableMetaValue
+	body      []ASTNode
+}
+
+pub struct ASTNodeElseMeta {
+pub mut:
+	keyword SubToken
+	body    []ASTNode
 }
 
 pub struct MatchResult {

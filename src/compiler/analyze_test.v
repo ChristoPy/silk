@@ -711,3 +711,65 @@ const val = arr[(idx + 1)]')
 	assert result.error.occurred == true
 	assert result.error.id == 'binary_only_in_declaration'
 }
+
+fn test_if_and_else_statements() {
+	// Simple if with boolean literal
+	mut state := Parser{}
+	state.parse('testfile', 'function f() {
+  if (true) {
+    const x = 1
+    let y = x
+  }
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// If with boolean variable
+	state = Parser{}
+	state.parse('testfile', 'const flag = true
+function f() {
+  if (flag) {
+    const x = 1
+  }
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// Else following an if block in same scope
+	state = Parser{}
+	state.parse('testfile', 'function f() {
+  if (true) {
+    const x = 1
+  }
+  else {
+    const y = 2
+  }
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_else_without_if_rejected() {
+	// Standalone else at top of function is rejected
+	mut state := Parser{}
+	state.parse('testfile', 'function f() {
+  else {
+    const x = 1
+  }
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'else_without_if'
+
+	// Else after a non-if statement is rejected
+	state = Parser{}
+	state.parse('testfile', 'function f() {
+  const x = 1
+  else {
+    const y = 2
+  }
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'else_without_if'
+}

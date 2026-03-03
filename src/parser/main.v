@@ -1,7 +1,7 @@
 module parser
 
 import util { throw_error }
-import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeElseMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeIfMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import tokenizer
 
 pub struct Parser {
@@ -82,10 +82,12 @@ fn (mut state Parser) statement() ASTNode {
 
 /**
 * NestedStatement
-*   : ConsttandDeclaration
+*   : ConstantDeclaration
 *   | LetDeclaration
 *   | ReturnStatement
 *   | FunctionCallStatement
+*   | IfStatement
+*   | ElseStatement
 *   ;
 */
 fn (mut state Parser) nested_statement() ASTNode {
@@ -100,6 +102,12 @@ fn (mut state Parser) nested_statement() ASTNode {
 		}
 		'Return' {
 			return state.return_statement()
+		}
+		'If' {
+			return state.if_statement()
+		}
+		'Else' {
+			return state.else_statement()
 		}
 		'Identifier' {
 			return state.function_call_statement()
@@ -208,6 +216,54 @@ fn (mut state Parser) return_statement() ASTNode {
 		meta: ASTNodeReturnMeta{
 			keyword: keyword
 			value: value
+		}
+	}
+}
+
+/**
+* IfStatement
+*   : If LParen ExpressionValue RParen LBrace NestedBlock RBrace
+*   ;
+*/
+fn (mut state Parser) if_statement() ASTNode {
+	keyword := state.eat_sub('If')
+	state.eat('LParen')
+	condition := state.expression_value()
+	state.eat('RParen')
+	state.eat('LBrace')
+	body := state.nested_block()
+	state.eat('RBrace')
+
+	return ASTNode{
+		name: 'IfStatement'
+		line: keyword.line
+		column: keyword.column
+		meta: ASTNodeIfMeta{
+			keyword: keyword
+			condition: condition
+			body: body
+		}
+	}
+}
+
+/**
+* ElseStatement
+*   : Else LBrace NestedBlock RBrace
+*   ;
+*/
+fn (mut state Parser) else_statement() ASTNode {
+	keyword := state.eat_sub('Else')
+	state.eat('LBrace')
+	body := state.nested_block()
+	state.eat('RBrace')
+
+	return ASTNode{
+		name: 'ElseStatement'
+		line: keyword.line
+		column: keyword.column
+		meta: ASTNodeElseMeta{
+			keyword: keyword
+			body: body
 		}
 	}
 }

@@ -1,6 +1,6 @@
 module compiler
 
-import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeElseMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeIfMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -630,7 +630,8 @@ fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	state.scope.pop()
 }
 
-fn (mut state Analyzer) traverse(name string, body []ASTNode) {
+fn (mut state Analyzer) analyze_block(body []ASTNode) {
+	mut last_was_if := false
 	for _, node in body {
 		match node.name {
 			'ImportStatement' {
@@ -658,6 +659,22 @@ fn (mut state Analyzer) traverse(name string, body []ASTNode) {
 				meta := node.meta as ASTNodeReturnMeta
 				state.on_variable_value(meta.value)
 			}
+			'IfStatement' {
+				state.on_if_statement(node.meta as ASTNodeIfMeta)
+				last_was_if = true
+			}
+			'ElseStatement' {
+				if !last_was_if {
+					state.error.occurred = true
+					state.error.token = (node.meta as ASTNodeElseMeta).keyword.as_token()
+					state.error.kind = 'Syntax'
+					state.error.id = 'else_without_if'
+					state.error.context = 'else_without_if'
+					return
+				}
+				state.on_else_statement(node.meta as ASTNodeElseMeta)
+				last_was_if = false
+			}
 			else {
 				panic('not implemented: ${node}')
 			}
@@ -666,6 +683,22 @@ fn (mut state Analyzer) traverse(name string, body []ASTNode) {
 			break
 		}
 	}
+}
+
+fn (mut state Analyzer) on_if_statement(meta ASTNodeIfMeta) {
+	state.on_variable_value(meta.condition)
+	if state.error.occurred {
+		return
+	}
+	state.analyze_block(meta.body)
+}
+
+fn (mut state Analyzer) on_else_statement(meta ASTNodeElseMeta) {
+	state.analyze_block(meta.body)
+}
+
+fn (mut state Analyzer) traverse(name string, body []ASTNode) {
+	state.analyze_block(body)
 }
 
 fn analize(ast AST, modules Modules) Analyzer {

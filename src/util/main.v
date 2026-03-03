@@ -16,6 +16,7 @@ const errors_map = {
 	'reserved_word_as_identifier': 'A reserved word cannot be used as an identifier (variable or function name).'
 	'binary_only_in_declaration':   'Arithmetic operations are only allowed in variable declarations (const/let).'
 	'binary_operands_must_be_numbers': 'Both operands must be numbers (literals or references to numbers).'
+	'else_without_if':              'An else block must come immediately after an if block.'
 }
 
 const reasons_map = {
@@ -40,6 +41,7 @@ const reasons_map = {
 	'reserved_word_as_identifier': 'Use a different name; this word is reserved by the language.'
 	'binary_only_in_declaration': 'Use arithmetic only in const/let initializers.'
 	'binary_operands_must_be_numbers': 'Use number literals or variables that hold numbers.'
+	'else_without_if': 'Move this else so it comes right after an if block in the same scope.'
 }
 
 pub fn throw_error(error CompileError) {
