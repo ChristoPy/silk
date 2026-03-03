@@ -30,11 +30,12 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
     let age = 32
     ```
 - **Arithmetic (variable declarations only)**  
-  In `const` and `let` declarations you can use `+`, `-`, `*`, `/` with number literals and references to numbers. Both operands must be numbers.
     ```js
     const a = 1 + 2
     const b = 10 - 3
     let c = a + b
+    const d = 1 + 2 * 3   // 1 + (2 * 3)
+    const e = (1 + 2) * 3 // grouped
     const half = 100 / 2
     ```
 - **Null**

@@ -399,12 +399,42 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 
 /**
 * DeclarationValue (variable declarations only)
-*   : ExpressionValue ( ( Plus | Minus | Star | Slash ) ExpressionValue )*
+*   : AdditiveExpression
+*
+* AdditiveExpression
+*   : MultiplicativeExpression ( ( Plus | Minus ) MultiplicativeExpression )*
+*
+* MultiplicativeExpression
+*   : ExpressionValue ( ( Star | Slash ) ExpressionValue )*
 *   ;
 */
 fn (mut state Parser) declaration_value() ASTNodeVariableMetaValue {
+	return state.declaration_additive()
+}
+
+fn (mut state Parser) declaration_additive() ASTNodeVariableMetaValue {
+	mut left := state.declaration_multiplicative()
+	for state.lookahead.kind in ['Plus', 'Minus'] {
+		op_tok := state.eat(state.lookahead.kind)
+		right := state.declaration_multiplicative()
+		line, column := state.value_line_column(left)
+		left = ASTNode{
+			name: 'BinaryExpression'
+			line: line
+			column: column
+			meta: ASTNodeBinaryExpressionMeta{
+				left: left
+				op: op_tok
+				right: right
+			}
+		}
+	}
+	return left
+}
+
+fn (mut state Parser) declaration_multiplicative() ASTNodeVariableMetaValue {
 	mut left := state.expression_value()
-	for state.lookahead.kind in ['Plus', 'Minus', 'Star', 'Slash'] {
+	for state.lookahead.kind in ['Star', 'Slash'] {
 		op_tok := state.eat(state.lookahead.kind)
 		right := state.expression_value()
 		line, column := state.value_line_column(left)
