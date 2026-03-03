@@ -9,8 +9,8 @@
 - [ ] Control flow
   - [x] Return statement
   - [ ] Match/switch
-- [ ] Math (Numbers only)
-- [ ] Sugest code fix for errors
+- [x] Math
+- [x] Suggest code fix for errors
 - [ ] Standard library
 - [x] Support imports
 - [ ] CLI
