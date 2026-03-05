@@ -432,10 +432,12 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 			return state.parse_index_suffix(value)
 		}
 		'LBracket' {
-			return state.array_literal()
+			value := state.array_literal()
+			return state.parse_index_suffix(value)
 		}
 		'LBrace' {
-			return state.object_literal()
+			value := state.object_literal()
+			return state.parse_index_suffix(value)
 		}
 		else {
 			throw_error(CompileError{

@@ -407,31 +407,31 @@ fn (mut state Analyzer) shape_has_number_at(property ASTNodeVariableMetaValue, s
 	return false
 }
 
-// array_literal_length returns the length of the array if base is a literal array, otherwise none.
-fn array_literal_length(base ASTNodeVariableMetaValue) ?int {
+// array_literal_length returns (length, true) if base is a literal array, otherwise (0, false).
+fn array_literal_length(base ASTNodeVariableMetaValue) (int, bool) {
 	match base {
 		SubNodeAST {
 			if base.name == 'Array' {
-				return base.body.len
+				return base.body.len, true
 			}
 		}
 		else {}
 	}
-	return none
+	return 0, false
 }
 
-// literal_index_value returns the index as int if it is a number literal token, otherwise none.
-fn literal_index_value(index ASTNodeVariableMetaValue) ?int {
+// literal_index_value returns (index, true) if index is a number literal token, otherwise (0, false).
+fn literal_index_value(index ASTNodeVariableMetaValue) (int, bool) {
 	match index {
 		Token {
 			if index.kind == 'Number' {
 				val := index.value.int()
-				return val
+				return val, true
 			}
 		}
 		else {}
 	}
-	return none
+	return 0, false
 }
 
 fn (mut state Analyzer) on_index_expression(meta ASTNodeIndexExpressionMeta) {
@@ -456,19 +456,15 @@ fn (mut state Analyzer) on_index_expression(meta ASTNodeIndexExpressionMeta) {
 		return
 	}
 	// Literal index bounds: when both base and index are literals, require 0 <= index < length
-	length := array_literal_length(meta.base)
-	idx := literal_index_value(meta.index)
-	if length != none && idx != none {
-		len := length or { 0 }
-		i := idx or { 0 }
-		if i < 0 || i >= len {
-			index_token := state.index_expression_index_token(meta.index)
-			state.error.occurred = true
-			state.error.token = index_token
-			state.error.kind = 'Reference'
-			state.error.id = 'index_out_of_bounds'
-			state.error.context = 'index_out_of_bounds'
-		}
+	len, has_len := array_literal_length(meta.base)
+	idx, has_idx := literal_index_value(meta.index)
+	if has_len && has_idx && (idx < 0 || idx >= len) {
+		index_token := state.index_expression_index_token(meta.index)
+		state.error.occurred = true
+		state.error.token = index_token
+		state.error.kind = 'Reference'
+		state.error.id = 'index_out_of_bounds'
+		state.error.context = 'index_out_of_bounds'
 	}
 }
 

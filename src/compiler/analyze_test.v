@@ -1044,3 +1044,24 @@ fn test_division_by_zero() {
 	assert result.error.occurred == true
 	assert result.error.id == 'division_by_zero'
 }
+
+fn test_index_out_of_bounds() {
+	// Literal array [1,2,3] has length 3; valid indices 0,1,2
+	mut state := Parser{}
+	state.parse('testfile', 'const x = [1, 2, 3][5]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_out_of_bounds'
+
+	state = Parser{}
+	state.parse('testfile', 'const x = [1, 2, 3][3]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_out_of_bounds'
+
+	// In bounds: no error
+	state = Parser{}
+	state.parse('testfile', 'const a = [1, 2, 3][0] const b = [1, 2, 3][2]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
