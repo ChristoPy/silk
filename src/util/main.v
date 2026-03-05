@@ -21,6 +21,7 @@ const errors_map = {
 	'return_path_inconsistent':     'Some paths return a value but others do not; every path must return.'
 	'unused_import':                'This import is never used.'
 	'division_by_zero':            'Division by zero is not allowed.'
+	'index_out_of_bounds':         'Literal array index is out of bounds.'
 }
 
 const reasons_map = {
@@ -50,6 +51,7 @@ const reasons_map = {
 	'return_path_inconsistent': 'Add a return statement on every path (e.g. after if/else) or remove returns that have a value.'
 	'unused_import': 'Remove the import or use it (e.g. call a function from the module).'
 	'division_by_zero': 'Use a non-zero divisor (e.g. check the value before dividing).'
+	'index_out_of_bounds': 'Use an index between 0 and (array length - 1).'
 }
 
 pub fn throw_error(error CompileError) {

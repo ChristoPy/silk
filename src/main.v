@@ -45,7 +45,7 @@ fn make_project(command Command) ! {
 		println(term.warn_message('Could not write project files: ${err}'))
 		return
 	}
-	println(term.ok_message('Project ${term.bold(name)} created successfuly!'))
+	println(term.ok_message('Project ${term.bold(name)} created successfully!'))
 }
 
 fn get_project_files(project_root string) []string {
@@ -146,5 +146,5 @@ fn build_project(command Command) ! {
 		}
 	}
 
-	println(term.ok_message('Project built successfuly!'))
+	println(term.ok_message('Project built successfully!'))
 }
