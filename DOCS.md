@@ -100,22 +100,112 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
 
 ### Modules
 - **Import**  
-  Imports are only allowed at the top of the file (before any other statement). The only standard module currently supported is **`std/io`**.
+  Imports are only allowed at the top of the file (before any other statement). You can import standard library modules (e.g. `std/io`, `std/string`, `std/number`, `std/array`, `std/object`).
   ```js
   import IO from "std/io"
+  import String from "std/string"
   ```
 - **Export**
   ```js
   export function main() {}
   ```
-- **Standard module: std/io**  
-  Use the `IO` object to call the standard I/O function `print`.
+- **Standard library**  
+  The standard library provides modules for I/O, built-in types (string, number, array, object), JSON, HTTP, time, environment variables, regex, math, and result (error handling). Import a module and call its functions via the alias you chose. All parsing and I/O helpers that can fail return a **Result** instead of throwing; use **std/result** to check success or error and to unwrap values.
+
+  **std/io** (e.g. `import IO from "std/io"`)
+  - `IO.print(value)` — print a value to the console
+
+  **std/string** (e.g. `import String from "std/string"`)
+  - `String.uppercase(s)` — uppercase copy of the string
+  - `String.lowercase(s)` — lowercase copy
+  - `String.trim(s)` — trim whitespace from both ends
+  - `String.length(s)` — length of the string
+  - `String.slice(s, start, end)` — substring from start to end
+  - `String.includes(s, sub)` — whether the string contains the substring
+  - `String.split(s, sep)` — split into an array by separator
+  - `String.replace(s, from, to)` — replace first occurrence of `from` with `to`
+  - `String.concat(a, b)` — concatenate two strings
+
+  **std/number** (e.g. `import Number from "std/number"`)
+  - `Number.round(n)` — round to nearest integer
+  - `Number.floor(n)` — floor
+  - `Number.ceil(n)` — ceiling
+  - `Number.abs(n)` — absolute value
+  - `Number.min(a, b)` — smaller of two numbers
+  - `Number.max(a, b)` — larger of two numbers
+  - `Number.parse(s)` — parse a string to a number; returns a Result (ok: parsed number, err: error message)
+
+  **std/array** (e.g. `import Array from "std/array"`)
+  - `Array.length(arr)` — length of the array
+  - `Array.join(arr, sep)` — join elements with separator into a string
+  - `Array.concat(a, b)` — concatenate two arrays
+  - `Array.slice(arr, start, end)` — slice from start to end
+  - `Array.indexOf(arr, elem)` — index of first occurrence of element, or -1
+  - `Array.first(arr)` — first element
+  - `Array.last(arr)` — last element
+
+  **std/object** (e.g. `import Object from "std/object"`)
+  - `Object.keys(obj)` — array of keys
+  - `Object.values(obj)` — array of values
+  - `Object.has(obj, key)` — whether the object has the key
+
+  **std/json** (e.g. `import Json from "std/json"`)
+  - `Json.parse(s)` — parse a JSON string; returns a Result (ok: object/array, err: error message)
+  - `Json.stringify(value)` — serialize a value to JSON; returns a Result (ok: string, err: error message)
+
+  **std/http** (e.g. `import Http from "std/http"`)
+  - `Http.get(url)` — GET request; returns a Result whose value is a Promise of the response body (sync failures return err)
+  - `Http.post(url, body)` — POST request; same Result shape
+
+  **std/time** (e.g. `import Time from "std/time"`)
+  - `Time.now()` — current timestamp in milliseconds
+  - `Time.format(timestamp)` — format timestamp as ISO date string
+  - `Time.parse(s)` — parse a date string; returns a Result (ok: timestamp, err: error message)
+
+  **std/env** (e.g. `import Env from "std/env"`)
+  - `Env.get(name)` — value of environment variable (empty string if missing)
+  - `Env.has(name)` — whether the environment variable is set
+
+  **std/regex** (e.g. `import Regex from "std/regex"`)
+  - `Regex.match(s, pattern)` — whether the string matches the pattern; returns a Result (ok: boolean, err: invalid pattern message)
+  - `Regex.replace(s, pattern, replacement)` — replace first match; returns a Result (ok: string, err: invalid pattern message)
+
+  **std/math** (e.g. `import Math from "std/math"`)
+  - `Math.random()` — random number between 0 and 1
+  - `Math.sqrt(n)` — square root
+  - `Math.pow(base, exp)` — base to the power of exp
+
+  **std/result** (e.g. `import Result from "std/result"`)  
+  Used to build and inspect Result values returned by parsing and I/O functions. A Result is either success `{ ok: true, value }` or error `{ ok: false, error }`.
+  - `Result.ok(value)` — build a success result
+  - `Result.err(error)` — build an error result
+  - `Result.is_ok(result)` — true if success
+  - `Result.is_err(result)` — true if error
+  - `Result.unwrap_or(result, default_value)` — return the value on success, or default_value on error
+
+  Example (using Result with Json.parse):
   ```js
-  import IO from "std/io"
+  import Result from "std/result"
+  import Json from "std/json"
 
   function main() {
-    IO.print("Hello, from Silk!")
-    IO.print(42)
+    const res = Json.parse("{}")
+    if (Result.is_ok(res)) {
+      // use res.value
+    } else {
+      // use res.error
+    }
+    const data = Result.unwrap_or(res, {})
+  }
+  ```
+
+  Example:
+  ```js
+  import IO from "std/io"
+  import String from "std/string"
+
+  function main() {
+    IO.print(String.uppercase("hello"))
   }
   ```
 

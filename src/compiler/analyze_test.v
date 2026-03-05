@@ -464,6 +464,147 @@ function main() {
 	assert result.error.id == 'nested_property_not_declared'
 }
 
+fn test_import_std_json() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Json from "std/json"
+const s = "{}"
+function main() {
+  Json.parse(s)
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Json from "std/json"
+const s = "{}"
+function main() {
+  Json.unknown(s)
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_std_http() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Http from "std/http"
+const url = "https://example.com"
+function main() {
+  Http.get(url)
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Http from "std/http"
+const url = "https://x.com"
+function main() {
+  Http.unknown(url)
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_std_time() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Time from "std/time"
+function main() {
+  Time.now()
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Time from "std/time"
+function main() {
+  Time.unknown()
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_std_env() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Env from "std/env"
+const name = "PATH"
+function main() {
+  Env.get(name)
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Env from "std/env"
+const name = "X"
+function main() {
+  Env.unknown(name)
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_std_regex() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Regex from "std/regex"
+const s = "hello"
+const pattern = "l+"
+function main() {
+  Regex.match(s, pattern)
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Regex from "std/regex"
+const s = "x"
+const pattern = "x"
+function main() {
+  Regex.unknown(s, pattern)
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_std_math() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Math from "std/math"
+function main() {
+  Math.random()
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Math from "std/math"
+function main() {
+  Math.unknown()
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_import_std_result() {
+	mut state := Parser{}
+	state.parse('testfile', 'import Result from "std/result"
+const r = Result.ok(1)')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Result from "std/result"
+function main() {
+  Result.unwrap_or(Result.ok(1), 0)
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+	state = Parser{}
+	state.parse('testfile', 'import Result from "std/result"
+function main() {
+  Result.unknown(1)
+}')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
 fn test_member_access_in_assignments() {
 	// const and let assignments use the correct (innermost) shape
 	mut state := Parser{}

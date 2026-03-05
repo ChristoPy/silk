@@ -63,12 +63,80 @@ const standard_module_object = Module{
 	]
 }
 
+const standard_module_json = Module{
+	name: 'std/json'
+	functions: [
+		Function{ name: 'parse', arguments: ['s'] },
+		Function{ name: 'stringify', arguments: ['value'] },
+	]
+}
+
+const standard_module_http = Module{
+	name: 'std/http'
+	functions: [
+		Function{ name: 'get', arguments: ['url'] },
+		Function{ name: 'post', arguments: ['url', 'body'] },
+	]
+}
+
+const standard_module_time = Module{
+	name: 'std/time'
+	functions: [
+		Function{ name: 'now', arguments: [] },
+		Function{ name: 'format', arguments: ['timestamp'] },
+		Function{ name: 'parse', arguments: ['s'] },
+	]
+}
+
+const standard_module_env = Module{
+	name: 'std/env'
+	functions: [
+		Function{ name: 'get', arguments: ['name'] },
+		Function{ name: 'has', arguments: ['name'] },
+	]
+}
+
+const standard_module_regex = Module{
+	name: 'std/regex'
+	functions: [
+		Function{ name: 'match', arguments: ['s', 'pattern'] },
+		Function{ name: 'replace', arguments: ['s', 'pattern', 'replacement'] },
+	]
+}
+
+const standard_module_math = Module{
+	name: 'std/math'
+	functions: [
+		Function{ name: 'random', arguments: [] },
+		Function{ name: 'sqrt', arguments: ['n'] },
+		Function{ name: 'pow', arguments: ['base', 'exp'] },
+	]
+}
+
+const standard_module_result = Module{
+	name: 'std/result'
+	functions: [
+		Function{ name: 'ok', arguments: ['value'] },
+		Function{ name: 'err', arguments: ['error'] },
+		Function{ name: 'is_ok', arguments: ['result'] },
+		Function{ name: 'is_err', arguments: ['result'] },
+		Function{ name: 'unwrap_or', arguments: ['result', 'default_value'] },
+	]
+}
+
 pub const standard_modules = {
 	'std/io':     compiler.standard_module,
 	'std/string': compiler.standard_module_string,
 	'std/number': compiler.standard_module_number,
 	'std/array':  compiler.standard_module_array,
 	'std/object': compiler.standard_module_object,
+	'std/json':   compiler.standard_module_json,
+	'std/http':   compiler.standard_module_http,
+	'std/time':   compiler.standard_module_time,
+	'std/env':    compiler.standard_module_env,
+	'std/regex':  compiler.standard_module_regex,
+	'std/math':   compiler.standard_module_math,
+	'std/result': compiler.standard_module_result,
 }
 
 pub struct Compiler {

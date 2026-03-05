@@ -23,5 +23,13 @@ export function max(a, b) {
 }
 
 export function parse(s) {
-  return Number(s);
+  try {
+    const n = Number(s);
+    if (Number.isNaN(n)) {
+      return { ok: false, error: 'Invalid number' };
+    }
+    return { ok: true, value: n };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
 }
