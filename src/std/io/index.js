@@ -1,3 +1,3 @@
 export function print(value) {
-    console.log(value);
+  console.log(value);
 };
