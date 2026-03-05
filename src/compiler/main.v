@@ -4,12 +4,71 @@ import types { CompileError, Module, Function, Modules }
 import util { throw_error }
 import parser { Parser }
 
-const standard_module = Module{
+pub const standard_module = Module{
 	name: 'std/io'
 	functions: [Function{
 		name: 'print'
 		arguments: ['value']
 	}]
+}
+
+
+const standard_module_string = Module{
+	name: 'std/string'
+	functions: [
+		Function{ name: 'uppercase', arguments: ['s'] },
+		Function{ name: 'lowercase', arguments: ['s'] },
+		Function{ name: 'trim', arguments: ['s'] },
+		Function{ name: 'length', arguments: ['s'] },
+		Function{ name: 'slice', arguments: ['s', 'start', 'end'] },
+		Function{ name: 'includes', arguments: ['s', 'sub'] },
+		Function{ name: 'split', arguments: ['s', 'sep'] },
+		Function{ name: 'replace', arguments: ['s', 'from', 'to'] },
+		Function{ name: 'concat', arguments: ['a', 'b'] },
+	]
+}
+
+const standard_module_number = Module{
+	name: 'std/number'
+	functions: [
+		Function{ name: 'round', arguments: ['n'] },
+		Function{ name: 'floor', arguments: ['n'] },
+		Function{ name: 'ceil', arguments: ['n'] },
+		Function{ name: 'abs', arguments: ['n'] },
+		Function{ name: 'min', arguments: ['a', 'b'] },
+		Function{ name: 'max', arguments: ['a', 'b'] },
+		Function{ name: 'parse', arguments: ['s'] },
+	]
+}
+
+const standard_module_array = Module{
+	name: 'std/array'
+	functions: [
+		Function{ name: 'length', arguments: ['arr'] },
+		Function{ name: 'join', arguments: ['arr', 'sep'] },
+		Function{ name: 'concat', arguments: ['a', 'b'] },
+		Function{ name: 'slice', arguments: ['arr', 'start', 'end'] },
+		Function{ name: 'indexOf', arguments: ['arr', 'elem'] },
+		Function{ name: 'first', arguments: ['arr'] },
+		Function{ name: 'last', arguments: ['arr'] },
+	]
+}
+
+const standard_module_object = Module{
+	name: 'std/object'
+	functions: [
+		Function{ name: 'keys', arguments: ['obj'] },
+		Function{ name: 'values', arguments: ['obj'] },
+		Function{ name: 'has', arguments: ['obj', 'key'] },
+	]
+}
+
+pub const standard_modules = {
+	'std/io':     compiler.standard_module,
+	'std/string': compiler.standard_module_string,
+	'std/number': compiler.standard_module_number,
+	'std/array':  compiler.standard_module_array,
+	'std/object': compiler.standard_module_object,
 }
 
 pub struct Compiler {
@@ -20,9 +79,7 @@ pub mut:
 
 pub fn (mut state Compiler) parse(file_name string, source string) {
 	state.parser.parse(file_name, source)
-	state.modules = {
-		'std/io': compiler.standard_module
-	}
+	state.modules = compiler.standard_modules
 	state.compile()
 }
 
