@@ -20,7 +20,8 @@ fn main() {
 	}
 	mut command_build := Command{
 		name: 'build'
-		description: 'Build project inside its folder.'
+		description: 'Build a Silk project from a folder.'
+		usage: '[path]'
 		execute: build_project
 	}
 	command.add_command(command_new)
@@ -108,7 +109,16 @@ fn prepare_build_folder(project_root string) ! {
 }
 
 fn build_project(command Command) ! {
-	project_root := os.getwd()
+	// Determine project root: either an explicit path argument or the current directory.
+	mut project_root := os.getwd()
+	if command.args.len > 0 {
+		provided := command.args[0]
+		if !os.exists(provided) || !os.is_dir(provided) {
+			println(term.warn_message('Provided path is not a project folder: ${provided}'))
+			return
+		}
+		project_root = os.real_path(provided)
+	}
 	files := get_project_files(project_root)
 
 	if files.len == 0 {
