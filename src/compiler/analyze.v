@@ -792,7 +792,8 @@ fn block_has_fall_through(body []ASTNode, start int) bool {
 			if_ft := block_has_fall_through(if_meta.body, 0)
 			else_ft := block_has_fall_through(else_meta.body, 0)
 			if !if_ft && !else_ft {
-				return block_has_fall_through(body, start + 2)
+				// Both branches return; no path falls through the if/else
+				return false
 			}
 			return true
 		}

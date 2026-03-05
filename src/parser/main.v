@@ -202,12 +202,13 @@ fn (mut state Parser) let_declaration() ASTNode {
 
 /**
 * ReturnStatement
-*   : Return ExpressionValue
+*   : Return DeclarationValue
 *   ;
+* (DeclarationValue allows additive/multiplicative so "return 1 + 2" parses; analyzer enforces binary only in const/let.)
 */
 fn (mut state Parser) return_statement() ASTNode {
 	keyword := state.eat_sub('Return')
-	value := state.expression_value()
+	value := state.declaration_value()
 
 	return ASTNode{
 		name: 'ReturnStatement'

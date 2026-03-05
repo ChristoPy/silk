@@ -1065,3 +1065,422 @@ fn test_index_out_of_bounds() {
 	result = analize(state.ast, compiler.modules)
 	assert result.error.occurred == false
 }
+
+// ---- Comprehensive rule coverage: every analyzer error id and valid constructs ----
+
+fn test_error_module_not_found() {
+	mut state := Parser{}
+	state.parse('testfile', 'import X from "nonexistent/module"')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'module_not_found'
+
+	state = Parser{}
+	state.parse('testfile', 'import Y from "std/typo"')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'module_not_found'
+}
+
+fn test_error_cannot_export_function() {
+	mut state := Parser{}
+	state.parse('testfile', 'export function foo() {}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'cannot_export_function'
+
+	state = Parser{}
+	state.parse('testfile', 'export function bar(x) { return x }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'cannot_export_function'
+}
+
+fn test_valid_export_main() {
+	mut state := Parser{}
+	state.parse('testfile', 'export function main() { }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+	assert result.exported_names == ['main']
+}
+
+fn test_valid_minimal_programs() {
+	// Empty program
+	mut state := Parser{}
+	state.parse('testfile', '')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// Const only at top level
+	state = Parser{}
+	state.parse('testfile', 'const x = 1')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// Function only
+	state = Parser{}
+	state.parse('testfile', 'function f() {}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	// Let only inside function
+	state = Parser{}
+	state.parse('testfile', 'function f() { let a = 0 }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_literals_all_types() {
+	mut state := Parser{}
+	state.parse('testfile', 'const n = 42
+const s = "hello"
+const t = true
+const f = false
+const z = null
+const arr = [1, 2]
+const obj = { a: 1 }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_binary_in_declaration() {
+	mut state := Parser{}
+	state.parse('testfile', 'const a = 1 + 2
+const b = 10 - 3
+const c = 2 * 3
+const d = 8 / 2
+const e = 1 + 2 * 3
+const f = (1 + 2) * 3')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const x = 1
+function f() {
+  let y = x + 1
+  return y
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_object_member_access() {
+	mut state := Parser{}
+	state.parse('testfile', 'const o = { name: "x", age: 1 }
+const n = o.name
+const a = o.age')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const o = { inner: { x: 2 } }
+const v = o.inner.x')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_array_index_access() {
+	mut state := Parser{}
+	state.parse('testfile', 'const i = 0
+const arr = [10, 20, 30]
+const first = arr[i]
+const zero = arr[0]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'const config = { idx: 1 }
+const list = ["a", "b", "c"]
+const second = list[config.idx]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_function_call_correct_arity() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(a, b) { return 1 }
+function main() { f(1, 2) }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function g() { return 0 }
+function main() { g() }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_if_else_all_paths_return() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(x) {
+  if (x) { return 1 }
+  else { return 2 }
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function g(x) {
+  if (x) { return 0 }
+  return 1
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_error_binary_only_in_declaration() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f() { return 1 + 2 }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_only_in_declaration'
+
+	state = Parser{}
+	state.parse('testfile', 'const x = 1
+function f() {
+  let y = x
+  return y + 1
+}')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_only_in_declaration'
+}
+
+fn test_error_binary_operands_must_be_numbers() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = "a" + 1')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_operands_must_be_numbers'
+
+	state = Parser{}
+	state.parse('testfile', 'const a = 1
+const b = true
+const c = a + b')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'binary_operands_must_be_numbers'
+}
+
+fn test_error_identifier_already_declared() {
+	mut state := Parser{}
+	state.parse('testfile', 'const a = 1 const a = 2')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'identifier_already_declared'
+
+	state = Parser{}
+	state.parse('testfile', 'function f() { let x = 0 let x = 1 }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'identifier_already_declared'
+}
+
+fn test_error_identifier_not_declared() {
+	mut state := Parser{}
+	state.parse('testfile', 'const a = undeclared')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'identifier_not_declared'
+}
+
+fn test_error_nested_property_not_declared_on_object() {
+	mut state := Parser{}
+	state.parse('testfile', 'const o = { a: 1 }
+const x = o.b')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+
+	state = Parser{}
+	state.parse('testfile', 'const o = { inner: { x: 1 } }
+const y = o.inner.y')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+}
+
+fn test_error_index_must_be_number() {
+	mut state := Parser{}
+	state.parse('testfile', 'const arr = [1, 2]
+const x = arr["0"]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_must_be_number'
+
+	state = Parser{}
+	state.parse('testfile', 'const o = { name: "x" }
+const arr = [1, 2, 3]
+const bad = arr[o.name]')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_must_be_number'
+}
+
+fn test_error_return_path_inconsistent_variants() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(x) { if (x) { return 1 } return 2 }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+
+	state = Parser{}
+	state.parse('testfile', 'function f(x) {
+  if (x) { return 1 }
+}')
+	mut result2 := analize(state.ast, compiler.modules)
+	assert result2.error.occurred == true
+	assert result2.error.id == 'return_path_inconsistent'
+}
+
+fn test_error_else_without_if_variants() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f() {
+  const x = 1
+  else {}
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'else_without_if'
+}
+
+fn test_valid_nested_structures() {
+	mut state := Parser{}
+	state.parse('testfile', 'const matrix = [[1, 2], [3, 4]]
+const cell = matrix[0][1]
+const user = { profile: { name: "x" } }
+const n = user.profile.name')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_literal_array_index_in_bounds() {
+	mut state := Parser{}
+	state.parse('testfile', 'const a = [10, 20][0]
+const b = [10, 20][1]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_std_module_calls() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io"
+import String from "std/string"
+function main() {
+  IO.print(String.uppercase("hi"))
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+}
+
+fn test_error_unused_import_explicit() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io"
+function main() {}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'unused_import'
+}
+
+fn test_error_division_by_zero_explicit() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = 0
+const y = 1 / 0')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'division_by_zero'
+}
+
+fn test_error_wrong_argument_count_std_explicit() {
+	mut state := Parser{}
+	state.parse('testfile', 'import String from "std/string"
+function main() {
+  String.slice("hello")
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'wrong_argument_count'
+}
+
+fn test_valid_import_at_top_then_const_and_function() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io"
+const x = 1
+function main() { IO.print("ok") }')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_multiple_imports_used() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io"
+import String from "std/string"
+function main() {
+  IO.print(String.lowercase("A"))
+}')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == false
+}
+
+fn test_error_import_after_const() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = 1
+import IO from "std/io"')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'import_not_at_top_level'
+}
+
+fn test_valid_object_with_number_field_for_index() {
+	mut state := Parser{}
+	state.parse('testfile', 'const config = { index: 0 }
+const items = [100, 200]
+const first = items[config.index]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_call_with_expression_args() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(a, b) { return 1 }
+const x = 1
+const y = 2
+function main() { f(x, y) }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_error_duplicate_parameter_name() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(a, a) { return 1 }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'identifier_already_declared'
+}
+
+fn test_valid_empty_array_and_object() {
+	mut state := Parser{}
+	state.parse('testfile', 'const arr = []
+const obj = {}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_return_literal() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f() { return 42 }
+function g() { return "hi" }
+function h() { return true }
+function i() { return null }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
+
+fn test_valid_if_without_else_returns() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(x) {
+  if (x) { return 1 }
+  return 0
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
