@@ -8,6 +8,7 @@
 - [x] Warn about errors in a nice way
 - [ ] Control flow
   - [x] Return statement
+    [x] IF/Else
   - [ ] Match/switch
 - [x] Math
 - [x] Suggest code fix for errors
