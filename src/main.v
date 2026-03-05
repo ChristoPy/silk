@@ -30,23 +30,26 @@ fn main() {
 }
 
 fn make_project(command Command) ! {
+	project_root := os.getwd()
 	name := command.args[0]
+	project_dir := os.join_path(project_root, name)
 
-	os.mkdir(name) or {
+	os.mkdir(project_dir) or {
 		println(term.warn_message('Could not make project folder: ${err}'))
 		return
 	}
 
-	os.write_file('${name}/main.silk', 'import IO from "std/io"\n\nfunction main() {\n  IO.print("Hello, from Silk!")\n}\n') or {
+	main_path := os.join_path(project_dir, 'main.silk')
+	os.write_file(main_path, 'import IO from "std/io"\n\nfunction main() {\n  IO.print("Hello, from Silk!")\n}\n') or {
 		println(term.warn_message('Could not write project files: ${err}'))
 		return
 	}
 	println(term.ok_message('Project ${term.bold(name)} created successfuly!'))
 }
 
-fn get_project_files() []string {
-	files_on_disk := os.ls('.') or {
-		println(term.warn_message('Could not read project files: ${err}'))
+fn get_project_files(project_root string) []string {
+	files_on_disk := os.ls(project_root) or {
+		println(term.warn_message('Could not read project folder: ${err}'))
 		return []
 	}
 
@@ -59,44 +62,76 @@ fn get_project_files() []string {
 	return files
 }
 
-fn prepare_build_folder() ! {
-	if os.exists('dist') {
-		os.rmdir_all('dist') or {
+fn get_silk_std_path(project_root string) string {
+	root := os.getenv('SILK_ROOT')
+	if root != '' {
+		p := os.join_path(root, 'src', 'std')
+		if os.exists(p) {
+			return p
+		}
+	}
+	parent_std := os.join_path(project_root, '..', 'src', 'std')
+	if os.exists(parent_std) {
+		return os.real_path(parent_std)
+	}
+	executable_path := os.executable()
+	executable_dir := os.dir(executable_path)
+	executable_std := os.join_path(executable_dir, '..', 'src', 'std')
+	if os.exists(executable_std) {
+		return os.real_path(executable_std)
+	}
+	return ''
+}
+
+fn prepare_build_folder(project_root string) ! {
+	dist_path := os.join_path(project_root, 'dist')
+	if os.exists(dist_path) {
+		os.rmdir_all(dist_path) or {
 			println(term.warn_message('Could not clear build folder: ${err}'))
 			return
 		}
 	}
-	os.mkdir('dist') or {
+	os.mkdir(dist_path) or {
 		println(term.warn_message('Could not make build folder: ${err}'))
 		return
 	}
-	os.cp_all('../src/std', 'dist/std', true) or {
+	std_path := get_silk_std_path(project_root)
+	if std_path == '' {
+		println(term.warn_message('Could not find Silk standard library. Set SILK_ROOT to the Silk repo root, or run build from a project inside the repo.'))
+		return
+	}
+	dist_std := os.join_path(dist_path, 'std')
+	os.cp_all(std_path, dist_std, true) or {
 		println(term.warn_message('Could not copy standard library: ${err}'))
 		return
 	}
 }
 
 fn build_project(command Command) ! {
-	files := get_project_files()
+	project_root := os.getwd()
+	files := get_project_files(project_root)
 
 	if files.len == 0 {
-		println(term.warn_message('No .silk files found in project folder.'))
+		println(term.warn_message('No .silk files found in current folder.'))
 		return
 	}
 
-	prepare_build_folder() or { return }
+	prepare_build_folder(project_root) or { return }
 
+	dist_path := os.join_path(project_root, 'dist')
 	mut state := Compiler{}
 	for file in files {
-		file_content := os.read_file(file) or {
-			println(term.warn_message('Could not read main.silk: ${err}'))
+		file_path := os.join_path(project_root, file)
+		file_content := os.read_file(file_path) or {
+			println(term.warn_message('Could not read file ${file}: ${err}'))
 			return
 		}
 		state.parse(file, file_content)
 
 		name := file.split('.')[0]
-		os.write_file('dist/${name}.js', state.generate_js()) or {
-			println(term.warn_message('Could not write build file: ${err}'))
+		output_path := os.join_path(dist_path, '${name}.js')
+		os.write_file(output_path, state.generate_js()) or {
+			println(term.warn_message('Could not write output file ${output_path}: ${err}'))
 			return
 		}
 	}
