@@ -407,6 +407,33 @@ fn (mut state Analyzer) shape_has_number_at(property ASTNodeVariableMetaValue, s
 	return false
 }
 
+// array_literal_length returns the length of the array if base is a literal array, otherwise none.
+fn array_literal_length(base ASTNodeVariableMetaValue) ?int {
+	match base {
+		SubNodeAST {
+			if base.name == 'Array' {
+				return base.body.len
+			}
+		}
+		else {}
+	}
+	return none
+}
+
+// literal_index_value returns the index as int if it is a number literal token, otherwise none.
+fn literal_index_value(index ASTNodeVariableMetaValue) ?int {
+	match index {
+		Token {
+			if index.kind == 'Number' {
+				val := index.value.int()
+				return val
+			}
+		}
+		else {}
+	}
+	return none
+}
+
 fn (mut state Analyzer) on_index_expression(meta ASTNodeIndexExpressionMeta) {
 	if state.error.occurred {
 		return
@@ -427,6 +454,21 @@ fn (mut state Analyzer) on_index_expression(meta ASTNodeIndexExpressionMeta) {
 		state.error.id = 'index_must_be_number'
 		state.error.context = 'index_must_be_number_literal_or_reference'
 		return
+	}
+	// Literal index bounds: when both base and index are literals, require 0 <= index < length
+	length := array_literal_length(meta.base)
+	idx := literal_index_value(meta.index)
+	if length != none && idx != none {
+		len := length or { 0 }
+		i := idx or { 0 }
+		if i < 0 || i >= len {
+			index_token := state.index_expression_index_token(meta.index)
+			state.error.occurred = true
+			state.error.token = index_token
+			state.error.kind = 'Reference'
+			state.error.id = 'index_out_of_bounds'
+			state.error.context = 'index_out_of_bounds'
+		}
 	}
 }
 
