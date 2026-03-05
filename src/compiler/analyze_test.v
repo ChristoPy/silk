@@ -593,7 +593,7 @@ const r = Result.ok(1)')
 	state = Parser{}
 	state.parse('testfile', 'import Result from "std/result"
 function main() {
-  Result.unwrap_or(Result.ok(1), 0)
+  Result.unwrapOr(Result.ok(1), 0)
 }')
 	result = analize(state.ast, compiler.standard_modules)
 	assert result.error.occurred == false

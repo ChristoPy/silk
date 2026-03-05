@@ -118,9 +118,9 @@ const standard_module_result = Module{
 	functions: [
 		Function{ name: 'ok', arguments: ['value'] },
 		Function{ name: 'err', arguments: ['error'] },
-		Function{ name: 'is_ok', arguments: ['result'] },
-		Function{ name: 'is_err', arguments: ['result'] },
-		Function{ name: 'unwrap_or', arguments: ['result', 'default_value'] },
+		Function{ name: 'isOk', arguments: ['result'] },
+		Function{ name: 'isErr', arguments: ['result'] },
+		Function{ name: 'unwrapOr', arguments: ['result', 'default_value'] },
 	]
 }
 

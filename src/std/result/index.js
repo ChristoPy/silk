@@ -6,15 +6,15 @@ export function err(error) {
     return { ok: false, error: error };
 }
 
-export function is_ok(result) {
+export function isOk(result) {
     return result.ok === true;
 }
 
-export function is_err(result) {
+export function isErr(result) {
     return result.ok === false;
 }
 
-export function unwrap_or(result, default_value) {
+export function unwrapOr(result, default_value) {
     if (result.ok === true) {
         return result.value;
     }
