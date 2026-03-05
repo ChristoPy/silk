@@ -38,6 +38,9 @@ pub mut:
 	import_aliases            map[string]string
 	number_vars               map[string]map[string]bool
 	// scope id -> var name -> true (variables known to hold a number literal)
+	function_arities          map[string]int
+	// function name (user + program main) -> number of parameters
+	used_import_aliases      map[string]bool
 }
 
 fn (mut state Analyzer) prevent_name_clash(token Token) {
@@ -159,6 +162,26 @@ fn (mut state Analyzer) suggest_closest_name(bad string) string {
 	return ''
 }
 
+// suggest_closest_from_keys returns the key from `keys` closest to `bad`, or "" if none close enough.
+fn suggest_closest_from_keys(keys []string, bad string) string {
+	if bad in keys {
+		return ''
+	}
+	mut best_key := ''
+	mut best_dist := 999
+	for key in keys {
+		d := levenshtein(bad, key)
+		if d < best_dist {
+			best_dist = d
+			best_key = key
+		}
+	}
+	if best_key != '' && best_dist <= 3 {
+		return best_key
+	}
+	return ''
+}
+
 fn (mut state Analyzer) verify_name_on_global_scope(token Token) {
 	if state.error.occurred {
 		return
@@ -214,6 +237,7 @@ fn (mut state Analyzer) on_member_expression(meta ASTNodeMemberExpressionMeta) {
 	}
 	// No object shape - check if base is an imported module (single-level .function only)
 	if meta.name.value in state.import_aliases {
+		state.used_import_aliases[meta.name.value] = true
 		path := state.import_aliases[meta.name.value]
 		if path in state.global_names {
 			mmodule := state.global_names[path]
@@ -234,6 +258,11 @@ fn (mut state Analyzer) on_member_expression(meta ASTNodeMemberExpressionMeta) {
 						state.error.kind = 'Reference'
 						state.error.id = 'nested_property_not_declared'
 						state.error.context = 'undefined_nested_reference'
+						mut keys := []string{}
+						for f in mmodule.functions {
+							keys << f.name
+						}
+						state.error.suggestion = suggest_closest_from_keys(keys, prop_tok.value)
 					}
 				}
 				else {
@@ -256,6 +285,7 @@ fn (mut state Analyzer) on_member_expression(meta ASTNodeMemberExpressionMeta) {
 	state.error.kind = 'Reference'
 	state.error.id = 'nested_property_not_declared'
 	state.error.context = 'undefined_nested_reference'
+	// No suggestion: we don't have a shape or module to suggest from
 }
 
 fn (mut state Analyzer) member_expression_property_token(property ASTNodeVariableMetaValue) Token {
@@ -286,6 +316,8 @@ fn (mut state Analyzer) verify_member_chain(shape ObjectShape, property ASTNodeV
 				state.error.kind = 'Reference'
 				state.error.id = 'nested_property_not_declared'
 				state.error.context = 'undefined_nested_reference'
+				keys := shape.fields.keys()
+				state.error.suggestion = suggest_closest_from_keys(keys, property.value)
 			}
 		}
 		ASTNode {
@@ -297,12 +329,26 @@ fn (mut state Analyzer) verify_member_chain(shape ObjectShape, property ASTNodeV
 				state.error.kind = 'Reference'
 				state.error.id = 'nested_property_not_declared'
 				state.error.context = 'undefined_nested_reference'
+				keys := shape.fields.keys()
+				state.error.suggestion = suggest_closest_from_keys(keys, key)
 				return
 			}
 			sub_shape := shape.fields[key]
 			state.verify_member_chain(sub_shape, inner.property)
 		}
 		else {}
+	}
+}
+
+// is_literal_zero returns true if value is the number literal 0.
+fn (mut state Analyzer) is_literal_zero(value ASTNodeVariableMetaValue) bool {
+	match value {
+		Token {
+			return value.kind == 'Number' && value.value == '0'
+		}
+		else {
+			return false
+		}
 	}
 }
 
@@ -420,10 +466,74 @@ fn (mut state Analyzer) member_expression_rightmost_token(property ASTNodeVariab
 	return Token{}
 }
 
+// callable_token returns a token suitable for error reporting (callee name or dot position).
+fn (mut state Analyzer) callable_token(callee ASTNodeVariableMetaValue) Token {
+	match callee {
+		Token {
+			return callee
+		}
+		ASTNode {
+			if callee.name == 'MemberExpression' {
+				member_meta := callee.meta as ASTNodeMemberExpressionMeta
+				return state.member_expression_property_token(member_meta.property)
+			}
+		}
+		else {}
+	}
+	return Token{}
+}
+
+// expected_arity returns (expected_count, true) for a callable, or (0, false) if not a function / unknown.
+fn (mut state Analyzer) expected_arity(callee ASTNodeVariableMetaValue) (int, bool) {
+	match callee {
+		Token {
+			name := callee.value
+			if name in state.function_arities {
+				return state.function_arities[name], true
+			}
+			return 0, false
+		}
+		ASTNode {
+			if callee.name == 'MemberExpression' {
+				member_meta := callee.meta as ASTNodeMemberExpressionMeta
+				base_name := member_meta.name.value
+				if base_name in state.import_aliases {
+					path := state.import_aliases[base_name]
+					if path in state.global_names {
+						mmodule := state.global_names[path]
+						prop_tok := state.member_expression_property_token(member_meta.property)
+						for f in mmodule.functions {
+							if f.name == prop_tok.value {
+								return f.arguments.len, true
+							}
+						}
+					}
+				}
+			}
+		}
+		else {}
+	}
+	return 0, false
+}
+
 fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
 	state.on_variable_value(meta.callee)
+	if state.error.occurred {
+		return
+	}
 	for _, node in meta.args {
 		state.on_variable_value(node)
+		if state.error.occurred {
+			return
+		}
+	}
+	expected, is_function := state.expected_arity(meta.callee)
+	if is_function && meta.args.len != expected {
+		state.error.occurred = true
+		state.error.token = state.callable_token(meta.callee)
+		state.error.kind = 'Reference'
+		state.error.id = 'wrong_argument_count'
+		state.error.context = 'wrong_argument_count'
 	}
 }
 
@@ -502,6 +612,7 @@ fn (mut state Analyzer) on_import_statement(meta ASTNodeImportStatementMeta) {
 	if !state.error.occurred {
 		path := meta.path.value.substr(1, meta.path.value.len - 1)
 		state.import_aliases[meta.name.value] = path
+		state.used_import_aliases[meta.name.value] = false
 	}
 }
 
@@ -561,6 +672,13 @@ fn (mut state Analyzer) on_declaration_value(value ASTNodeVariableMetaValue) {
 					state.error.id = 'binary_operands_must_be_numbers'
 					state.error.context = 'binary_operands_must_be_numbers'
 				}
+				if bin_meta.op.kind == 'Slash' && state.is_literal_zero(bin_meta.right) {
+					state.error.occurred = true
+					state.error.token = bin_meta.op
+					state.error.kind = 'Reference'
+					state.error.id = 'division_by_zero'
+					state.error.context = 'division_by_zero'
+				}
 				return
 			}
 		}
@@ -598,9 +716,57 @@ fn (mut state Analyzer) on_variable_declaration(meta ASTNodeVariableMeta) {
 	}
 }
 
+// block_has_any_return returns true if body contains at least one ReturnStatement (including inside if/else).
+fn block_has_any_return(body []ASTNode) bool {
+	for node in body {
+		if node.name == 'ReturnStatement' {
+			return true
+		}
+		if node.name == 'IfStatement' {
+			meta := node.meta as ASTNodeIfMeta
+			if block_has_any_return(meta.body) {
+				return true
+			}
+		}
+		if node.name == 'ElseStatement' {
+			meta := node.meta as ASTNodeElseMeta
+			if block_has_any_return(meta.body) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// block_has_fall_through returns true if some path reaches the end of body without returning.
+fn block_has_fall_through(body []ASTNode, start int) bool {
+	if start >= body.len {
+		return true
+	}
+	node := body[start]
+	if node.name == 'ReturnStatement' {
+		return false
+	}
+	if node.name == 'IfStatement' {
+		if_meta := node.meta as ASTNodeIfMeta
+		if start + 1 < body.len && body[start + 1].name == 'ElseStatement' {
+			else_meta := body[start + 1].meta as ASTNodeElseMeta
+			if_ft := block_has_fall_through(if_meta.body, 0)
+			else_ft := block_has_fall_through(else_meta.body, 0)
+			if !if_ft && !else_ft {
+				return block_has_fall_through(body, start + 2)
+			}
+			return true
+		}
+		return block_has_fall_through(body, start + 1)
+	}
+	return block_has_fall_through(body, start + 1)
+}
+
 fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	state.prevent_name_clash(meta.name)
 	state.add_name_on_scope(meta.name.value)
+	state.function_arities[meta.name.value] = meta.args.len
 
 	state.scope << meta.name.value
 	state.names << Scope{
@@ -627,6 +793,17 @@ fn (mut state Analyzer) on_function_declaration(meta ASTNodeFunctionMeta) {
 	}
 
 	state.traverse(meta.name.value, meta.body)
+	if state.error.occurred {
+		state.scope.pop()
+		return
+	}
+	if block_has_any_return(meta.body) && block_has_fall_through(meta.body, 0) {
+		state.error.occurred = true
+		state.error.token = meta.name
+		state.error.kind = 'Reference'
+		state.error.id = 'return_path_inconsistent'
+		state.error.context = 'return_path_inconsistent'
+	}
 	state.scope.pop()
 }
 
@@ -714,7 +891,30 @@ fn analize(ast AST, modules Modules) Analyzer {
 		object_shapes: map[string]map[string]ObjectShape{}
 		import_aliases: map[string]string{}
 		number_vars: map[string]map[string]bool{}
+		function_arities: map[string]int{}
+		used_import_aliases: map[string]bool{}
 	}
 	state.traverse(ast.name, ast.body)
+	if !state.error.occurred {
+		for alias, _ in state.import_aliases {
+			if !state.used_import_aliases[alias] {
+				// Report first unused import; we need a token - use the one from the AST
+				for node in ast.body {
+					if node.name == 'ImportStatement' {
+						import_meta := node.meta as ASTNodeImportStatementMeta
+						if import_meta.name.value == alias {
+							state.error.occurred = true
+							state.error.token = import_meta.name
+							state.error.kind = 'Reference'
+							state.error.id = 'unused_import'
+							state.error.context = 'unused_import'
+							break
+						}
+					}
+				}
+				break
+			}
+		}
+	}
 	return state
 }

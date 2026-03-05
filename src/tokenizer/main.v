@@ -42,7 +42,6 @@ const reserved_words = {
 	'null':     'Null'
 	'import':   'Import'
 	'from':     'From'
-	'match':    'Match'
 	'export':   'Export'
 	'if':       'If'
 	'else':     'Else'

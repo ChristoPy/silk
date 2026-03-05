@@ -165,7 +165,8 @@ fn test_import_clash_with_const() {
 
 fn test_valid_import_no_error() {
 	mut state := Parser{}
-	state.parse('testfile', 'import IO from "std/io" const x = 1')
+	state.parse('testfile1', 'import IO from "std/io" const x = 1')
+	state.parse('testfile2', 'import IO from "std/io" function main() { IO.print("hi") }')
 	mut result := analize(state.ast, compiler.standard_modules)
 	assert result.error.occurred == false
 }
@@ -184,7 +185,7 @@ fn test_import_only_at_top_level() {
 	assert result.error.id == 'import_not_at_top_level'
 
 	state = Parser{}
-	state.parse('testfile', 'import A from "std/io" import B from "std/io" const x = 1')
+	state.parse('testfile', 'import A from "std/io" import B from "std/io" function main() { A.print("") B.print("") }')
 	result = analize(state.ast, compiler.standard_modules)
 	assert result.error.occurred == false
 }
@@ -354,6 +355,7 @@ fn test_import_member_valid() {
 	state.parse('testfile', 'import IO from "std/io"
 const x = 0
 function main() {
+  IO.print("")
   return x
 }')
 	mut result := analize(state.ast, compiler.standard_modules)
@@ -989,4 +991,56 @@ fn test_else_without_if_rejected() {
 	result = analize(state.ast, compiler.modules)
 	assert result.error.occurred == true
 	assert result.error.id == 'else_without_if'
+}
+
+fn test_wrong_argument_count_std() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io" function main() { IO.print() }')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'wrong_argument_count'
+
+	state = Parser{}
+	state.parse('testfile', 'import IO from "std/io" function main() { IO.print("a", "b") }')
+	result = analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'wrong_argument_count'
+}
+
+fn test_wrong_argument_count_user() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(a, b) { return 1 } function main() { f(1) }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'wrong_argument_count'
+
+	state = Parser{}
+	state.parse('testfile', 'function f() { return 1 } function main() { f(1, 2) }')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'wrong_argument_count'
+}
+
+fn test_return_path_inconsistent() {
+	mut state := Parser{}
+	state.parse('testfile', 'function f(x) { if (x) { return 1 } }')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'return_path_inconsistent'
+}
+
+fn test_unused_import() {
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io" const x = 1')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'unused_import'
+}
+
+fn test_division_by_zero() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = 1 / 0')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'division_by_zero'
 }

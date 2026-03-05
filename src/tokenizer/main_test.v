@@ -155,7 +155,6 @@ fn test_all_reserved_words_are_keywords_not_identifiers() {
 		['null', 'Null'],
 		['import', 'Import'],
 		['from', 'From'],
-		['match', 'Match'],
 		['export', 'Export'],
 		['if', 'If'],
 		['else', 'Else'],

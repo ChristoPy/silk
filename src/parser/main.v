@@ -607,51 +607,22 @@ fn (mut state Parser) array_literal() SubNodeAST {
 
 /**
 * IdentifierOrFunctionCall
-*   : Identifier
-*   | Identifier GenericFunctionCall
-*   | Identifier ( Dot Identifier )*
+*   : Callable
+*   | Callable GenericFunctionCall
+*
+* Callable
+*   : Identifier ( Dot Identifier )*
 *   ;
 */
 fn (mut state Parser) identifier_or_function_call() ASTNodeVariableMetaValue {
-	base := state.eat('Identifier')
-
+	// Reuse the same \"Callable\" parsing as statement-level function calls, so that
+	// expressions can call either bare identifiers (f()) or member expressions
+	// (IO.print(), Result.ok(), etc.).
+	callable := state.parse_callable()
 	if state.lookahead.kind == 'LParen' {
-		return state.generic_function_call(base)
+		return state.generic_function_call(callable)
 	}
-
-	// Member chain: . prop . prop ...
-	mut props := []Token{}
-	for state.lookahead.kind == 'Dot' {
-		state.eat('Dot')
-		props << state.eat('Identifier')
-	}
-
-	if props.len == 0 {
-		return base
-	}
-
-	// Build nested MemberExpression from right to left, then attach to base
-	mut prop_expr := ASTNodeVariableMetaValue(props[props.len - 1])
-	for i := props.len - 2; i >= 0; i-- {
-		prop_expr = ASTNode{
-			name: 'MemberExpression'
-			line: props[i].line
-			column: props[i].column
-			meta: ASTNodeMemberExpressionMeta{
-				name: props[i]
-				property: prop_expr
-			}
-		}
-	}
-	return ASTNode{
-		name: 'MemberExpression'
-		line: base.line
-		column: base.column
-		meta: ASTNodeMemberExpressionMeta{
-			name: base
-			property: prop_expr
-		}
-	}
+	return callable
 }
 
 // parse_index_suffix parses optional [ expression_value ] after an indexable value (identifier, member, or index).

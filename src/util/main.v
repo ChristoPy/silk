@@ -17,6 +17,10 @@ const errors_map = {
 	'binary_only_in_declaration':   'Arithmetic operations are only allowed in variable declarations (const/let).'
 	'binary_operands_must_be_numbers': 'Both operands must be numbers (literals or references to numbers).'
 	'else_without_if':              'An else block must come immediately after an if block.'
+	'wrong_argument_count':         'This function was called with the wrong number of arguments.'
+	'return_path_inconsistent':     'Some paths return a value but others do not; every path must return.'
+	'unused_import':                'This import is never used.'
+	'division_by_zero':            'Division by zero is not allowed.'
 }
 
 const reasons_map = {
@@ -42,6 +46,10 @@ const reasons_map = {
 	'binary_only_in_declaration': 'Use arithmetic only in const/let initializers.'
 	'binary_operands_must_be_numbers': 'Use number literals or variables that hold numbers.'
 	'else_without_if': 'Move this else so it comes right after an if block in the same scope.'
+	'wrong_argument_count': 'Pass the exact number of arguments the function expects (check the function definition or std module docs).'
+	'return_path_inconsistent': 'Add a return statement on every path (e.g. after if/else) or remove returns that have a value.'
+	'unused_import': 'Remove the import or use it (e.g. call a function from the module).'
+	'division_by_zero': 'Use a non-zero divisor (e.g. check the value before dividing).'
 }
 
 pub fn throw_error(error CompileError) {
