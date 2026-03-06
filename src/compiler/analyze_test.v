@@ -1484,3 +1484,63 @@ fn test_valid_if_without_else_returns() {
 	mut result := analize(state.ast, compiler.modules)
 	assert result.error.occurred == false
 }
+
+// ---- Additional coverage from analysis ----
+
+fn test_did_you_mean_nested_property_on_object() {
+	// Object has { name, age }; typo "nam" -> suggest "name"
+	mut state := Parser{}
+	state.parse('testfile', 'const o = { name: "x", age: 1 }
+const x = o.nam')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+	assert result.error.suggestion == 'name'
+
+	state = Parser{}
+	state.parse('testfile', 'const o = { name: "x", age: 1 }
+const x = o.ag')
+	result = analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+	assert result.error.suggestion == 'age'
+}
+
+fn test_did_you_mean_nested_property_on_module() {
+	// IO has print; typo "prin" -> suggest "print"
+	mut state := Parser{}
+	state.parse('testfile', 'import IO from "std/io"
+function main() { IO.prin("x") }')
+	mut result := analize(state.ast, compiler.standard_modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'nested_property_not_declared'
+	assert result.error.suggestion == 'print'
+}
+
+fn test_index_out_of_bounds_empty_array() {
+	mut state := Parser{}
+	state.parse('testfile', 'const x = [][0]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'index_out_of_bounds'
+}
+
+fn test_return_path_inconsistent_else_without_return() {
+	// if returns, else does not -> fall through
+	mut state := Parser{}
+	state.parse('testfile', 'function f(x) {
+  if (x) { return 1 }
+  else { }
+}')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == true
+	assert result.error.id == 'return_path_inconsistent'
+}
+
+fn test_valid_empty_array_index_zero_in_bounds() {
+	// [][0] is out of bounds; but [1][0] is in bounds
+	mut state := Parser{}
+	state.parse('testfile', 'const x = [1][0]')
+	mut result := analize(state.ast, compiler.modules)
+	assert result.error.occurred == false
+}
