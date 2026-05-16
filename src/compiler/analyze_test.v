@@ -897,38 +897,34 @@ const bad = a + b')
 	assert result.error.id == 'binary_operands_must_be_numbers'
 }
 
-fn test_math_only_in_declarations() {
-	// Parenthesized math in return is rejected
+fn test_math_allowed_everywhere() {
+	// Math in return is now valid
 	mut state := Parser{}
 	state.parse('testfile', 'function f() {
-  return (1 + 2)
+  return 1 + 2
 }')
 	mut result := analize(state.ast, compiler.modules)
-	assert result.error.occurred == true
-	assert result.error.id == 'binary_only_in_declaration'
+	assert result.error.occurred == false
 
-	// Parenthesized math in array literal value is rejected
+	// Math in array literal value is now valid
 	state = Parser{}
-	state.parse('testfile', 'const xs = [(1 + 2)]')
+	state.parse('testfile', 'const xs = [1 + 2]')
 	result = analize(state.ast, compiler.modules)
-	assert result.error.occurred == true
-	assert result.error.id == 'binary_only_in_declaration'
+	assert result.error.occurred == false
 
-	// Parenthesized math in object literal value is rejected
+	// Math in object literal value is now valid
 	state = Parser{}
-	state.parse('testfile', 'const obj = { v: (1 + 2) }')
+	state.parse('testfile', 'const obj = { v: 1 + 2 }')
 	result = analize(state.ast, compiler.modules)
-	assert result.error.occurred == true
-	assert result.error.id == 'binary_only_in_declaration'
+	assert result.error.occurred == false
 
-	// Parenthesized math in index expression is rejected
+	// Math in index expression is now valid
 	state = Parser{}
 	state.parse('testfile', 'const arr = [10, 20]
 const idx = 0
-const val = arr[(idx + 1)]')
+const val = arr[idx + 1]')
 	result = analize(state.ast, compiler.modules)
-	assert result.error.occurred == true
-	assert result.error.id == 'binary_only_in_declaration'
+	assert result.error.occurred == false
 }
 
 fn test_if_and_else_statements() {
@@ -1228,12 +1224,12 @@ fn test_valid_if_else_all_paths_return() {
 	assert result.error.occurred == false
 }
 
-fn test_error_binary_only_in_declaration() {
+fn test_binary_in_return_and_args() {
+	// Binary expressions in return are now valid
 	mut state := Parser{}
 	state.parse('testfile', 'function f() { return 1 + 2 }')
 	mut result := analize(state.ast, compiler.modules)
-	assert result.error.occurred == true
-	assert result.error.id == 'binary_only_in_declaration'
+	assert result.error.occurred == false
 
 	state = Parser{}
 	state.parse('testfile', 'const x = 1
@@ -1242,8 +1238,7 @@ function f() {
   return y + 1
 }')
 	result = analize(state.ast, compiler.modules)
-	assert result.error.occurred == true
-	assert result.error.id == 'binary_only_in_declaration'
+	assert result.error.occurred == false
 }
 
 fn test_error_binary_operands_must_be_numbers() {

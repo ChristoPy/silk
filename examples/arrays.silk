@@ -1,0 +1,34 @@
+import IO from "std/io"
+import Array from "std/array"
+
+const nums = [10, 20, 30, 40, 50]
+const words = ["silk", "is", "smooth"]
+const extra = [60, 70]
+
+function main() {
+  // Length
+  const len = Array.length(nums)
+  IO.print(len)
+
+  // First and last elements
+  const first = Array.first(words)
+  const last = Array.last(words)
+  IO.print(first)
+  IO.print(last)
+
+  // Join into a string
+  const sentence = Array.join(words, " ")
+  IO.print(sentence)
+
+  // Index of an element (-1 if not found)
+  const pos = Array.indexOf(nums, 30)
+  IO.print(pos)
+
+  // Concatenate two arrays
+  const combined = Array.concat(nums, extra)
+  IO.print(combined)
+
+  // Slice a portion
+  const middle = Array.slice(nums, 1, 4)
+  IO.print(middle)
+}

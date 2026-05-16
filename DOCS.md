@@ -179,9 +179,9 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
   Used to build and inspect Result values returned by parsing and I/O functions. A Result is either success `{ ok: true, value }` or error `{ ok: false, error }`.
   - `Result.ok(value)` — build a success result
   - `Result.err(error)` — build an error result
-  - `Result.is_ok(result)` — true if success
-  - `Result.is_err(result)` — true if error
-  - `Result.unwrap_or(result, default_value)` — return the value on success, or default_value on error
+  - `Result.isOk(result)` — true if success
+  - `Result.isErr(result)` — true if error
+  - `Result.unwrapOr(result, default_value)` — return the value on success, or default_value on error
 
   Example (using Result with Json.parse):
   ```js
@@ -190,12 +190,12 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
 
   function main() {
     const res = Json.parse("{}")
-    if (Result.is_ok(res)) {
+    if (Result.isOk(res)) {
       // use res.value
     } else {
       // use res.error
     }
-    const data = Result.unwrap_or(res, {})
+    const data = Result.unwrapOr(res, {})
   }
   ```
 
@@ -312,3 +312,30 @@ At **top level** (outside any function) you must use **`const`** only. Inside a 
   //   ╭─ ReferenceError: Index must be a number (literal or reference to a number).
   //   • ...
   ```
+
+---
+
+## Error reference
+
+All compiler error IDs (as used in diagnostics and `util.errors_map`), with a short description and fix hint.
+
+| ID | Kind | Description | Fix hint |
+|----|------|-------------|---------|
+| `unexpected_token` | Syntax | Unexpected token in source. | Check the grammar (e.g. expected expression, `)`, `}`). |
+| `unexpected_eof` | Syntax | Input ended before a construct was complete. | Add the missing token (e.g. closing `)`, `}`, or expression). |
+| `identifier_already_declared` | Reference | Name already declared in this scope. | Use a different name or remove the duplicate declaration. |
+| `identifier_not_declared` | Reference | Name used but never declared. | Declare it (const/let/function) or fix the typo (see “Did you mean?”). |
+| `module_not_found` | Reference | Import path does not match a known module. | Use a valid path (e.g. `"std/io"`) or fix the path string. |
+| `cannot_export_function` | Reference | Only `main` can be exported. | Export `function main() { ... }` only. |
+| `import_not_at_top_level` | Syntax | Import appears after another statement. | Move all imports to the top of the file. |
+| `nested_property_not_declared` | Reference | Property does not exist on the object (or module). | Use a key that exists on the object or fix the typo (see “Did you mean?”). |
+| `index_must_be_number` | Reference | Array index is not a number. | Use a number literal or a variable that holds a number. |
+| `reserved_word_as_identifier` | Syntax | Reserved word used as variable/function name. | Use a different identifier. |
+| `binary_only_in_declaration` | Syntax | Arithmetic used outside const/let initializer. | Use `+` `-` `*` `/` only in `const x = ...` or `let x = ...`. |
+| `binary_operands_must_be_numbers` | Reference | Operands of `+` `-` `*` `/` must be numbers. | Use number literals or variables that hold numbers. |
+| `else_without_if` | Syntax | `else` not immediately after an `if`. | Place `else` right after the closing `}` of the `if` block. |
+| `wrong_argument_count` | Reference | Function called with wrong number of arguments. | Pass the exact number of arguments the function expects. |
+| `return_path_inconsistent` | Reference | Some paths return a value, others do not. | Ensure every path returns a value (e.g. add return in else) or remove returns. |
+| `unused_import` | Reference | Import alias is never used. | Remove the import or use the module (e.g. call a function from it). |
+| `division_by_zero` | Reference | Divisor is the literal `0`. | Use a non-zero divisor or check the value before dividing. |
+| `index_out_of_bounds` | Reference | Literal array index is out of bounds (negative or >= length). | Use an index between 0 and (array length - 1). |

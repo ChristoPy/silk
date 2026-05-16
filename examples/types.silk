@@ -1,0 +1,45 @@
+import IO from "std/io"
+
+// --- Strings ---
+const language = "Silk"
+const empty = ""
+
+// --- Numbers (integers only) ---
+const year = 2024
+const zero = 0
+
+// --- Booleans ---
+const yes = true
+const no = false
+
+// --- Null ---
+const nothing = null
+
+// --- Arrays (heterogeneous elements allowed) ---
+const scores = [95, 82, 78]
+const words = ["hello", "world"]
+const mixed = [1, "two", true, null]
+
+// --- Objects ---
+const point = {
+  x: 10,
+  y: 20
+}
+
+const person = {
+  name: "Alice",
+  age: 30,
+  active: true
+}
+
+// Top-level is const-only. Inside functions, let allows reassignment.
+function main() {
+  IO.print(language)
+  IO.print(year)
+  IO.print(yes)
+  IO.print(nothing)
+  IO.print(scores)
+  IO.print(point)
+  IO.print(person.name)
+  IO.print(person.age)
+}

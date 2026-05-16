@@ -54,6 +54,8 @@ pub type ASTNodeMeta = ASTNodeBinaryExpressionMeta
 	| ASTNodeMemberExpressionMeta
 	| ASTNodeReturnMeta
 	| ASTNodeVariableMeta
+	| ASTNodeAssignmentMeta
+	| ASTNodeUnaryExpressionMeta
 pub type ASTNodeVariableMetaValue = ASTNode | ASTNodeObjectMetaValue | SubNodeAST | Token
 
 pub struct ASTNode {
@@ -127,8 +129,21 @@ pub mut:
 pub struct ASTNodeBinaryExpressionMeta {
 pub mut:
 	left  ASTNodeVariableMetaValue
-	op    Token // Plus, Minus, Star, Slash
+	op    Token // Plus, Minus, Star, Slash, EqEq, NotEq, Lt, Gt, LtEq, GtEq, And, Or
 	right ASTNodeVariableMetaValue
+}
+
+pub struct ASTNodeUnaryExpressionMeta {
+pub mut:
+	op    Token // Bang
+	right ASTNodeVariableMetaValue
+}
+
+pub struct ASTNodeAssignmentMeta {
+pub mut:
+	name  Token
+	equal SubToken
+	value ASTNodeVariableMetaValue
 }
 
 pub struct ASTNodeIfMeta {

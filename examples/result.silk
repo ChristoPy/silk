@@ -1,0 +1,54 @@
+import IO from "std/io"
+import Number from "std/number"
+import Result from "std/result"
+
+// The Result pattern is how Silk handles operations that can fail.
+// A Result is either { ok: true, value: ... } or { ok: false, error: ... }.
+
+// Manually constructing results.
+function safeDivide(a, b) {
+  if (b == 0) {
+    return Result.err("cannot divide by zero")
+  } else {
+    return Result.ok(a)
+  }
+}
+
+function main() {
+  // Creating results
+  const good = Result.ok(42)
+  const bad = Result.err("something went wrong")
+
+  // Inspecting results
+  const isGood = Result.isOk(good)
+  const isBad = Result.isErr(bad)
+  IO.print(isGood)
+  IO.print(isBad)
+
+  // Unwrapping: returns value on ok, fallback on err
+  const val = Result.unwrapOr(good, 0)
+  const fallback = Result.unwrapOr(bad, 0)
+  IO.print(val)
+  IO.print(fallback)
+
+  // Parsing strings to numbers — returns a Result
+  const parsed = Number.parse("123")
+  const failed = Number.parse("oops")
+
+  const parsedOk = Result.isOk(parsed)
+  const failedOk = Result.isOk(failed)
+  IO.print(parsedOk)
+  IO.print(failedOk)
+
+  const number = Result.unwrapOr(parsed, 0)
+  IO.print(number)
+
+  // Using a function that returns a result
+  const r = safeDivide(10, 2)
+  const rOk = Result.isOk(r)
+  IO.print(rOk)
+
+  const rZero = safeDivide(10, 0)
+  const rZeroOk = Result.isOk(rZero)
+  IO.print(rZeroOk)
+}

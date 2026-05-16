@@ -1,7 +1,7 @@
 module parser
 
 import util { throw_error }
-import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeElseMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeIfMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
+import types { AST, ASTNode, ASTNodeAssignmentMeta, ASTNodeBinaryExpressionMeta, ASTNodeElseMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeIfMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeUnaryExpressionMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, CompileError, SubNodeAST, SubToken, Token }
 import tokenizer
 
 pub struct Parser {
@@ -110,7 +110,12 @@ fn (mut state Parser) nested_statement() ASTNode {
 			return state.else_statement()
 		}
 		'Identifier' {
-			return state.function_call_statement()
+			// Consume the identifier first, then peek to distinguish assignment from call
+			name_tok := state.eat('Identifier')
+			if state.lookahead.kind == 'Equals' {
+				return state.assignment_statement_with_name(name_tok)
+			}
+			return state.function_call_from_identifier(name_tok)
 		}
 		else {
 			throw_error(CompileError{
@@ -221,15 +226,63 @@ fn (mut state Parser) return_statement() ASTNode {
 	}
 }
 
+fn (mut state Parser) assignment_statement_with_name(name Token) ASTNode {
+	equal := state.eat_sub('Equals')
+	value := state.declaration_value()
+	return ASTNode{
+		name: 'AssignmentStatement'
+		line: name.line
+		column: name.column
+		meta: ASTNodeAssignmentMeta{
+			name: name
+			equal: equal
+			value: value
+		}
+	}
+}
+
+fn (mut state Parser) function_call_from_identifier(base Token) ASTNode {
+	mut props := []Token{}
+	for state.lookahead.kind == 'Dot' {
+		state.eat('Dot')
+		props << state.eat('Identifier')
+	}
+	mut callable := ASTNodeVariableMetaValue(base)
+	if props.len > 0 {
+		mut prop_expr := ASTNodeVariableMetaValue(props[props.len - 1])
+		for i := props.len - 2; i >= 0; i-- {
+			prop_expr = ASTNode{
+				name: 'MemberExpression'
+				line: props[i].line
+				column: props[i].column
+				meta: ASTNodeMemberExpressionMeta{
+					name: props[i]
+					property: prop_expr
+				}
+			}
+		}
+		callable = ASTNode{
+			name: 'MemberExpression'
+			line: base.line
+			column: base.column
+			meta: ASTNodeMemberExpressionMeta{
+				name: base
+				property: prop_expr
+			}
+		}
+	}
+	return state.generic_function_call(callable)
+}
+
 /**
 * IfStatement
-*   : If LParen ExpressionValue RParen LBrace NestedBlock RBrace
+*   : If LParen DeclarationValue RParen LBrace NestedBlock RBrace
 *   ;
 */
 fn (mut state Parser) if_statement() ASTNode {
 	keyword := state.eat_sub('If')
 	state.eat('LParen')
-	condition := state.expression_value()
+	condition := state.declaration_value()
 	state.eat('RParen')
 	state.eat('LBrace')
 	body := state.nested_block()
@@ -457,18 +510,78 @@ fn (mut state Parser) expression_value() ASTNodeVariableMetaValue {
 }
 
 /**
-* DeclarationValue (variable declarations only)
-*   : AdditiveExpression
+* DeclarationValue
+*   : LogicalOrExpression
 *
-* AdditiveExpression
-*   : MultiplicativeExpression ( ( Plus | Minus ) MultiplicativeExpression )*
-*
-* MultiplicativeExpression
-*   : ExpressionValue ( ( Star | Slash ) ExpressionValue )*
-*   ;
+* LogicalOrExpression  : LogicalAndExpression ( Or LogicalAndExpression )*
+* LogicalAndExpression : ComparisonExpression ( And ComparisonExpression )*
+* ComparisonExpression : AdditiveExpression ( ( EqEq | NotEq | Lt | Gt | LtEq | GtEq ) AdditiveExpression )*
+* AdditiveExpression   : MultiplicativeExpression ( ( Plus | Minus ) MultiplicativeExpression )*
+* MultiplicativeExpression : UnaryExpression ( ( Star | Slash ) UnaryExpression )*
+* UnaryExpression      : Bang UnaryExpression | ExpressionValue
 */
 fn (mut state Parser) declaration_value() ASTNodeVariableMetaValue {
-	return state.declaration_additive()
+	return state.declaration_logical_or()
+}
+
+fn (mut state Parser) declaration_logical_or() ASTNodeVariableMetaValue {
+	mut left := state.declaration_logical_and()
+	for state.lookahead.kind == 'Or' {
+		op_tok := state.eat('Or')
+		right := state.declaration_logical_and()
+		line, column := state.value_line_column(left)
+		left = ASTNode{
+			name: 'BinaryExpression'
+			line: line
+			column: column
+			meta: ASTNodeBinaryExpressionMeta{
+				left: left
+				op: op_tok
+				right: right
+			}
+		}
+	}
+	return left
+}
+
+fn (mut state Parser) declaration_logical_and() ASTNodeVariableMetaValue {
+	mut left := state.declaration_comparison()
+	for state.lookahead.kind == 'And' {
+		op_tok := state.eat('And')
+		right := state.declaration_comparison()
+		line, column := state.value_line_column(left)
+		left = ASTNode{
+			name: 'BinaryExpression'
+			line: line
+			column: column
+			meta: ASTNodeBinaryExpressionMeta{
+				left: left
+				op: op_tok
+				right: right
+			}
+		}
+	}
+	return left
+}
+
+fn (mut state Parser) declaration_comparison() ASTNodeVariableMetaValue {
+	mut left := state.declaration_additive()
+	for state.lookahead.kind in ['EqEq', 'NotEq', 'Lt', 'Gt', 'LtEq', 'GtEq'] {
+		op_tok := state.eat(state.lookahead.kind)
+		right := state.declaration_additive()
+		line, column := state.value_line_column(left)
+		left = ASTNode{
+			name: 'BinaryExpression'
+			line: line
+			column: column
+			meta: ASTNodeBinaryExpressionMeta{
+				left: left
+				op: op_tok
+				right: right
+			}
+		}
+	}
+	return left
 }
 
 fn (mut state Parser) declaration_additive() ASTNodeVariableMetaValue {
@@ -492,10 +605,10 @@ fn (mut state Parser) declaration_additive() ASTNodeVariableMetaValue {
 }
 
 fn (mut state Parser) declaration_multiplicative() ASTNodeVariableMetaValue {
-	mut left := state.expression_value()
+	mut left := state.declaration_unary()
 	for state.lookahead.kind in ['Star', 'Slash'] {
 		op_tok := state.eat(state.lookahead.kind)
-		right := state.expression_value()
+		right := state.declaration_unary()
 		line, column := state.value_line_column(left)
 		left = ASTNode{
 			name: 'BinaryExpression'
@@ -509,6 +622,23 @@ fn (mut state Parser) declaration_multiplicative() ASTNodeVariableMetaValue {
 		}
 	}
 	return left
+}
+
+fn (mut state Parser) declaration_unary() ASTNodeVariableMetaValue {
+	if state.lookahead.kind == 'Bang' {
+		op_tok := state.eat('Bang')
+		right := state.declaration_unary()
+		return ASTNode{
+			name: 'UnaryExpression'
+			line: op_tok.line
+			column: op_tok.column
+			meta: ASTNodeUnaryExpressionMeta{
+				op: op_tok
+				right: right
+			}
+		}
+	}
+	return state.expression_value()
 }
 
 fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) {
@@ -546,7 +676,7 @@ fn (mut state Parser) generic_list(left string, limiter string, callback fn ()) 
 */
 fn (mut state Parser) list(left string, limiter string, callback fn (ASTNodeVariableMetaValue)) {
 	state.generic_list(left, limiter, fn [callback, mut state] () {
-		callback(state.expression_value())
+		callback(state.declaration_value())
 	})
 }
 
@@ -577,7 +707,7 @@ fn (mut state Parser) object_literal() SubNodeAST {
 	mut ref := &root
 	state.list('LBrace', 'RBrace', fn [mut ref, mut state] (key ASTNodeVariableMetaValue) {
 		state.eat('Colon')
-		value := state.expression_value()
+		value := state.declaration_value()
 
 		ref.body << ASTNodeObjectMetaValue{
 			key: key as Token
@@ -641,7 +771,7 @@ fn (mut state Parser) parse_index_suffix(start ASTNodeVariableMetaValue) ASTNode
 	mut current := start
 	for state.lookahead.kind == 'LBracket' {
 		state.eat('LBracket')
-		index := state.expression_value()
+		index := state.declaration_value()
 		state.eat('RBracket')
 		line, column := state.value_line_column(current)
 		current = ASTNode{

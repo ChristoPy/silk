@@ -1,0 +1,8 @@
+import IO from "std/io"
+
+// Every Silk program starts with imports.
+// Functions can be exported as ES modules using `export function main()`.
+
+function main() {
+  IO.print("Hello, from Silk!")
+}

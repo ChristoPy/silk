@@ -1,6 +1,6 @@
 module compiler
 
-import types { AST, ASTNode, ASTNodeBinaryExpressionMeta, ASTNodeElseMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeIfMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
+import types { AST, ASTNode, ASTNodeAssignmentMeta, ASTNodeBinaryExpressionMeta, ASTNodeElseMeta, ASTNodeFunctionCallMeta, ASTNodeFunctionMeta, ASTNodeIfMeta, ASTNodeImportStatementMeta, ASTNodeIndexExpressionMeta, ASTNodeMemberExpressionMeta, ASTNodeObjectMetaValue, ASTNodeReturnMeta, ASTNodeUnaryExpressionMeta, ASTNodeVariableMeta, ASTNodeVariableMetaValue, Modules, SubNodeAST, Token }
 
 struct Scope {
 pub mut:
@@ -560,7 +560,7 @@ fn (mut state Analyzer) on_function_call(meta ASTNodeFunctionCallMeta) {
 		return
 	}
 	for _, node in meta.args {
-		state.on_variable_value(node)
+		state.on_declaration_value(node)
 		if state.error.occurred {
 			return
 		}
@@ -597,11 +597,10 @@ fn (mut state Analyzer) on_variable_value(meta ASTNodeVariableMetaValue) {
 			} else if meta.name == 'IndexExpression' {
 				state.on_index_expression(meta.meta as ASTNodeIndexExpressionMeta)
 			} else if meta.name == 'BinaryExpression' {
-				state.error.occurred = true
-				state.error.token = (meta.meta as ASTNodeBinaryExpressionMeta).op
-				state.error.kind = 'Syntax'
-				state.error.id = 'binary_only_in_declaration'
-				state.error.context = 'binary_only_in_declaration'
+				state.on_declaration_value(meta)
+			} else if meta.name == 'UnaryExpression' {
+				unary_meta := meta.meta as ASTNodeUnaryExpressionMeta
+				state.on_variable_value(unary_meta.right)
 			} else {
 				panic('not implemented: ${meta}')
 			}
@@ -703,19 +702,21 @@ fn (mut state Analyzer) on_declaration_value(value ASTNodeVariableMetaValue) {
 				if state.error.occurred {
 					return
 				}
-				if !state.is_number_expression(bin_meta.left) || !state.is_number_expression(bin_meta.right) {
-					state.error.occurred = true
-					state.error.token = bin_meta.op
-					state.error.kind = 'Reference'
-					state.error.id = 'binary_operands_must_be_numbers'
-					state.error.context = 'binary_operands_must_be_numbers'
-				}
-				if bin_meta.op.kind == 'Slash' && state.is_literal_zero(bin_meta.right) {
-					state.error.occurred = true
-					state.error.token = bin_meta.op
-					state.error.kind = 'Reference'
-					state.error.id = 'division_by_zero'
-					state.error.context = 'division_by_zero'
+				if bin_meta.op.kind in ['Plus', 'Minus', 'Star', 'Slash'] {
+					if !state.is_number_expression(bin_meta.left) || !state.is_number_expression(bin_meta.right) {
+						state.error.occurred = true
+						state.error.token = bin_meta.op
+						state.error.kind = 'Reference'
+						state.error.id = 'binary_operands_must_be_numbers'
+						state.error.context = 'binary_operands_must_be_numbers'
+					}
+					if bin_meta.op.kind == 'Slash' && state.is_literal_zero(bin_meta.right) {
+						state.error.occurred = true
+						state.error.token = bin_meta.op
+						state.error.kind = 'Reference'
+						state.error.id = 'division_by_zero'
+						state.error.context = 'division_by_zero'
+					}
 				}
 				return
 			}
@@ -873,7 +874,15 @@ fn (mut state Analyzer) analyze_block(body []ASTNode) {
 			}
 			'ReturnStatement' {
 				meta := node.meta as ASTNodeReturnMeta
-				state.on_variable_value(meta.value)
+				state.on_declaration_value(meta.value)
+			}
+			'AssignmentStatement' {
+				meta := node.meta as ASTNodeAssignmentMeta
+				state.prevent_undefined_reference(meta.name)
+				if state.error.occurred {
+					break
+				}
+				state.on_declaration_value(meta.value)
 			}
 			'IfStatement' {
 				state.on_if_statement(node.meta as ASTNodeIfMeta)

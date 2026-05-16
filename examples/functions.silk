@@ -1,0 +1,69 @@
+import IO from "std/io"
+
+// Functions are declared with `function`. Parameters have no type annotations.
+// If any path returns a value, all paths must return.
+
+function greet(name) {
+  IO.print(name)
+}
+
+// Comparisons on parameters work fine.
+function isAdult(age) {
+  return age >= 18
+}
+
+// Both branches return — all paths covered.
+function larger(a, b) {
+  if (a > b) {
+    return a
+  } else {
+    return b
+  }
+}
+
+// Arithmetic works with declared number variables and literals, not raw parameters.
+// Use local variables built from literals for arithmetic inside functions.
+const base = 10
+
+function sumOfThree() {
+  const a = 10
+  const b = 20
+  const c = 30
+  return a + b + c
+}
+
+// Functions can be composed.
+function isLargeAndAdult(age, size) {
+  const old = isAdult(age)
+  const big = size > 100
+  return old && big
+}
+
+function main() {
+  greet("Alice")
+
+  const adult = isAdult(25)
+  const minor = isAdult(15)
+  IO.print(adult)
+  IO.print(minor)
+
+  const big = larger(42, 17)
+  IO.print(big)
+
+  // let allows reassignment inside functions.
+  let count = 0
+  count = count + 1
+  count = count + 1
+  IO.print(count)
+
+  // Passing computed values as arguments.
+  const shifted = base + 5
+  IO.print(larger(base, shifted))
+
+  const total = sumOfThree()
+  IO.print(total)
+
+  // Composition
+  const check = isLargeAndAdult(30, 150)
+  IO.print(check)
+}

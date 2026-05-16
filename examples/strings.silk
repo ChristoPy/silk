@@ -1,0 +1,42 @@
+import IO from "std/io"
+import String from "std/string"
+
+const raw = "  Hello, World!  "
+const a = "Silk"
+const b = " is smooth"
+
+function main() {
+  // Trimming whitespace
+  const trimmed = String.trim(raw)
+  IO.print(trimmed)
+
+  // Case conversion
+  const upper = String.uppercase(trimmed)
+  const lower = String.lowercase(trimmed)
+  IO.print(upper)
+  IO.print(lower)
+
+  // Length
+  const len = String.length(trimmed)
+  IO.print(len)
+
+  // Substring check
+  const hasHello = String.includes(trimmed, "Hello")
+  IO.print(hasHello)
+
+  // Slicing
+  const sliced = String.slice(trimmed, 0, 5)
+  IO.print(sliced)
+
+  // Replace
+  const replaced = String.replace(trimmed, "World", "Silk")
+  IO.print(replaced)
+
+  // Concatenation
+  const joined = String.concat(a, b)
+  IO.print(joined)
+
+  // Splitting returns an array
+  const parts = String.split(trimmed, ",")
+  IO.print(parts)
+}

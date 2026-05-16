@@ -1,0 +1,49 @@
+import IO from "std/io"
+
+const a = 20
+const b = 6
+
+function main() {
+  // --- Arithmetic (operands must be numbers) ---
+  const sum = a + b
+  const diff = a - b
+  const product = a * b
+  const quotient = a / b
+  const grouped = (a + b) * 2
+
+  IO.print(sum)
+  IO.print(diff)
+  IO.print(product)
+  IO.print(quotient)
+  IO.print(grouped)
+
+  // --- Comparison (any types, produces boolean) ---
+  const eq = a == b
+  const neq = a != b
+  const gt = a > b
+  const lt = a < b
+  const gte = a >= b
+  const lte = a <= b
+
+  IO.print(eq)
+  IO.print(neq)
+  IO.print(gt)
+
+  // --- Logical ---
+  const flag = true
+  const other = false
+  const andResult = flag && other
+  const orResult = flag || other
+  const notResult = !flag
+
+  IO.print(andResult)
+  IO.print(orResult)
+  IO.print(notResult)
+
+  // --- Combining operators ---
+  const inRange = a > 10 && a < 100
+  const either = a == 20 || b == 20
+
+  IO.print(inRange)
+  IO.print(either)
+}

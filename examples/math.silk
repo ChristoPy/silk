@@ -1,0 +1,40 @@
+import IO from "std/io"
+import Math from "std/math"
+import Number from "std/number"
+
+const base = 16
+const exponent = 2
+
+function main() {
+  // Square root
+  const root = Math.sqrt(base)
+  IO.print(root)
+
+  // Power
+  const powered = Math.pow(base, exponent)
+  IO.print(powered)
+
+  // Random number between 0 and 1
+  const rnd = Math.random()
+  IO.print(rnd)
+
+  // Rounding
+  const big = 100
+  const rounded = Number.round(big)
+  const floored = Number.floor(big)
+  const ceiled = Number.ceil(big)
+  IO.print(rounded)
+  IO.print(floored)
+  IO.print(ceiled)
+
+  // Absolute value
+  const negative = 0 - 42
+  const abs = Number.abs(negative)
+  IO.print(abs)
+
+  // Min / max
+  const smaller = Number.min(3, 9)
+  const larger = Number.max(3, 9)
+  IO.print(smaller)
+  IO.print(larger)
+}

@@ -1,0 +1,52 @@
+import IO from "std/io"
+
+const score = 85
+const threshold = 60
+
+// Helper functions must be defined before they are called.
+
+function passed(s) {
+  return s >= threshold
+}
+
+function grade(s) {
+  if (s >= 90) {
+    return "A"
+  } else {
+    return "B or below"
+  }
+}
+
+function describe(flag) {
+  if (flag) {
+    IO.print("yes")
+  } else {
+    IO.print("no")
+  }
+}
+
+function main() {
+  // if/else with comparison
+  const ok = passed(score)
+  IO.print(ok)
+
+  // if/else returning a value
+  const g = grade(score)
+  IO.print(g)
+
+  // if/else with logical condition
+  const highPass = score >= threshold && score >= 80
+  if (highPass) {
+    IO.print("high pass")
+  } else {
+    IO.print("standard pass or fail")
+  }
+
+  // Negation in condition
+  const failed = !ok
+  describe(failed)
+
+  // Chained conditions
+  const inBand = score >= 80 && score < 90
+  IO.print(inBand)
+}

@@ -1,0 +1,57 @@
+import IO from "std/io"
+
+// --- Arrays ---
+const fruits = ["apple", "banana", "cherry"]
+const primes = [2, 3, 5, 7, 11]
+
+// --- Objects ---
+const config = {
+  debug: true,
+  retries: 3,
+  name: "app"
+}
+
+// --- Nested objects ---
+const server = {
+  host: "localhost",
+  port: 8080,
+  tls: false
+}
+
+// --- Object with nested object ---
+const project = {
+  name: "silk",
+  owner: {
+    name: "Chris",
+    active: true
+  }
+}
+
+function main() {
+  // Array indexing (bounds are checked at compile time for literal arrays)
+  const first = fruits[0]
+  const second = fruits[1]
+  const last = fruits[2]
+  IO.print(first)
+  IO.print(second)
+  IO.print(last)
+
+  // Using a variable as index
+  let i = 1
+  const picked = primes[i]
+  IO.print(picked)
+
+  // Object property access
+  const debugMode = config.debug
+  const retries = config.retries
+  IO.print(debugMode)
+  IO.print(retries)
+
+  // Nested property access
+  const ownerName = project.owner.name
+  IO.print(ownerName)
+
+  // Mix: array + object
+  const items = [config.retries, primes[0]]
+  IO.print(items)
+}
